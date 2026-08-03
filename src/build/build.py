@@ -16,6 +16,7 @@ cfs-app/README.md.
 from __future__ import annotations
 
 import hashlib
+import platform
 import shutil
 import subprocess
 import sys
@@ -42,6 +43,17 @@ def _compile(source: Path, output: Path) -> None:
     disable timestamp-dependent macros. This is the minimum needed for
     gcc to produce a bit-identical binary across two independent runs
     from the same source.
+
+    Platform note: on macOS, `gcc` is aliased to Apple's clang/ld64, and
+    ld64 embeds a UUID load command (LC_UUID) in every Mach-O binary that
+    is NOT guaranteed content-deterministic across separate link
+    invocations the way GNU ld's output is on Linux. `-Wl,-no_uuid`
+    disables that load command. This flag is Apple-linker-specific and
+    would fail on Linux's GNU ld, hence the platform check. This
+    discrepancy is itself a small piece of evidence for why
+    Technical-Design-Document.md specifies a pinned Docker build
+    environment rather than trusting the host toolchain — host-toolchain
+    "reproducibility" is platform-dependent in ways like this one.
     """
     output.parent.mkdir(parents=True, exist_ok=True)
     cmd = [
@@ -49,10 +61,10 @@ def _compile(source: Path, output: Path) -> None:
         "-O0",
         f"-fdebug-prefix-map={source.parent}=.",
         "-frandom-seed=fixed-seed-for-reproducibility",
-        "-o",
-        str(output),
-        str(source),
     ]
+    if platform.system() == "Darwin":
+        cmd += ["-Wl,-no_uuid"]
+    cmd += ["-o", str(output), str(source)]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"compile failed: {result.stderr}")
