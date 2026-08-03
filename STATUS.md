@@ -37,7 +37,6 @@ push).
 ## What's next (immediate)
 
 - [ ] Decide repo license (Apache 2.0 vs MIT) — see PRD.md § 9
-- [ ] Authorize GitHub connector and create the repo, or push manually
 - [ ] Begin Phase 1 of Implementation-Plan.md: minimal S0 pipeline
 - [ ] Resolve open technical decisions in Technical-Design-Document.md § 7
       (SBOM format, attestation approach, policy language)
@@ -48,11 +47,26 @@ push).
 
 ## Blockers
 
-- GitHub connector not yet authorized in this environment — needed before
-  any repo creation/push can happen through Claude directly.
+- None currently. GitHub repo is live and up to date (see below).
 - None of the code-level open questions (SBOM format, attestation
   approach) are true blockers — they just need a decision before Phase 1
   coding starts.
+
+## Repository
+
+- **Live at:** https://github.com/Zartharas/verifiable-spacecraft-lifecycle (private)
+- Pushed from local `master` branch to remote `main` on 2026-08-02.
+- Commit author uses GitHub noreply email
+  (`12345678+Zartharas@users.noreply.github.com`) per GH007 privacy
+  requirement — set via `git config user.email` in this repo; not a global
+  git config change.
+- The Claude sandbox's mounted-folder git client repeatedly hit stale
+  `.git/*.lock` files during commit/push (both `HEAD.lock` and
+  `index.lock`), which real Terminal access on the host machine did not
+  reproduce identically but did also encounter once. Going forward,
+  **commits/pushes for this repo should be run from a local Terminal**,
+  not through the Claude sandbox, to avoid repeated lock contention. Claude
+  can still edit files directly; the user commits/pushes.
 
 ## Claims status (not-yet-permitted list)
 
@@ -101,3 +115,4 @@ Key ones:
 |---|---|---|
 | 2026-08-02 | Initial documentation scaffold created | All docs (v1) |
 | 2026-08-02 | Adopted cFS source-handling policy and claims-status governance from adjacent workspace projects | STATUS.md, Legal-Data-Sourcing-Notes.md |
+| 2026-08-02 | Initial commit pushed to GitHub (private repo live), README structure diagram fixed | README.md, STATUS.md, repo now on GitHub |
