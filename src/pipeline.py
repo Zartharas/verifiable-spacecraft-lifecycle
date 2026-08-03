@@ -101,7 +101,15 @@ def run(
     attestation_backdate_seconds: int = 0,
     configuration: Optional[dict] = None,
     claimed_telemetry_success: Optional[bool] = None,
+    stack: str = "cfs",
 ) -> PipelineResult:
+    """
+    `stack` selects the target artifact (see `src/target_stack.py`):
+    "cfs" (default, Phases 1-5) or "fprime" (Phase 6 generalizability —
+    see Threat-Model.md "Phase 6 results"). Only `build()` and
+    `run_health_check()` actually branch on it; every other stage here
+    works on `binary_path`/`installed_path` generically and is unchanged.
+    """
     result = PipelineResult()
     cond = preset(condition_name)
     configuration = configuration or {}
@@ -110,7 +118,7 @@ def run(
 
     _run_evidence_start = len(_EvidenceStore().read_all())
 
-    build_result = build(condition_name=condition_name)
+    build_result = build(condition_name=condition_name, stack=stack)
     result.build_result = build_result
     binary_path = Path(build_result["binary_path"])
 
@@ -147,6 +155,7 @@ def run(
         prov_path=prov_path,
         version=version,
         configuration=configuration,
+        stack=stack,
     )
     result.ground_approved = approved
     if not approved:
@@ -217,7 +226,7 @@ def run(
             )
 
         health_ok, _ = run_health_check(
-            tentative_path, condition_name=condition_name, force_fail=force_health_fail
+            tentative_path, condition_name=condition_name, force_fail=force_health_fail, stack=stack
         )
         result.health_ok = health_ok
 
@@ -282,7 +291,7 @@ def run(
             attestation_path, installed_path, condition_name=condition_name
         )
         health_ok, _ = run_health_check(
-            installed_path, condition_name=condition_name, force_fail=force_health_fail
+            installed_path, condition_name=condition_name, force_fail=force_health_fail, stack=stack
         )
         result.health_ok = health_ok
         if not (attestation_ok and health_ok):

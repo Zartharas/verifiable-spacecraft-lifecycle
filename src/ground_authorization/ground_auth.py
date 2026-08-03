@@ -41,6 +41,7 @@ def authorize(
     prov_path: Optional[Path] = None,
     version: int = 1,
     configuration: Optional[dict] = None,
+    stack: str = "cfs",
 ) -> bool:
     store = EvidenceStore()
     cond = preset(condition_name)
@@ -82,7 +83,7 @@ def authorize(
                 denial_reasons.append(f"provenance verification failed: {reason}")
 
         if checks_passed and not version_ledger.check_and_advance(
-            version, artifact_hash, condition_name=condition_name
+            version, artifact_hash, condition_name=condition_name, stack=stack
         ):
             checks_passed = False
             denial_reasons.append("downgrade attempt")

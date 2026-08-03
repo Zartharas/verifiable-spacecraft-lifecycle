@@ -267,6 +267,62 @@ metric definitions (`evaluation/report.py`). Full numbers in
   artifact, not the real cFS build. Not yet citable as an external research
   result — still `PRELIMINARY_INTERNAL_ONLY`.
 
+## Phase 6 results (generalizability, 2026-08-03)
+
+Added a second target stack — NASA JPL's F Prime (F´), Apache 2.0,
+pinned to tag `v4.2.2` — architecturally distinct from stack #1 (cFS-
+informed): component-driven C++ vs. message-bus C. See
+`fprime-app/README.md` for the full rationale and legal basis.
+
+- **What generalized with zero changes:** `condition.py`,
+  `evidence_store/`, `signing/`, `sbom/`, `provenance/`,
+  `ground_authorization/ground_auth.py`, `uplink_sim/`,
+  `onboard_verification/`, `installation/partitions.py`, `attestation/`,
+  `rollback/`, `policy/`, `operational_monitoring/`,
+  `evidence_store/authorization_evidence.py`. None of these modules care
+  what language or architecture produced the binary they're handed — they
+  all already worked on `binary_path`/`installed_path` generically.
+- **What needed a small, explicit adapter:** `src/build/build.py`
+  (source directory + compiler) and `src/health/health_check.py`
+  (expected deterministic stdout pattern), both driven by the new
+  `src/target_stack.py` registry via a `stack` parameter (default `"cfs"`
+  everywhere, so Phase 1-5 behavior is unchanged).
+- **Methodological finding worth keeping for the paper (third one of this
+  kind):** re-running the pipeline against `fprime` immediately surfaced
+  a real bug in `src/ground_authorization/version_ledger.py` — it was a
+  single global JSON file tracking "last approved version," so approving
+  version 1 for `fprime` right after `cfs`'s test suite had already
+  advanced its counter well past version 1 was wrongly flagged as a
+  downgrade attempt (test case #9's mechanism), for a stack that had
+  never been deployed before. This is the same category of hazard as the
+  two Phase 4/5 findings (a piece of state that doesn't distinguish "this
+  run/target" from "everything else" silently produces wrong results) —
+  fixed by scoping the ledger file per stack. Arguably the more
+  interesting result of Phase 6: a second target stack didn't just
+  confirm generalization, it found a real correctness gap that a
+  single-stack evaluation had no way to expose (nothing about testing
+  `cfs` repeatedly could ever reveal that the ledger conflates "target
+  identity" with "the whole evaluation session").
+- **Results:** running the full evaluation harness
+  (`evaluation/experiment.py fprime`, `evaluation/report.py fprime`)
+  against `fprime` produced results structurally identical to `cfs`'s
+  Phase 5 results: 100% happy-path success/reproducibility across all 6
+  conditions, 100% detection across all 15 attack matrix test cases (5/5
+  trials each), 0 false positives/negatives in every condition's
+  confusion matrix. Storage-overhead figures match almost exactly between
+  the two stacks (S5 overhead vs. S0: 5,748 bytes for both) — expected,
+  since SBOM/provenance/attestation/authorization-evidence documents are
+  JSON structures sized by their own schema, not by the underlying
+  binary's language or size. Full numbers in
+  `evaluation/results/phase6_report_fprime.md`.
+- **Honest scope of this claim (see STATUS.md "Claims status"):** this is
+  architectural/tooling generalizability between two stand-in artifacts —
+  neither cFS nor F´ has actually been built and run in this project yet
+  (both are gated on a Docker-capable machine). It is not yet a claim
+  that the assurance ladder has been validated against two real
+  flight-software frameworks; it is a claim that the ladder's design
+  doesn't depend on which one is underneath.
+
 ## 4. Metrics (see PRD.md § success criteria for how these roll up)
 
 - Tampered-artifact detection (rate, per condition, per test case)

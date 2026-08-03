@@ -22,7 +22,20 @@ category of trap the Phase 4 comparison table surfaced (see
 Threat-Model.md "Phase 4 results") — evidence-store-based analysis needs
 to be designed around what's actually unique per run, not assumed.
 
-Run with: python3 evaluation/experiment.py
+Phase 6 (generalizability): every function here takes a `stack` parameter
+(default `"cfs"`, Phases 1-5's stand-in) so the exact same harness can be
+re-run against `stack="fprime"` (see `src/target_stack.py`,
+`fprime-app/README.md`) with zero duplicated logic. `_reset_all_state()`
+resets the given stack's version ledger specifically — a second real bug
+was found here too: the version ledger used to be one global file shared
+across stacks, so approving version 1 for `fprime` right after `cfs` had
+already advanced past version 1 would have been wrongly flagged as a
+downgrade attempt. Fixed in `src/ground_authorization/version_ledger.py`
+by keying the ledger file by stack — see Threat-Model.md "Phase 6
+results" for the full writeup.
+
+Run with: python3 evaluation/experiment.py             # cfs (Phase 5, unchanged)
+          python3 evaluation/experiment.py fprime       # fprime (Phase 6)
 """
 
 from __future__ import annotations
@@ -60,8 +73,8 @@ EXPECTED_STAGES = {
 }
 
 
-def _reset_all_state():
-    version_ledger.reset()
+def _reset_all_state(stack: str = "cfs"):
+    version_ledger.reset(stack)
     partitions.reset()
 
 
@@ -81,11 +94,11 @@ def _timed_run(**kwargs) -> tuple[float, "PipelineResult", list[dict]]:
 
 # --- Happy path per condition -------------------------------------------
 
-def happy_path_trials(condition_name: str, n_trials: int = N_TRIALS) -> list[dict]:
-    _reset_all_state()
+def happy_path_trials(condition_name: str, n_trials: int = N_TRIALS, stack: str = "cfs") -> list[dict]:
+    _reset_all_state(stack)
     trials = []
     for i in range(1, n_trials + 1):
-        elapsed, result, records = _timed_run(condition_name=condition_name, version=i)
+        elapsed, result, records = _timed_run(condition_name=condition_name, version=i, stack=stack)
         stages_present = {r["pipeline_stage"] for r in records}
         expected = set(EXPECTED_STAGES[condition_name])
         attestation_ages = [
@@ -117,14 +130,14 @@ def happy_path_trials(condition_name: str, n_trials: int = N_TRIALS) -> list[dic
 # --- Attack scenarios, one function per test case -----------------------
 # Each returns a dict: {"caught": bool, "elapsed_seconds": float, **extra}
 
-def scenario_01(version: int) -> dict:
+def scenario_01(version: int, stack: str = "cfs") -> dict:
     elapsed, result, _ = _timed_run(
-        condition_name="S2", version=version, corrupt_binary_after_provenance=True
+        condition_name="S2", version=version, corrupt_binary_after_provenance=True, stack=stack
     )
     return {"caught": result.rejected_at == "ground_authorization", "elapsed_seconds": elapsed}
 
 
-def scenario_02(version: int) -> dict:
+def scenario_02(version: int, stack: str = "cfs") -> dict:
     # Mirrors tests/test_phase2_pipeline.py::test_case_02 — S2 requires
     # a valid SBOM too, so one is supplied to isolate the provenance
     # failure specifically (see Threat-Model.md "Phase 2 results").
@@ -135,44 +148,58 @@ def scenario_02(version: int) -> dict:
     from signing.signing import sign
 
     t0 = time.perf_counter()
-    build_result = build_stage(condition_name="S2")
+    build_result = build_stage(condition_name="S2", stack=stack)
     binary_path = Path(build_result["binary_path"])
     sbom_path = generate_sbom(binary_path, condition_name="S2")
     prov_path = generate_provenance(binary_path, condition_name="S2", version=version)
     prov_path.write_text("")
     sig_path = sign(binary_path, condition_name="S2")
     approved = authorize(
-        binary_path, sig_path, condition_name="S2", sbom_path=sbom_path, prov_path=prov_path, version=version
+        binary_path,
+        sig_path,
+        condition_name="S2",
+        sbom_path=sbom_path,
+        prov_path=prov_path,
+        version=version,
+        stack=stack,
     )
     elapsed = time.perf_counter() - t0
     return {"caught": not approved, "elapsed_seconds": elapsed}
 
 
-def scenario_03(version: int) -> dict:
-    elapsed, result, _ = _timed_run(condition_name="S1", version=version, inject_incomplete_sbom=True)
+def scenario_03(version: int, stack: str = "cfs") -> dict:
+    elapsed, result, _ = _timed_run(
+        condition_name="S1", version=version, inject_incomplete_sbom=True, stack=stack
+    )
     return {"caught": result.rejected_at == "ground_authorization", "elapsed_seconds": elapsed}
 
 
-def scenario_04(version: int) -> dict:
-    elapsed, result, _ = _timed_run(condition_name="S1", version=version, inject_vulnerable_dependency=True)
+def scenario_04(version: int, stack: str = "cfs") -> dict:
+    elapsed, result, _ = _timed_run(
+        condition_name="S1", version=version, inject_vulnerable_dependency=True, stack=stack
+    )
     return {"caught": result.rejected_at == "ground_authorization", "elapsed_seconds": elapsed}
 
 
-def scenario_05(version: int) -> dict:
-    elapsed, result, _ = _timed_run(condition_name="S2", version=version, builder_id="rogue-unregistered-runner")
+def scenario_05(version: int, stack: str = "cfs") -> dict:
+    elapsed, result, _ = _timed_run(
+        condition_name="S2", version=version, builder_id="rogue-unregistered-runner", stack=stack
+    )
     return {"caught": result.rejected_at == "ground_authorization", "elapsed_seconds": elapsed}
 
 
-def scenario_06(version: int) -> dict:
-    elapsed, result, _ = _timed_run(condition_name="S0", version=version, tamper_in_transit=True)
+def scenario_06(version: int, stack: str = "cfs") -> dict:
+    elapsed, result, _ = _timed_run(
+        condition_name="S0", version=version, tamper_in_transit=True, stack=stack
+    )
     return {"caught": result.rejected_at == "onboard_verification", "elapsed_seconds": elapsed}
 
 
-def scenario_07(version: int) -> dict:
+def scenario_07(version: int, stack: str = "cfs") -> dict:
     generate_keypair()
     revoke_current_key()
     try:
-        elapsed, result, _ = _timed_run(condition_name="S0", version=version)
+        elapsed, result, _ = _timed_run(condition_name="S0", version=version, stack=stack)
         caught = result.rejected_at == "ground_authorization"
     finally:
         if REVOKED_KEYS_PATH.exists():
@@ -180,82 +207,90 @@ def scenario_07(version: int) -> dict:
     return {"caught": caught, "elapsed_seconds": elapsed}
 
 
-def scenario_08(version: int) -> dict:
-    elapsed, result, _ = _timed_run(condition_name="S5", version=version, configuration={"debug_mode": True})
+def scenario_08(version: int, stack: str = "cfs") -> dict:
+    elapsed, result, _ = _timed_run(
+        condition_name="S5", version=version, configuration={"debug_mode": True}, stack=stack
+    )
     return {"caught": result.rejected_at == "ground_authorization", "elapsed_seconds": elapsed}
 
 
-def scenario_09(version_pair: tuple[int, int]) -> dict:
+def scenario_09(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, downgrade_version = version_pair
-    run(condition_name="S2", version=baseline_version)
-    elapsed, result, _ = _timed_run(condition_name="S2", version=downgrade_version)
+    run(condition_name="S2", version=baseline_version, stack=stack)
+    elapsed, result, _ = _timed_run(condition_name="S2", version=downgrade_version, stack=stack)
     return {"caught": result.rejected_at == "ground_authorization", "elapsed_seconds": elapsed}
 
 
-def scenario_10(version_pair: tuple[int, int]) -> dict:
+def scenario_10(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, attack_version = version_pair
-    baseline = run(condition_name="S4", version=baseline_version)
+    baseline = run(condition_name="S4", version=baseline_version, stack=stack)
     assert baseline.rollback_outcome == "confirmed"
     elapsed, result, _ = _timed_run(
-        condition_name="S4", version=attack_version, simulate_interrupted_install=True
+        condition_name="S4", version=attack_version, simulate_interrupted_install=True, stack=stack
     )
     return {"caught": result.rejected_at == "installation", "elapsed_seconds": elapsed}
 
 
-def scenario_11(version_pair: tuple[int, int]) -> dict:
+def scenario_11(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, attack_version = version_pair
-    baseline = run(condition_name="S4", version=baseline_version)
+    baseline = run(condition_name="S4", version=baseline_version, stack=stack)
     assert baseline.rollback_outcome == "confirmed"
-    elapsed, result, _ = _timed_run(condition_name="S4", version=attack_version, force_health_fail=True)
+    elapsed, result, _ = _timed_run(
+        condition_name="S4", version=attack_version, force_health_fail=True, stack=stack
+    )
     return {"caught": result.rollback_outcome == "rolled_back", "elapsed_seconds": elapsed}
 
 
-def scenario_12(version_pair: tuple[int, int]) -> dict:
+def scenario_12(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, attack_version = version_pair
-    baseline = run(condition_name="S4", version=baseline_version)
+    baseline = run(condition_name="S4", version=baseline_version, stack=stack)
     assert baseline.rollback_outcome == "confirmed"
     elapsed, result, _ = _timed_run(
         condition_name="S4",
         version=attack_version,
         attestation_backdate_seconds=DEFAULT_FRESHNESS_SECONDS + 3600,
+        stack=stack,
     )
     return {"caught": result.rollback_outcome == "rolled_back", "elapsed_seconds": elapsed}
 
 
-def scenario_13(_: int) -> dict:
+def scenario_13(_: int, stack: str = "cfs") -> dict:
     t0 = time.perf_counter()
     ok, _reason = monitoring.reconcile_inventory(
         ground_expected_version=2,
         spacecraft_confirmed_version=1,
-        artifact_hash="phase5-synthetic-hash-case-13",
+        artifact_hash=f"phase5-synthetic-hash-case-13-{stack}",
         condition_name="S5",
     )
     elapsed = time.perf_counter() - t0
     return {"caught": not ok, "elapsed_seconds": elapsed}
 
 
-def scenario_14(version_pair: tuple[int, int]) -> dict:
+def scenario_14(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, attack_version = version_pair
-    baseline = run(condition_name="S4", version=baseline_version)
+    baseline = run(condition_name="S4", version=baseline_version, stack=stack)
     assert baseline.rollback_outcome == "confirmed"
     state = partitions._load_state()
     slot_path = partitions._slot_path(state["active"])
     data = bytearray(slot_path.read_bytes())
     data[0] ^= 0xFF
     slot_path.write_bytes(bytes(data))
-    elapsed, result, _ = _timed_run(condition_name="S4", version=attack_version, force_health_fail=True)
+    elapsed, result, _ = _timed_run(
+        condition_name="S4", version=attack_version, force_health_fail=True, stack=stack
+    )
     return {"caught": result.rollback_outcome == "recovery_failed", "elapsed_seconds": elapsed}
 
 
-def scenario_15(version_pair: tuple[int, int]) -> dict:
+def scenario_15(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, attack_version = version_pair
-    baseline = run(condition_name="S5", version=baseline_version)
+    baseline = run(condition_name="S5", version=baseline_version, stack=stack)
     assert baseline.rollback_outcome == "confirmed"
     elapsed, result, _ = _timed_run(
         condition_name="S5",
         version=attack_version,
         force_health_fail=True,
         claimed_telemetry_success=True,
+        stack=stack,
     )
     return {"caught": result.telemetry_consistent is False, "elapsed_seconds": elapsed}
 
@@ -288,12 +323,12 @@ TEST_CASE_CONDITION = {
 }
 
 
-def run_attack_trials(test_case: str, n_trials: int = N_TRIALS) -> list[dict]:
-    _reset_all_state()
+def run_attack_trials(test_case: str, n_trials: int = N_TRIALS, stack: str = "cfs") -> list[dict]:
+    _reset_all_state(stack)
     trials = []
     for i in range(n_trials):
         if test_case in SINGLE_VERSION_SCENARIOS:
-            trials.append(SINGLE_VERSION_SCENARIOS[test_case](i + 1))
+            trials.append(SINGLE_VERSION_SCENARIOS[test_case](i + 1, stack=stack))
         elif test_case == "9":
             # Downgrade attempt: attack_v must be LOWER than baseline_v,
             # and baseline_v must strictly increase each trial so it's
@@ -301,24 +336,24 @@ def run_attack_trials(test_case: str, n_trials: int = N_TRIALS) -> list[dict]:
             # running state (not reset between trials in this loop).
             baseline_v = 100 + i * 10
             attack_v = baseline_v - 5
-            trials.append(PAIRED_VERSION_SCENARIOS[test_case]((baseline_v, attack_v)))
+            trials.append(PAIRED_VERSION_SCENARIOS[test_case]((baseline_v, attack_v), stack=stack))
         else:
             baseline_v = i * 2 + 1
             attack_v = i * 2 + 2
-            trials.append(PAIRED_VERSION_SCENARIOS[test_case]((baseline_v, attack_v)))
+            trials.append(PAIRED_VERSION_SCENARIOS[test_case]((baseline_v, attack_v), stack=stack))
     return trials
 
 
-def run_full_evaluation(n_trials: int = N_TRIALS) -> dict:
+def run_full_evaluation(n_trials: int = N_TRIALS, stack: str = "cfs") -> dict:
     results = {"happy_path": {}, "attack_cases": {}}
 
     for condition in ALL_CONDITIONS:
-        results["happy_path"][condition] = happy_path_trials(condition, n_trials)
+        results["happy_path"][condition] = happy_path_trials(condition, n_trials, stack=stack)
 
     for test_case in sorted(TEST_CASE_CONDITION, key=int):
         results["attack_cases"][test_case] = {
             "condition": TEST_CASE_CONDITION[test_case],
-            "trials": run_attack_trials(test_case, n_trials),
+            "trials": run_attack_trials(test_case, n_trials, stack=stack),
         }
 
     return results
@@ -327,12 +362,15 @@ def run_full_evaluation(n_trials: int = N_TRIALS) -> dict:
 if __name__ == "__main__":
     import json
 
-    print(f"Running Phase 5 evaluation ({N_TRIALS} trials per scenario)...")
-    results = run_full_evaluation()
+    stack_arg = sys.argv[1] if len(sys.argv) > 1 else "cfs"
+    print(f"Running Phase {'5' if stack_arg == 'cfs' else '6'} evaluation "
+          f"({N_TRIALS} trials per scenario, stack={stack_arg})...")
+    results = run_full_evaluation(stack=stack_arg)
 
     out_dir = REPO_ROOT / "evaluation" / "results"
     out_dir.mkdir(parents=True, exist_ok=True)
-    with open(out_dir / "phase5_raw_results.json", "w") as f:
+    out_name = "phase5_raw_results.json" if stack_arg == "cfs" else f"phase6_raw_results_{stack_arg}.json"
+    with open(out_dir / out_name, "w") as f:
         json.dump(results, f, indent=2, default=str)
 
-    print(f"Raw results written to {out_dir / 'phase5_raw_results.json'}")
+    print(f"Raw results written to {out_dir / out_name}")

@@ -9,19 +9,45 @@ timing metrics are a sandbox-timing proxy, "manual evidence-processing
 effort" is an evidence-record-count proxy, and none of this is against
 the real cFS build (see STATUS.md "Claims status").
 
-Run with: python3 evaluation/report.py   (after running experiment.py)
+Phase 6 (generalizability): pass a stack name as the CLI argument to
+summarize a non-"cfs" stack's raw results (produced by
+`evaluation/experiment.py <stack>`) instead — e.g.
+`python3 evaluation/report.py fprime` reads
+`phase6_raw_results_fprime.json` and writes `phase6_summary_fprime.json`
+/ `phase6_report_fprime.md`. All aggregation logic below is identical
+regardless of stack; only the file paths differ.
+
+Run with: python3 evaluation/report.py           # cfs (Phase 5, unchanged)
+          python3 evaluation/report.py fprime     # fprime (Phase 6)
 """
 
 from __future__ import annotations
 
 import json
 import statistics
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
-RAW_RESULTS_PATH = REPO_ROOT / "evaluation" / "results" / "phase5_raw_results.json"
-SUMMARY_JSON_PATH = REPO_ROOT / "evaluation" / "results" / "phase5_summary.json"
-REPORT_MD_PATH = REPO_ROOT / "evaluation" / "results" / "phase5_report.md"
+
+
+def _paths_for(stack: str) -> tuple[Path, Path, Path]:
+    results_dir = REPO_ROOT / "evaluation" / "results"
+    if stack == "cfs":
+        return (
+            results_dir / "phase5_raw_results.json",
+            results_dir / "phase5_summary.json",
+            results_dir / "phase5_report.md",
+        )
+    return (
+        results_dir / f"phase6_raw_results_{stack}.json",
+        results_dir / f"phase6_summary_{stack}.json",
+        results_dir / f"phase6_report_{stack}.md",
+    )
+
+
+_STACK_ARG = sys.argv[1] if len(sys.argv) > 1 else "cfs"
+RAW_RESULTS_PATH, SUMMARY_JSON_PATH, REPORT_MD_PATH = _paths_for(_STACK_ARG)
 
 # Test cases whose successful outcome is a completed rollback — "time to
 # trusted restoration" applies to these. All others get "time to
@@ -139,17 +165,26 @@ def generate_report() -> dict:
     return summary
 
 
+_STACK_ARTIFACT_DESC = {
+    "cfs": "the stand-in stub artifact (`cfs-app/stub-telemetry-app`), not the real cFS build",
+    "fprime": "the stand-in stub artifact (`fprime-app/stub-component-app`), not the real F Prime (F´) framework",
+}
+
+
 def _write_markdown_report(summary: dict) -> None:
+    phase_label = "Phase 5" if _STACK_ARG == "cfs" else f"Phase 6 (stack: {_STACK_ARG})"
+    artifact_desc = _STACK_ARTIFACT_DESC.get(
+        _STACK_ARG, f"the stand-in stub artifact for stack '{_STACK_ARG}'"
+    )
     lines = []
-    lines.append("# Phase 5 Evaluation Report (auto-generated)")
+    lines.append(f"# {phase_label} Evaluation Report (auto-generated)")
     lines.append("")
     lines.append(
         "**Read `docs/PRD.md` § 10 before citing any number here.** Timing "
         "metrics are a sandbox-timing proxy, not hardware/real-mission "
         "timing. \"Manual evidence-processing effort\" is an evidence-"
-        "record-count proxy, not measured human time. All results are "
-        "against the stand-in stub artifact (`cfs-app/stub-telemetry-app`), "
-        "not the real cFS build. See STATUS.md \"Claims status\" for the "
+        f"record-count proxy, not measured human time. All results are "
+        f"against {artifact_desc}. See STATUS.md \"Claims status\" for the "
         "full caveat list."
     )
     lines.append("")

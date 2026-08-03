@@ -8,19 +8,63 @@ session, however small.
 
 ## Current phase
 
-**Phase 5 — Evaluation and metrics collection: COMPLETE.**
-(see `docs/Implementation-Plan.md`) All 6 assurance conditions × 5 repeated
-trials each for the happy path, and all 15 attack matrix test cases × 5
-trials each at their expected condition. 100% detection across every
-attack case, 100% happy-path success/reproducibility, 0 false positives/
-negatives in every condition's confusion matrix, S5 storage overhead a
-sane 5,748 bytes over S0. Next up: Phase 6 (generalizability), or run
-`cfs-app/Dockerfile` to bring the real cFS build online — the latter was
-explicitly deferred until Phase 5 completed.
+**Phase 6 — Generalizability: COMPLETE.**
+(see `docs/Implementation-Plan.md`) Added a second target stack — NASA
+JPL's F Prime (F´), architecturally distinct from stack #1 (cFS-informed
+message-bus C vs. F´-informed component-driven C++) — and re-ran the full
+pipeline, 15-case attack matrix, and Phase 5 evaluation harness against
+it. Required changing exactly two adapter modules plus one correctness
+fix (version ledger wasn't stack-scoped); every other mechanism
+generalized unmodified. Results structurally identical to stack #1: 100%
+detection/success/reproducibility, 0 false positives/negatives. Next up:
+Phase 7 (paper drafting), or run `cfs-app/Dockerfile`/`fprime-app/Dockerfile`
+to bring either real framework online — both remain deferred to a
+Docker-capable machine.
 
 ## Last session summary
 
-**Date:** 2026-08-03 (session 5)
+**Date:** 2026-08-03 (session 6)
+
+Added Phase 6 (generalizability): a second target stack, NASA JPL's F
+Prime (F´), pinned to tag `v4.2.2` (Apache 2.0, verified directly from
+the repo's `LICENSE.txt` and releases page, not from memory). Built
+`src/target_stack.py` as a small registry so `src/build/build.py` and
+`src/health/health_check.py` — the only two modules that had hardcoded
+the Phase 1 stub's specific shape — could take a `stack` parameter
+instead. Added `fprime-app/stub-component-app/main.cpp` (C++, different
+output shape) plus a matching README/Dockerfile mirroring `cfs-app`'s
+honest stand-in-vs-real conventions. Every other pipeline module
+(signing, SBOM, provenance, attestation, partitions, rollback, policy,
+monitoring, authorization evidence) needed zero changes — confirming the
+S0-S5 ladder's design was already stack-agnostic in practice, not just in
+principle.
+
+Found and fixed a real bug in the process: `src/ground_authorization/
+version_ledger.py` was a single global JSON file tracking "last approved
+version" across the whole evaluation session, so approving version 1 for
+`fprime` immediately after `cfs`'s test suite had already advanced its
+counter was wrongly flagged as a downgrade attempt. Fixed by scoping the
+ledger file per stack — the more correct design, since a real ground
+system tracks version history per deployed target. This is the third
+real bug found purely by building this project's own evaluation tooling
+(after the Phase 4 comparison-table tagging bug and the Phase 5
+authorization-evidence overhead bug) — a good, recurring pattern for the
+paper's methodology section.
+
+Added `tests/test_phase6_generalizability.py` (9 tests: build
+reproducibility, S0/S5 happy path, one attack case per assurance layer,
+and a dedicated regression test for the version-ledger fix). Full suite
+now 35/35 passing. Re-ran the Phase 5-style evaluation harness
+(`evaluation/experiment.py fprime`, `evaluation/report.py fprime`,
+chunked the same way as Phase 5) against `fprime`: 100% happy-path
+success/reproducibility across all 6 conditions, 100% detection across
+all 15 attack matrix test cases (5/5 trials each), 0 false positives/
+negatives anywhere. Storage-overhead figures matched stack #1's almost
+exactly (S5 overhead vs. S0: 5,748 bytes for both) — expected, since
+those artifacts are JSON documents sized by schema, not by the underlying
+binary.
+
+**Previous session (2026-08-03, session 5):**
 
 Built and ran the Phase 5 evaluation harness (`evaluation/experiment.py`,
 `evaluation/report.py`). Along the way, found and fixed a real correctness
@@ -151,16 +195,25 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       reproducibility, 0 false positives/negatives; S5 overhead vs. S0 a
       sane 5,748 bytes (see Implementation-Plan.md Phase 5 for the
       correctness bug found and fixed along the way)
+- [x] **Phase 6 (generalizability) complete** — second target stack (NASA
+      JPL's F Prime, `fprime-app/`) added via `src/target_stack.py`;
+      35/35 tests passing (26 + 9 new Phase 6 tests); full evaluation
+      re-run against `fprime` with results structurally identical to
+      stack #1 (100% detection/success/reproducibility, 0 false
+      positives/negatives); one real bug found and fixed (version ledger
+      wasn't stack-scoped) — see Implementation-Plan.md Phase 6
 
 ## What's next (immediate)
 
-- [ ] **You:** run `cfs-app/Dockerfile` on your Mac (has Docker) to build
-      the real cFS sample app; report back so the target artifact can be
-      swapped from the stub to the real thing — this was explicitly
-      deferred until Phase 5 completed, and Phase 5 is now done
+- [ ] **You:** run `cfs-app/Dockerfile` and, when ready,
+      `fprime-app/Dockerfile` on your Mac (has Docker) to build the real
+      cFS and F´ artifacts; report back so the target stacks can be
+      swapped from stubs to the real frameworks — both were explicitly
+      deferred until the evaluation phases completed, and Phases 5 and 6
+      are now both done
 - [ ] **You:** commit + push this session's changes
-- [ ] Begin Phase 6 (second software stack, for generalizability) or
-      Phase 7 (paper drafting) — or pursue the real-cFS Docker build first
+- [ ] Begin Phase 7 (paper drafting and repo polish) — or pursue either
+      real Docker build first
 - [ ] Consider reviewing prior related projects already present in the
       Development Projects folder (`mission-aware-satellite-cyber-recovery`,
       `satcom-ttc-post-compromise-recovery`) for reusable components or
@@ -206,30 +259,41 @@ not based on intent or partial progress.
   `PRELIMINARY_INTERNAL_ONLY` rather than fully citable: this is one
   non-cFS artifact in one sandbox environment, not yet the real cFS build
   and not yet cross-validated on a second machine/stack.
-- Detection-accuracy claims against real cFS: `NOT_PERMITTED` — not run yet
-- Recovery-success claims **against the stub artifact**:
+- Detection-accuracy claims against real cFS or real F´: `NOT_PERMITTED`
+  — neither has been run yet, both gated on a Docker-capable machine
+- Recovery-success claims **against the stub artifacts**:
   `PRELIMINARY_INTERNAL_ONLY` — test cases #10/#11/#12/#14 demonstrate
-  rollback working correctly across 5 repeated trials each (100% detection,
-  Phase 5), with "time to trusted restoration" now a measured metric
-  against the resolved S0 baseline (PRD.md § 10), not just pass/fail. Still
-  not against real cFS.
-- Reproducible-build claims **against the stub artifact**:
-  `PRELIMINARY_INTERNAL_ONLY` — 100% reproducible across all Phase 5
-  trials (5 per condition, 6 conditions) in this sandbox; not yet
-  demonstrated for the real cFS build (needs Docker)
-- Generalizability claims (beyond single cFS stack): `NOT_PERMITTED` —
-  requires Phase 6
+  rollback working correctly across 5 repeated trials each (100% detection)
+  against **both** stand-in stacks (Phase 5 `cfs`, Phase 6 `fprime`), with
+  "time to trusted restoration" now a measured metric against the resolved
+  S0 baseline (PRD.md § 10), not just pass/fail. Still not against either
+  real framework.
+- Reproducible-build claims **against the stub artifacts**:
+  `PRELIMINARY_INTERNAL_ONLY` — 100% reproducible across all Phase 5/6
+  trials (5 per condition, 6 conditions, both stacks) in this sandbox; not
+  yet demonstrated for either real framework's build (needs Docker)
+- Generalizability claims (beyond a single stack): `PRELIMINARY_INTERNAL_ONLY`
+  — **resolved from `NOT_PERMITTED`, Phase 6 (2026-08-03).** The S0-S5
+  ladder's mechanisms and evidence schema were re-run, unmodified except
+  for two adapter modules, against a second, architecturally distinct
+  stand-in stack (F Prime-informed) with structurally identical results.
+  Still `PRELIMINARY_INTERNAL_ONLY`, not fully citable: this demonstrates
+  architectural/tooling generalizability between two *stand-in artifacts*,
+  not validation against two real flight-software frameworks — do not
+  state or imply "validated on cFS and F´" until both Dockerfiles have
+  actually been run.
 - CCSDS/protocol-conformance claims: `NOT_PERMITTED` — uplink simulator is
   CCSDS-*informed*, not a conformance-tested implementation (see PRD.md
   non-goals)
 - Flight-software or operational-spacecraft applicability claims:
   `NOT_PERMITTED` — this is a simulated research prototype only, and this
   restriction is permanent, not phase-gated (see PRD.md non-goals)
-- Publication-evidence status: `PRELIMINARY_INTERNAL_ONLY` — Phase 5 now
-  has a full evaluation with a credible, documented baseline (PRD.md § 10),
-  resolving the "metric legitimacy" risk from PRD.md § 8. Still not
-  `PERMITTED` for external citation until run against the real cFS build
-  and, ideally, a second software stack (Phase 6).
+- Publication-evidence status: `PRELIMINARY_INTERNAL_ONLY` — Phases 5 and
+  6 now provide a full evaluation with a credible, documented baseline
+  (PRD.md § 10) across two architecturally distinct stand-in stacks,
+  resolving both the "metric legitimacy" and "generalizability" risks
+  from PRD.md § 8. Still not `PERMITTED` for external citation until run
+  against at least one real framework (real cFS and/or real F´).
 
 Mandatory stop point: do not submit any manuscript, external write-up, or
 public claim of a result until the specific phase above has completed and
@@ -240,8 +304,10 @@ this section has been updated to reflect it.
 See PRD.md § 9 and Technical-Design-Document.md § 7 for the full list.
 Key ones:
 1. ~~Repo license~~ — resolved: Apache 2.0
-2. Second software stack — pursue now or defer to Phase 6?
-3. Baseline definition for S0 in effort/overhead metrics
+2. ~~Second software stack — pursue now or defer to Phase 6?~~ — resolved:
+   pursued now, Phase 6 (2026-08-03), NASA JPL's F Prime (F´)
+3. ~~Baseline definition for S0 in effort/overhead metrics~~ — resolved,
+   PRD.md § 10
 4. ~~SBOM format (CycloneDX vs SPDX)~~ — resolved: CycloneDX (see TDD § 7b)
 5. ~~Attestation approach (swtpm vs custom stub)~~ — resolved: custom
    stub, no swtpm available (see TDD § 7c) — revisit if swtpm becomes
@@ -280,3 +346,4 @@ are available. Install Python packages with `pip3 install
 | 2026-08-03 | Phase 3 (S3/S4: attestation + rollback) built and verified: software attestation stub (no swtpm available), A/B partition manager (tentative-activate/confirm/revert), health check harness, rollback controller with recovery-image integrity check. 6 new tests covering attack cases #10,#11,#12,#14; 20/20 total passing, no regressions. | src/attestation/ (new), src/installation/partitions.py (new), src/health/ (new), src/rollback/ (new), src/pipeline.py, tests/test_phase3_pipeline.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |
 | 2026-08-03 | Phase 4 (S5: machine-readable authorization evidence) built and verified: prohibited-configuration policy (custom deny-list, not OPA/Rego), inventory reconciliation, false-telemetry detection, OSCAL-informed authorization evidence aggregator, automated S0-S5 comparison table. 6 new tests covering attack cases #8,#13,#15; 26/26 total passing (all 15 attack matrix cases now implemented). Comparison table generator caught a real Phase 1 evidence-tagging bug (test case #6 tagged at wrong stage) — fixed. | src/policy/ (new), src/operational_monitoring/ (new), src/evidence_store/authorization_evidence.py (new), src/ground_authorization/ground_auth.py, src/pipeline.py, evaluation/metrics.py, tests/test_phase4_pipeline.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |
 | 2026-08-03 | Phase 5 (evaluation and metrics collection) built and run: 5 repeated trials for the happy path at every condition and every one of the 15 attack matrix test cases at its expected condition. Found and fixed a real correctness bug in `authorization_evidence.py` (constant-hash lookup aggregating cross-run evidence, inflating S5 overhead to ~855,655 bytes); corrected figure is 5,748 bytes. Final results: 100% happy-path success/reproducibility across all 6 conditions, 100% detection across all 15 attack cases, 0 false positives/negatives in every condition's confusion matrix. 26/26 tests still passing, no regressions. | src/evidence_store/authorization_evidence.py, src/pipeline.py, evaluation/experiment.py (new), evaluation/report.py (new), evaluation/results/ (new), docs/PRD.md, docs/Implementation-Plan.md, STATUS.md |
+| 2026-08-03 | Phase 6 (generalizability) built and run: added a second target stack (NASA JPL's F Prime, pinned to tag v4.2.2, Apache 2.0) via a new `src/target_stack.py` registry, parameterizing `build.py`/`health_check.py` by `stack`. Every other pipeline module generalized unmodified. Found and fixed a real bug: the version ledger was a single global file, not scoped per stack, wrongly flagging fprime's first release as a downgrade. 9 new tests (35/35 total passing, no regressions). Re-ran the Phase 5 evaluation harness against `fprime`: results structurally identical to stack #1 (100% detection/success/reproducibility, 0 false positives/negatives, matching storage overhead). | src/target_stack.py (new), src/build/build.py, src/health/health_check.py, src/pipeline.py, src/ground_authorization/version_ledger.py, src/ground_authorization/ground_auth.py, fprime-app/ (new), evaluation/experiment.py, evaluation/report.py, evaluation/results/ (phase6 files), tests/test_phase6_generalizability.py (new), docs/PRD.md, docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, docs/Legal-Data-Sourcing-Notes.md, STATUS.md |

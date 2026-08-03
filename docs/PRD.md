@@ -112,7 +112,11 @@ for this kind of research use — see `Legal-Data-Sourcing-Notes.md`.
   as "terrestrial-analog pipeline with spacecraft-motivated constraints."
 - **Generalizability risk:** a single cFS-stack evaluation caps the venue
   ceiling at JAIS/Computers & Security. Reaching TDSC/TSE/TOSEM requires a
-  second stack or a formal, stack-agnostic model.
+  second stack or a formal, stack-agnostic model. **Resolved 2026-08-03,
+  Phase 6** — see § 11: a second stack (F Prime) was added and the
+  evaluation re-run against it. Still not sufficient on its own for
+  TDSC/TSE/TOSEM without also running against the real frameworks (see
+  § 11's precise claims-status scoping).
 - **Metric legitimacy risk:** metrics like "time to trusted restoration" or
   "manual evidence-processing effort" need a credible baseline (what does
   S0 represent operationally?) or they read as invented numbers.
@@ -124,8 +128,10 @@ for this kind of research use — see `Legal-Data-Sourcing-Notes.md`.
 
 ## 9. Open questions (update as resolved — track in STATUS.md)
 
-- Second software stack for generalizability: pursue now, or defer to a
-  revision cycle after initial cFS results are in?
+- ~~Second software stack for generalizability: pursue now, or defer to a
+  revision cycle after initial cFS results are in?~~ — resolved: pursued
+  now (Phase 6, 2026-08-03). NASA JPL's F Prime (F´) added as stack #2;
+  see § 11 and `docs/Threat-Model.md` "Phase 6 results."
 - ~~Baseline definition for S0 in operational-effort metrics~~ — resolved,
   see § 10.
 - ~~License for the repo~~ — resolved: Apache 2.0.
@@ -180,3 +186,31 @@ to validate anyway.
 
 See `evaluation/experiment.py` for the implementation and
 `evaluation/results/` for generated output.
+
+## 11. Generalizability (resolved 2026-08-03, Phase 6)
+
+Closes the "generalizability risk" from § 8. A second target stack was
+added rather than deferred: NASA JPL's F Prime (F´), Apache 2.0, pinned to
+tag `v4.2.2`, architecturally distinct from stack #1 (component-driven C++
+vs. cFS's message-bus C) — see `fprime-app/README.md` for the full
+rationale and `docs/Legal-Data-Sourcing-Notes.md` for the legal basis.
+
+Re-running the full pipeline, 15-case attack matrix, and Phase 5
+evaluation harness against this second stack required changing exactly
+two adapter modules (`src/build/build.py`, `src/health/health_check.py`)
+plus one correctness fix the test surfaced
+(`src/ground_authorization/version_ledger.py`, previously a single global
+file rather than scoped per stack) — every other assurance mechanism
+generalized unmodified. Results are structurally identical to stack #1's
+Phase 5 results (100% detection/success/reproducibility, 0 false
+positives/negatives). See `docs/Threat-Model.md` "Phase 6 results" and
+`evaluation/results/phase6_report_fprime.md` for full numbers.
+
+**Scope of this claim, stated precisely (see STATUS.md "Claims
+status"):** this is architectural/tooling generalizability between two
+stand-in artifacts, not validation against two real flight-software
+frameworks — neither cFS nor F´ has actually been built and run in this
+project yet (both gated on a Docker-capable machine). The claim is that
+the assurance ladder's design does not depend on which framework is
+underneath, not that it has been proven against real flight software
+twice.

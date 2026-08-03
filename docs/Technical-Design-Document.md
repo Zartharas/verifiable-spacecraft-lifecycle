@@ -274,3 +274,52 @@ network/hardware dependency.
   execution-environment workaround (run in three chunks, merge into
   `phase5_raw_results.json`, then run `report.py` once). See
   Implementation-Plan.md's Phase 5 section for the exact commands.
+
+## 7f. Phase 6 decisions actually made
+
+- **Stack-agnostic design surfaced, not invented:** the design principle
+  "one codebase, six conditions" (§ 7d and Design principle #1) turned
+  out to already generalize across target stacks for almost every module.
+  Phase 6 didn't have to *design* a stack-agnostic architecture from
+  scratch — it had to identify the two places (`build.py`,
+  `health_check.py`) that had accidentally hardcoded the Phase 1 stub's
+  specific shape, and parameterize just those.
+- **`src/target_stack.py`: a small dataclass registry, not a plugin
+  system.** Each stack is a `Stack(name, source_dir, source_filename,
+  binary_name, compiler, expected_health_output, description)` entry in
+  a dict. Deliberately not a dynamic plugin/entry-point mechanism —
+  there are two stacks, both known at design time, and a dict lookup is
+  the simplest thing that lets `build.py`/`health_check.py` take a
+  `stack: str` parameter instead of hardcoding one.
+- **F Prime (F´) chosen as stack #2, pinned to tag `v4.2.2`.** Verified
+  directly (not from memory) via `github.com/nasa/fprime/releases` for
+  the tag and the repo's `LICENSE.txt` at the `devel` branch for licensing
+  (Apache License 2.0, copyright California Institute of Technology, "US
+  Government Sponsorship acknowledged"). Chosen specifically for being
+  architecturally distinct from cFS (component/port-based vs.
+  message-bus, C++ generated code vs. C) so that "the pipeline works
+  against stack #2" can't be dismissed as "it happened to also be a
+  trivial C program."
+- **Second stub artifact deliberately differs in language and output
+  shape, not just in name.** `fprime-app/stub-component-app/main.cpp` is
+  C++ (`stub-telemetry-app/main.c` is C) and emits
+  `telemetry.chanN=M` lines (the cFS stub emits `channel=N value=M`) —
+  this is what makes `test_both_stacks_registered_and_distinct` in
+  `tests/test_phase6_generalizability.py` a meaningful assertion rather
+  than a tautology.
+- **Version ledger scoped per stack, not per artifact hash.** Following
+  the same lesson as § 7d/7e (constant or shared keys silently aggregate
+  cross-context state), `src/ground_authorization/version_ledger.py` now
+  writes one JSON file per `stack` (`version_ledger.<stack>.json`)
+  instead of one global file. This is treated as a durable design fix, not
+  a Phase-6-specific patch: any future third stack automatically gets its
+  own independent version history with no code change beyond registering
+  it in `target_stack.py`.
+- **`evaluation/experiment.py` and `evaluation/report.py` extended with a
+  `stack` parameter/CLI argument rather than duplicated into
+  Phase-6-specific copies.** Every scenario function, `happy_path_trials`,
+  `run_attack_trials`, and `run_full_evaluation` takes `stack: str =
+  "cfs"`; `report.py`'s output paths are derived from the stack argument
+  (`phase5_*` for `"cfs"`, `phase6_*_<stack>` otherwise). This keeps the
+  Phase 5 canonical results file byte-for-byte unaffected while reusing
+  100% of the aggregation logic for Phase 6.

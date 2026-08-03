@@ -228,11 +228,69 @@ python3 evaluation/report.py                   # writes phase5_summary.json + ph
 cat evaluation/results/phase5_report.md
 ```
 
-## Phase 6 — Generalizability (stretch, needed for TDSC/TSE/TOSEM)
+## Phase 6 — Generalizability (stretch, needed for TDSC/TSE/TOSEM) — COMPLETE (2026-08-03)
 
-- [ ] Add a second software stack or formalize a stack-agnostic model
-- [ ] Re-run relevant subset of evaluation against the second stack
-- [ ] Update Research-Paper-Outline.md venue assessment based on results
+- [x] Added a second target stack: NASA JPL's F Prime (F´), Apache 2.0,
+      pinned to tag `v4.2.2` (see `fprime-app/README.md`,
+      `docs/Legal-Data-Sourcing-Notes.md`) — architecturally distinct from
+      stack #1 (component-driven C++ vs. cFS's message-bus C)
+- [x] Formalized a stack-agnostic model: `src/target_stack.py` registers
+      each stack's source location, compiler, and expected deterministic
+      output; only `src/build/build.py` and `src/health/health_check.py`
+      needed a `stack` parameter (default `"cfs"`, zero behavior change
+      for Phases 1-5). Every other module (`condition.py`,
+      `evidence_store/`, `signing/`, `ground_authorization/` besides the
+      version ledger, `uplink_sim/`, `onboard_verification/`,
+      `installation/`, `attestation/`, `rollback/`, `policy/`,
+      `operational_monitoring/`) required no changes at all
+- [x] Fixed a real bug surfaced by testing the second stack: the version
+      ledger (`src/ground_authorization/version_ledger.py`) was a single
+      global file, so approving version 1 for `fprime` right after `cfs`
+      had already advanced past version 1 would have been wrongly flagged
+      as a downgrade attempt. Fixed by scoping the ledger file per stack
+      — the more correct design (a real ground system tracks version
+      history per deployed target, not one shared counter)
+- [x] Re-ran the full evaluation (happy path × 6 conditions + all 15
+      attack matrix test cases, 5 trials each) against the `fprime` stack
+      — `evaluation/experiment.py fprime` /
+      `evaluation/report.py fprime`, chunked across multiple invocations
+      the same way as Phase 5 to stay under the sandbox's per-command
+      execution ceiling
+- [x] New `tests/test_phase6_generalizability.py` (9 tests): build
+      reproducibility, S0/S5 happy path, one representative attack case
+      per assurance layer (signature #6, provenance #1, rollback
+      #11/#14), and a dedicated regression test for the version-ledger
+      stack-scoping fix
+
+**Exit criteria: MET.** Re-running the pipeline against `fprime` required
+touching exactly two adapter modules (`build.py`, `health_check.py`) plus
+one correctness fix surfaced by the test (`version_ledger.py`) — every
+other assurance mechanism generalized with zero changes. Results against
+`fprime` are structurally identical to `cfs`: 100% happy-path success/
+reproducibility across all 6 conditions, 100% detection across all 15
+attack matrix test cases (5/5 trials each), 0 false positives/negatives
+in every condition's confusion matrix. Even the storage-overhead figures
+match almost exactly (S5 overhead vs. S0 is 5,748 bytes for both stacks)
+— expected, since SBOM/provenance/attestation/authorization-evidence
+documents are JSON structures sized by their own schema, not by the
+underlying binary's size or language. Full numbers in
+`evaluation/results/phase6_report_fprime.md`.
+
+**Claims-status note (see STATUS.md):** this demonstrates architectural/
+tooling generalizability — the S0-S5 ladder's mechanisms and evidence
+schema work unmodified against a second, real, architecturally distinct
+flight-software framework's *stand-in* — not validation against two real
+flight-software frameworks. Neither cFS nor F´ has actually been built and
+run yet; that remains gated on a Docker-capable machine (see
+`cfs-app/README.md` and `fprime-app/README.md`).
+
+**Run it yourself:**
+```
+python3 -m pytest tests/test_phase6_generalizability.py -v
+python3 evaluation/experiment.py fprime        # writes phase6_raw_results_fprime.json
+python3 evaluation/report.py fprime            # writes phase6_summary_fprime.json + phase6_report_fprime.md
+cat evaluation/results/phase6_report_fprime.md
+```
 
 ## Phase 7 — Paper drafting and repo polish
 
