@@ -26,14 +26,18 @@ disclosure per `SECURITY.md` rather than just a code fix.
 
 ## Log
 
-**Note:** several real bugs were found and fixed during Phases 4-6
+**Note:** three real bugs were found and fixed during Phases 4-6
 (evidence-tagging bug for test case #6, authorization-evidence overhead
 bug, version-ledger cross-stack collision bug) before this log was
-actually put into use — those are documented narratively in
-`docs/Threat-Model.md`'s "Phase N results" sections and `STATUS.md`'s
-session log instead. Retroactively backfilling proper entries here for
-those is still outstanding — see STATUS.md "What's next." Starting with
-Phase 7, new findings get a real entry here.
+actually put into use — they were only documented narratively at the
+time, in `docs/Threat-Model.md`'s "Phase N results" sections and
+`STATUS.md`'s session log. Backfilled below as ISSUE-004/005/006 once
+the log was actually in use (Phase 7). Numbering reflects the order
+entries were logged, not the order the bugs actually occurred — 004-006
+predate 001-003 chronologically; see each entry's "Found during" for the
+real phase. Content here is reconstructed from the existing narrative
+write-ups and the actual source fix, not from memory of the original
+debugging session.
 
 ## [ISSUE-001] cFS Dockerfile used the wrong build invocation
 
@@ -153,6 +157,131 @@ Phase 7, new findings get a real entry here.
   binary (`/bin/true`, which exits instantly with no output) is
   correctly reported unhealthy in ~25ms rather than waiting out the full
   timeout window. Full suite: 41/41 passing, no regressions.
+
+## [ISSUE-004] Test case #6 tagged at the wrong evidence stage (backfilled)
+
+- **Date found:** 2026-08-03
+- **Found during:** Phase 4 — building the automated S0-S5 detection
+  comparison table (`evaluation/metrics.py::build_comparison_table`),
+  which reads pass/fail directly from the evidence store rather than
+  from test assertions
+- **Category:** bug
+- **Severity:** low (no incorrect security decision was ever made — the
+  pipeline correctly rejected the tampered update in every run; this was
+  an evidence-trail/reporting gap, not a detection failure)
+- **Description:** test case #6 (modified update in transit, implemented
+  in Phase 1) was tagged at the *injection* point (`uplink`, logged
+  `n/a`) instead of the *detection* point
+  (`onboard_signature_verification`, logged `fail`). Every other test
+  case added in Phases 2-4 tags the record that actually caught the
+  attack; #6 was the one inconsistency, introduced in Phase 1 before that
+  convention existed. Building the automated comparison table
+  immediately surfaced it as `caught=0` in the S0-S5 matrix, despite the
+  underlying pipeline test for this case having "passed" for three
+  phases straight.
+- **Root cause:** Phase 1's original test-case-#6 evidence record was
+  written before a project-wide convention (tag the detection record,
+  not the injection point) had been established; nothing caught the
+  inconsistency because manual pass/fail test assertions don't inspect
+  *which* evidence record got the test-case tag, only whether the
+  pipeline's return value was correct.
+- **Fix:** added an explicit `test_case_injected="6"` tag to the real
+  detection-point record in `src/pipeline.py` (the
+  `onboard_signature_verification` failure branch, alongside the
+  existing `result="fail"` record) rather than only the injection-point
+  one. This is a genuinely good example of why automated,
+  evidence-store-driven evaluation matters over a manual test suite: the
+  manual suite had never revealed that the evidence trail itself was
+  incomplete, only the tooling that reads the evidence store directly
+  did.
+- **Known follow-on effect (not itself a bug):** tagging both the
+  injection and detection records for one conceptual test instance
+  produced a temporary double-count (`seen=2, caught=1`) in the
+  comparison table — the pass/fail signal was correct, just the instance
+  count wasn't. Resolved properly in Phase 5, where
+  `evaluation/experiment.py` counts test *instances* directly from
+  `PipelineResult` fields per trial rather than counting evidence-store
+  records at all.
+- **Disclosure status:** n/a (this project's own evidence-tagging logic)
+- **Verified fixed:** yes — the Phase 4 comparison table correctly shows
+  test case #6 as caught at its expected condition; 26/26 tests passing
+  at the time, no regressions. See `docs/Threat-Model.md` "Phase 4
+  results" for the original write-up this entry is backfilled from.
+
+## [ISSUE-005] Authorization-evidence overhead inflated ~150x by cross-run aggregation (backfilled)
+
+- **Date found:** 2026-08-03
+- **Found during:** Phase 5 — the first full evaluation harness run
+  (`evaluation/experiment.py`), computing S0-S5 storage overhead
+- **Category:** bug
+- **Severity:** medium (a real correctness bug in a reported research
+  metric — would have produced a materially wrong published number if
+  not caught before write-up)
+- **Description:** the first full evaluation run reported S5's
+  authorization-evidence storage overhead as ~855,655 bytes — two orders
+  of magnitude larger than plausible for machine-readable authorization
+  evidence on this artifact size. The corrected figure, after the fix
+  below, is 5,748 bytes.
+- **Root cause:** `src/evidence_store/authorization_evidence.py`'s
+  internal `store.for_artifact(hash)` lookup aggregated *every* evidence
+  record ever logged for the stand-in stub's build hash across the
+  entire evaluation session (the stub's build hash is constant across
+  trials, since it's the same source recompiled deterministically), not
+  just the records from the current run. Each successive trial's
+  authorization-evidence generation pulled in every prior trial's
+  records too, compounding across the ~135 calls the Phase 5 harness
+  makes per stack. This is the same underlying trap as ISSUE-004: a
+  lookup keyed by something that doesn't uniquely identify "this run"
+  silently aggregates cross-run noise instead of failing loudly.
+- **Fix:** `src/pipeline.py` now passes an explicit, index-sliced
+  `records` list containing only the current run's evidence (sliced from
+  `_run_evidence_start`, an index captured at the start of that specific
+  `run()` call) into `generate_authorization_evidence`, rather than
+  letting it query the store by build hash internally.
+- **Disclosure status:** n/a (this project's own evaluation-metrics code)
+- **Verified fixed:** yes — re-run evaluation harness reported the
+  corrected 5,748-byte figure consistently across all 5 repeated trials;
+  100% happy-path success/reproducibility across all 6 conditions, 0
+  false positives/negatives across all 15 attack cases, 26/26 tests
+  passing at the time. See `docs/Threat-Model.md` "Phase 5 results" and
+  `docs/PRD.md` § 10 for the corrected baseline this fix established.
+
+## [ISSUE-006] Version ledger was a single global file, not scoped per stack (backfilled)
+
+- **Date found:** 2026-08-03
+- **Found during:** Phase 6 — re-running the pipeline against the newly
+  added `fprime` stack for the first time
+- **Category:** bug
+- **Severity:** medium (would have produced a false-positive downgrade
+  rejection for any second target stack's legitimate first release — a
+  real availability/correctness bug, not a security gap, since it fails
+  toward over-rejection rather than under-detection)
+- **Description:** approving version 1 for `fprime` — its first-ever
+  release — was wrongly flagged as a downgrade attempt (the mechanism
+  behind test case #9) immediately after `cfs`'s own test suite had
+  already advanced its version counter well past 1, for a stack that had
+  never been deployed at all.
+- **Root cause:** `src/ground_authorization/version_ledger.py` stored
+  "last approved version" in a single global JSON file shared by every
+  target stack, rather than one scoped per stack. It conflated "target
+  identity" with "the whole evaluation session" — the same category of
+  hazard as ISSUE-004 and ISSUE-005 (state that doesn't uniquely
+  identify "this run/target" silently produces wrong results instead of
+  failing loudly). Nothing about testing `cfs` repeatedly could ever have
+  exposed this: a single-stack evaluation has no way to surface a
+  cross-stack collision.
+- **Fix:** scoped the ledger file per stack (keyed by `stack` name)
+  instead of using one shared file across all stacks.
+- **Disclosure status:** n/a (this project's own ground-authorization
+  code)
+- **Verified fixed:** yes — 9 new Phase 6 tests added (35/35 total
+  passing, no regressions), including one specifically asserting version
+  ledgers are isolated per stack
+  (`test_version_ledgers_are_isolated_per_stack` in
+  `tests/test_phase6_generalizability.py`). Re-ran the Phase 5 evaluation
+  harness against `fprime`: results structurally identical to stack #1
+  (100% detection/success/reproducibility, 0 false positives/negatives).
+  See `docs/Threat-Model.md` "Phase 6 results" for the original write-up.
 
 ---
 
