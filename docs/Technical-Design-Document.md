@@ -165,3 +165,36 @@ network/hardware dependency.
   tied to a specific real mission. Loss/latency values are illustrative,
   not validated against a specific reference system — flag this
   explicitly if cited in the paper's methodology.
+
+## 7c. Phase 3 decisions actually made
+
+- **Attestation: custom software stub, not swtpm/real TPM.** The
+  authoring sandbox has no swtpm binary, no tpm2-tools, and no root to
+  install either. `src/attestation/attestation.py` signs a measurement
+  (installed binary hash + partition id + timestamp) with a dedicated
+  Ed25519 key, which lets the *assurance property under test* —
+  detecting a stale or mismatched claim about what's running — be tested
+  without hardware. **This is a materially weaker guarantee than real
+  TPM-backed attestation**: a software-held key can be exfiltrated in ways
+  a TPM-sealed key cannot, and there's no hardware root of trust anchoring
+  the measurement. State this limitation explicitly in the paper — do not
+  let "attestation" imply hardware backing it doesn't have. Revisit if
+  swtpm becomes available on a capable machine (same category of decision
+  as the real cFS Docker build — flagged, not blocking).
+- **A/B partitions: tentative-activate + confirm/revert, single JSON state
+  file.** `src/installation/partitions.py`. Models the standard embedded
+  update pattern (boot into candidate, validate, confirm or revert) rather
+  than a naive immediate-switch. The recovery-image integrity check before
+  reverting (test case #14) was a late but important addition — a plain
+  A/B implementation without it would pass every test except that one.
+- **Health check: execute the installed binary, compare stdout to an
+  expected deterministic pattern.** `src/health/health_check.py`. Works
+  because the stub artifact is deterministic by construction (see
+  `cfs-app/stub-telemetry-app/main.c`) — a real cFS app's health check
+  would look at telemetry/housekeeping data instead, not stdout.
+- **Rollback controller: thin coordination layer, not new state.**
+  `src/rollback/rollback.py` just decides confirm-vs-revert and delegates
+  to `partitions.py`, which owns all actual state and the integrity check.
+  Kept separate to match the named "Rollback controller" actor in
+  Pipeline-Flow-Document.md, not because the logic is complex enough to
+  need its own module on merits alone.

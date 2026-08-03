@@ -98,18 +98,43 @@ python3 -m pytest tests/ -v                    # all 14 tests
 python3 evaluation/metrics.py                  # evidence store summary
 ```
 
-## Phase 3 — Attestation + Rollback (S3, S4)
+## Phase 3 — Attestation + Rollback (S3, S4) — COMPLETE (2026-08-03)
 
-- [ ] Software-based attestation (swtpm or custom) at boot/runtime
-- [ ] A/B partition manager
-- [ ] Health validation harness
-- [ ] Rollback controller wired to health/attestation failure
-- [ ] Test cases #10–14 implemented and passing at expected conditions
+- [x] Software-based attestation (**custom stub, not swtpm** — no swtpm/
+      tpm2-tools available and no root to install them; see TDD § 7c for
+      why this is a materially weaker guarantee than hardware-backed
+      attestation and must be stated as such in the paper) —
+      `src/attestation/attestation.py`
+- [x] A/B partition manager — `src/installation/partitions.py`, with
+      tentative-activate/confirm/revert semantics and a recovery-image
+      integrity check
+- [x] Health validation harness — `src/health/health_check.py`
+- [x] Rollback controller wired to health/attestation failure —
+      `src/rollback/rollback.py`
+- [x] Test cases #10, #11, #12, #14 implemented and passing at expected
+      conditions — `tests/test_phase3_pipeline.py`. Test case #13
+      (ground/spacecraft inventory disagreement) deferred to Phase 4 (S5)
+      per Threat-Model.md — it's an S5 mechanism, not S3/S4.
 
-**Exit criteria:** an interrupted installation (#10) and a failed health
-check (#11) both correctly trigger rollback to last-known-good, with full
-evidence trail, and recovery success/time-to-trusted-restoration metrics
-are being collected.
+**Exit criteria: MET.** An interrupted installation (#10) is caught before
+ever tentatively activating (system stays on the confirmed baseline,
+untouched). A failed health check (#11) is caught after tentative
+activation and correctly triggers rollback to the last confirmed
+partition. Both have full evidence trails (`installation`,
+`health_validation`, `rollback` stages). Bonus: stale attestation (#12)
+and invalid recovery image (#14) also implemented and passing — the
+latter is a genuinely interesting result (see Threat-Model.md "Phase 3
+results"): the rollback mechanism itself needs an integrity check, or a
+"recovery" can silently activate a corrupted image.
+
+20/20 tests pass across all three phases, no regressions.
+
+**Run it yourself:**
+```
+python3 src/pipeline.py                        # includes S4 happy path
+python3 -m pytest tests/ -v                    # all 20 tests
+python3 evaluation/metrics.py                  # evidence store summary
+```
 
 ## Phase 4 — Machine-readable authorization evidence (S5)
 

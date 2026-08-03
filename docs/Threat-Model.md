@@ -140,6 +140,41 @@ cfs-app/README.md for why it's not the real cFS target yet:**
   mechanism first, or the test isn't isolating what it claims to isolate.
   Worth a sentence in the paper's evaluation methodology section.
 
+**Phase 3 results (2026-08-03), against the stand-in artifact:**
+
+- **Test case #10 (interrupted installation): confirmed detected at S4**,
+  matching the hypothesis. The write-verification step
+  (`partitions.verify_written`) catches the mismatch between the intended
+  and actual on-disk hash before the new partition is ever tentatively
+  activated — the system simply never leaves the confirmed baseline.
+- **Test case #11 (failed health check): confirmed detected at S4**,
+  matching the hypothesis (S3/S4 range). At S3 alone, a health failure is
+  *detected* (logged as `post_install_unrecoverable_at_s3`) but nothing
+  can be done about it — no recovery mechanism exists yet at that
+  condition. At S4, the same failure triggers a real rollback to the last
+  confirmed partition. This S3-vs-S4 contrast (detect-only vs.
+  detect-and-recover) is a clean, citable illustration of what the extra
+  assurance layer actually buys you — worth a table row or figure in the
+  paper specifically contrasting S3 and S4 outcomes for the same fault.
+- **Test case #12 (stale attestation): confirmed detected at S3**
+  (attestation verification itself, which is active from S3), and at S4
+  additionally **triggers a rollback**, matching and slightly exceeding
+  the hypothesis. Simulated via `attestation_backdate_seconds` rather than
+  a real elapsed-time wait, for fast deterministic tests.
+- **Test case #14 (invalid recovery image): confirmed detected at S4**,
+  matching the hypothesis, and this is the most interesting Phase 3
+  result: the rollback path checks the *recovery target's own* on-disk
+  integrity (not just the failing partition's) before trusting it, and
+  correctly reports `recovery_failed` rather than silently activating
+  corrupted "known-good" content. This is a genuinely important point for
+  the paper — a naive A/B rollback implementation that skips this check
+  would look correct in every test except this one, and would silently
+  make things worse in the exact scenario rollback exists to handle.
+- **Test case #13 (ground/spacecraft inventory disagreement): NOT
+  implemented in Phase 3**, deferred to Phase 4 (S5) as originally scoped
+  — it requires machine-readable authorization evidence to reconcile
+  ground and spacecraft state, which doesn't exist until S5.
+
 ## 4. Metrics (see PRD.md § success criteria for how these roll up)
 
 - Tampered-artifact detection (rate, per condition, per test case)

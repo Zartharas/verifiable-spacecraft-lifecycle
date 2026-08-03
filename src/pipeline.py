@@ -4,13 +4,25 @@ End-to-end pipeline orchestrator.
 Phase 1 (S0): build -> sign -> ground authorization -> simulated uplink ->
 onboard verification -> installation.
 
-Phase 2 (S1/S2) inserts, condition-gated via condition.py:
-  build -> [provenance generation, S2+] -> [SBOM generation, S1+] ->
-  sign -> ground authorization (now also checks SBOM/provenance/version) ->
-  simulated uplink -> onboard verification -> installation
+Phase 2 (S1/S2) inserts, condition-gated: provenance generation (S2+),
+SBOM generation (S1+), before signing; ground authorization now also
+checks SBOM/provenance/version.
 
-Later phases add attestation/health/rollback (after installation) as those
-mechanisms come online — see Pipeline-Flow-Document.md.
+Phase 3 (S3/S4) inserts, condition-gated, after onboard verification:
+  - S3 (onboard_attestation active, trusted_rollback not yet): simple
+    install (as in Phase 1/2), then attestation + health check — but with
+    NO recovery mechanism yet. A failure here is logged as unrecoverable
+    at this condition, which is itself a meaningful result: S3 tells you
+    something is wrong but can't yet do anything about it. That's the
+    whole motivation for S4.
+  - S4 (trusted_rollback active): full A/B partition flow — write to the
+    inactive slot, verify the write landed intact (catches test case #10:
+    interrupted installation), tentatively activate, attestation + health
+    check, then confirm (permanent) or roll back to the other slot
+    (catches test cases #11 failed health, #12 stale attestation, and via
+    the rollback path itself, #14 invalid recovery image).
+
+See Pipeline-Flow-Document.md for the full stage-by-stage description.
 """
 
 from __future__ import annotations
@@ -28,8 +40,12 @@ from ground_authorization.ground_auth import authorize  # noqa: E402
 from uplink_sim.uplink import transmit, LinkProfile, IDEAL  # noqa: E402
 from onboard_verification.onboard import verify_received_bundle  # noqa: E402
 from installation.install import install  # noqa: E402
+from installation import partitions  # noqa: E402
 from sbom.sbom import generate_sbom  # noqa: E402
 from provenance.provenance import generate_provenance  # noqa: E402
+from attestation.attestation import generate_attestation, verify_attestation  # noqa: E402
+from health.health_check import run_health_check  # noqa: E402
+from rollback import rollback  # noqa: E402
 from condition import preset  # noqa: E402
 
 
@@ -41,6 +57,9 @@ class PipelineResult:
         self.ground_approved = None
         self.onboard_verified = None
         self.installed_path = None
+        self.attestation_path = None
+        self.health_ok = None
+        self.rollback_outcome = None  # "confirmed" | "rolled_back" | "recovery_failed" | None
         self.rejected_at = None
 
     def __repr__(self):
@@ -48,7 +67,8 @@ class PipelineResult:
             f"PipelineResult(rejected_at={self.rejected_at!r}, "
             f"ground_approved={self.ground_approved}, "
             f"onboard_verified={self.onboard_verified}, "
-            f"installed={self.installed_path is not None})"
+            f"installed={self.installed_path is not None}, "
+            f"rollback_outcome={self.rollback_outcome!r})"
         )
 
 
@@ -56,7 +76,7 @@ def _corrupt_binary(binary_path: Path) -> None:
     """Test helper for test case #1 — simulate a binary swapped in after
     provenance/attestation but before release, so the two stop matching."""
     data = bytearray(binary_path.read_bytes())
-    data.append(0xFF)  # append rather than flip, so it also changes length/hash robustly
+    data.append(0xFF)
     binary_path.write_bytes(bytes(data))
 
 
@@ -70,6 +90,9 @@ def run(
     corrupt_binary_after_provenance: bool = False,
     link_profile: LinkProfile = IDEAL,
     rng_seed: Optional[int] = None,
+    simulate_interrupted_install: bool = False,
+    force_health_fail: bool = False,
+    attestation_backdate_seconds: int = 0,
 ) -> PipelineResult:
     result = PipelineResult()
     cond = preset(condition_name)
@@ -84,7 +107,6 @@ def run(
             binary_path, condition_name=condition_name, version=version, builder_id=builder_id
         )
         result.provenance_path = prov_path
-
         if corrupt_binary_after_provenance:
             _corrupt_binary(binary_path)
 
@@ -128,9 +150,78 @@ def run(
         result.rejected_at = "onboard_verification"
         return result
 
-    installed_path = install(received_binary, condition_name=condition_name)
-    result.installed_path = installed_path
-    return result
+    if cond.active("trusted_rollback"):
+        slot, dest = partitions.write_to_inactive(received_binary, version)
+
+        if simulate_interrupted_install:
+            with open(dest, "rb") as f:
+                data = f.read()
+            with open(dest, "wb") as f:
+                f.write(data[: len(data) // 2])
+
+        written_ok = partitions.verify_written(slot, condition_name=condition_name)
+        if not written_ok:
+            result.rejected_at = "installation"
+            return result
+
+        partitions.tentative_activate(slot, condition_name=condition_name)
+        tentative_path = partitions.get_active_path()
+
+        attestation_ok = True
+        if cond.active("onboard_attestation"):
+            attestation_path = generate_attestation(
+                tentative_path,
+                slot,
+                condition_name=condition_name,
+                backdate_seconds=attestation_backdate_seconds,
+            )
+            result.attestation_path = attestation_path
+            attestation_ok, _ = verify_attestation(
+                attestation_path, tentative_path, condition_name=condition_name
+            )
+
+        health_ok, _ = run_health_check(
+            tentative_path, condition_name=condition_name, force_fail=force_health_fail
+        )
+        result.health_ok = health_ok
+
+        outcome, reason = rollback.resolve(
+            health_ok=health_ok, attestation_ok=attestation_ok, condition_name=condition_name
+        )
+        result.rollback_outcome = outcome
+        result.installed_path = partitions.get_active_path()
+        if outcome != "confirmed":
+            result.rejected_at = f"post_install_{outcome}"
+        return result
+
+    elif cond.active("onboard_attestation"):
+        # S3 only: attestation + health checked, but no recovery
+        # mechanism exists yet at this condition — see module docstring.
+        installed_path = install(received_binary, condition_name=condition_name)
+        result.installed_path = installed_path
+
+        attestation_path = generate_attestation(
+            installed_path,
+            "single",
+            condition_name=condition_name,
+            backdate_seconds=attestation_backdate_seconds,
+        )
+        result.attestation_path = attestation_path
+        attestation_ok, _ = verify_attestation(
+            attestation_path, installed_path, condition_name=condition_name
+        )
+        health_ok, _ = run_health_check(
+            installed_path, condition_name=condition_name, force_fail=force_health_fail
+        )
+        result.health_ok = health_ok
+        if not (attestation_ok and health_ok):
+            result.rejected_at = "post_install_unrecoverable_at_s3"
+        return result
+
+    else:
+        installed_path = install(received_binary, condition_name=condition_name)
+        result.installed_path = installed_path
+        return result
 
 
 if __name__ == "__main__":
@@ -145,3 +236,7 @@ if __name__ == "__main__":
     print("\n=== S2 happy path (SBOM + provenance active) ===")
     r3 = run(condition_name="S2", version=3)
     print(r3)
+
+    print("\n=== S4 happy path (A/B rollback active) ===")
+    r4 = run(condition_name="S4", version=4)
+    print(r4)
