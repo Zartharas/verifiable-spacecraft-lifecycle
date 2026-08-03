@@ -1,0 +1,122 @@
+# Threat Model & Assurance Ladder
+
+**Last updated:** 2026-08-02
+**Status:** Draft v1 — defines the experimental design; treat changes here as
+requiring a corresponding update to Technical-Design-Document.md and
+Implementation-Plan.md.
+
+This document is the core experimental design artifact. Everything else in
+the project (pipeline components, test cases, metrics) exists to support
+measuring across the conditions defined here.
+
+## 1. Assurance ladder (S0–S5)
+
+Each condition is strictly additive — S(n) includes everything in S(n-1)
+plus one new mechanism. This lets us isolate the marginal effect of each
+added assurance layer.
+
+| Condition | Mechanisms present | New mechanism vs. prior |
+|---|---|---|
+| S0 | Signature only | — (baseline) |
+| S1 | Signature + SBOM | Software Bill of Materials |
+| S2 | Signature + SBOM + build provenance | SLSA/in-toto-style provenance attestation |
+| S3 | S2 + onboard attestation | Runtime/boot attestation on the spacecraft side |
+| S4 | S3 + trusted rollback | Verified A/B partition rollback on failure |
+| S5 | S4 + machine-readable authorization evidence | OSCAL-style structured evidence for ground/auditor consumption |
+
+Each of the 12 pipeline stages (see Pipeline-Flow-Document.md) is either
+active or a no-op depending on which condition is under test. The pipeline
+implementation must support running the *same* artifact through all six
+conditions with only configuration changes — no code forks per condition.
+This is a hard architectural requirement (see Technical-Design-Document.md
+§ "Condition switching").
+
+## 2. Threat actors considered
+
+- **External attacker with network access** to the ground segment or the
+  uplink channel (tampering in transit, replay, downgrade).
+- **Compromised build infrastructure** (unauthorized/malicious build
+  runner, poisoned dependency).
+- **Insider with legitimate but excessive access** (approves a
+  configuration that is technically signed but policy-prohibited).
+- **Compromised or leaked signing key** (revoked key still presented as
+  valid).
+- **Onboard software fault** (failed health check, interrupted
+  installation) — not adversarial, but must be handled by the same
+  recovery machinery and is in scope because assurance mechanisms should
+  degrade gracefully under non-adversarial failure too.
+- **Ground/space state divergence** (inventory disagreement, false
+  "successful installation" telemetry) — covers both deception and honest
+  desync.
+
+Explicitly out of scope: RF-layer jamming/spoofing, physical tampering with
+ground hardware, insider threats with root access to the signing HSM
+itself. These are real spacecraft security concerns but outside this
+project's scope (supply-chain/lifecycle assurance, not RF security or
+personnel security).
+
+## 3. Attack / failure injection matrix
+
+Each row is a standardized test case, run against every applicable
+condition (S0–S5) where the relevant mechanism could plausibly detect it.
+"Expected detection point" marks which condition should first catch it —
+this is the actual hypothesis the experiment tests.
+
+| # | Test case | Pipeline stage injected | Expected first detection at |
+|---|---|---|---|
+| 1 | Binary does not match source | Build → Provenance | S2 (provenance) |
+| 2 | Missing or false provenance | Provenance | S2 |
+| 3 | Incomplete SBOM | SBOM generation | S1 |
+| 4 | Dependency with known test vulnerability | SBOM / dependency scan | S1 |
+| 5 | Unauthorized build runner | Build environment | S2 |
+| 6 | Modified update (in transit) | Uplink | S0 (signature should catch this) |
+| 7 | Revoked signing key | Signature verification | S0/S2 (requires revocation-aware verification — flag as a design requirement, not automatic) |
+| 8 | Correct signature but prohibited configuration | Ground authorization / policy | S5 (needs machine-readable policy evidence) |
+| 9 | Downgrade attempt | Ground authorization / onboard verification | S2/S4 (provenance version check, or rollback policy) |
+| 10 | Interrupted installation | Installation | S4 (rollback) |
+| 11 | Failed health check | Post-install health validation | S3/S4 |
+| 12 | Stale attestation | Onboard attestation | S3 |
+| 13 | Ground/spacecraft inventory disagreement | Operational monitoring | S5 |
+| 14 | Invalid recovery image | Rollback | S4 |
+| 15 | False "successful installation" telemetry | Operational monitoring / attestation | S3/S5 |
+
+**Note:** "Expected first detection" values are hypotheses to validate, not
+guaranteed outcomes — a key result of the paper may be that some conditions
+catch things earlier or later than the naive expectation (e.g., S0 alone
+should already catch #6 via signature mismatch; if it doesn't in the
+prototype, that's a bug, not a finding).
+
+## 4. Metrics (see PRD.md § success criteria for how these roll up)
+
+- Tampered-artifact detection (rate, per condition, per test case)
+- Incomplete-component detection (rate)
+- Time to identify affected systems (wall-clock, simulated)
+- Update acceptance accuracy (true positive / false positive / false negative)
+- Attestation freshness (age of last valid attestation at time of check)
+- Recovery success rate
+- Time to trusted restoration (needs baseline definition — open question, see PRD.md § 9)
+- Manual evidence-processing effort (needs baseline definition — open question)
+- Traceability completeness (fraction of lifecycle stages with linked evidence)
+- Storage and link overhead (bytes added per condition vs. S0)
+- Reproducibility of the deployed binary (bit-for-bit reproducible build rate)
+
+## 5. Per-stage STRIDE-style notes
+
+To be expanded as each pipeline stage is implemented (Implementation-Plan.md
+phases). Placeholder structure per stage:
+
+- **Spoofing:** can an actor impersonate a legitimate source (build runner,
+  ground authority, signing identity)?
+- **Tampering:** can artifact content be altered without detection at this
+  stage?
+- **Repudiation:** can an actor deny having authorized/produced something?
+- **Information disclosure:** does this stage leak anything that weakens
+  later stages (e.g., exposing verification logic, key material)?
+- **Denial of service:** can this stage be blocked/delayed to force a
+  fallback to a weaker path?
+- **Elevation of privilege:** can passing this stage grant more trust than
+  it should?
+
+Fill in per-stage detail here as `Technical-Design-Document.md` components
+are built — keep this document as the single source of truth for "what are
+we testing and why," separate from "how is it built."

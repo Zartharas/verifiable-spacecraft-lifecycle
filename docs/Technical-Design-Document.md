@@ -1,0 +1,114 @@
+# Technical Design Document (TDD)
+
+**Last updated:** 2026-08-02
+**Status:** Draft v1 — architecture proposal, not yet implemented
+
+## 1. Design principles
+
+1. **One codebase, six conditions.** S0–S5 must be config-driven, not
+   forked implementations. Every pipeline stage checks "is this mechanism
+   active for the current condition?" rather than having condition-specific
+   code paths duplicated.
+2. **Evidence-first.** Every stage that could plausibly produce forensic
+   or audit value writes a structured record to the evidence store, even
+   at low assurance conditions where that evidence isn't yet *used* by
+   verification — this lets later analysis compare "evidence existed but
+   wasn't checked" (S0-S1) vs. "evidence existed and was checked" (S2+).
+3. **No real spacecraft, no real ground segment.** Everything is simulated
+   locally or in containers. See Legal-Data-Sourcing-Notes.md.
+4. **Reuse existing standard tooling wherever possible.** This project
+   composes SLSA/in-toto/Sigstore/CycloneDX-class tools rather than
+   inventing new cryptographic primitives — novelty comes from the
+   spacecraft-constrained composition and evaluation, not from new crypto.
+
+## 2. Target artifact
+
+A cFS (NASA Core Flight System, Apache 2.0) application. Candidate:
+start with a single simple app (e.g., a sample telemetry output app from
+the cFS sample-apps set) to get the full pipeline working end-to-end
+before adding a second app for the generalizability question flagged in
+PRD.md.
+
+## 3. Component architecture
+
+| Component | Candidate tooling | Notes |
+|---|---|---|
+| Reproducible build | Docker/Nix-pinned build environment | Must produce bit-identical output on re-run |
+| Provenance generation | in-toto / SLSA provenance generator | Standard attestation format |
+| SBOM generation | Syft → CycloneDX or SPDX | Pick one format and stay consistent |
+| Signing | Sigstore/cosign (or a local-CA equivalent if offline signing is needed to model "no live human") | Needs to support a "revoked key" test case — plan key rotation/revocation handling explicitly |
+| Ground authorization | Custom policy service (small rules engine) | Encodes "permitted configuration" policy for test case #8 |
+| Uplink simulator | Custom, CCSDS-informed | Configurable latency/loss/bandwidth; this is the component most likely to draw reviewer scrutiny — build it carefully and document its model explicitly |
+| Onboard verification agent | Custom, runs inside the cFS runtime or a wrapper around it | Signature + policy check |
+| Attestation | Software-based attestation (TPM simulation or a software equivalent — real TPM hardware likely unnecessary for a simulated node) | Document clearly that this is software-simulated, not hardware root-of-trust, unless hardware becomes available |
+| Installation / A/B rollback | Custom partition-state manager | Two logical partitions (active/inactive), atomic switch |
+| Health validation | Custom health-check harness | Simple liveness/behavior checks against the running app |
+| Evidence store | Structured JSON log, OSCAL-informed schema | Append-only; source of truth for metrics |
+| Attack/failure injector | Custom test harness | Injects the 15 test cases from Threat-Model.md at the correct pipeline stage |
+| Metrics collector | Python analysis scripts over the evidence store | Produces the per-condition comparison tables for the paper |
+
+*(All "candidate tooling" choices are proposals — confirm/revise during
+Phase 1 of Implementation-Plan.md and update this table. Don't treat this
+table as final.)*
+
+## 4. Evidence record schema (draft)
+
+Each evidence record, regardless of stage, should carry at minimum:
+
+```json
+{
+  "record_id": "uuid",
+  "timestamp": "ISO8601",
+  "pipeline_stage": "string (e.g. 'build', 'provenance', 'signing', ...)",
+  "condition": "S0 | S1 | S2 | S3 | S4 | S5",
+  "artifact_ref": "hash or identifier of the artifact this record concerns",
+  "actor": "which simulated actor produced this record",
+  "result": "pass | fail | n/a",
+  "detail": { "...stage-specific fields..." },
+  "test_case_injected": "null, or test case # from Threat-Model.md if this run included an injected failure"
+}
+```
+
+Refine this schema once the evidence store is actually implemented —
+update this section rather than letting the schema drift undocumented.
+
+## 5. Condition switching mechanism
+
+Proposal: a single config file (e.g., `condition.yaml`) read by every
+pipeline stage at run time, defining which mechanisms are active:
+
+```yaml
+condition: S3
+mechanisms:
+  signature: true
+  sbom: true
+  provenance: true
+  onboard_attestation: true
+  trusted_rollback: false
+  machine_readable_authorization: false
+```
+
+Each stage checks the relevant flag before performing its check —
+inactive mechanisms are skipped, not stubbed with fake-pass results, so
+the pipeline behaves as an honest S0-S5 system rather than a system that
+"has everything but pretends not to."
+
+## 6. Deployment/runtime model for the prototype
+
+Recommend: everything runs in Docker Compose (or similar) on a single
+development machine — build service, ground authorization service, uplink
+simulator, "spacecraft" container (running the cFS app + onboard
+verification/attestation/rollback logic), evidence store, all as separate
+containers/services communicating over local network. This is sufficient
+realism for the supply-chain claims being made and avoids any real
+network/hardware dependency.
+
+## 7. Open technical decisions (track resolution in STATUS.md)
+
+- Exact SBOM format (CycloneDX vs SPDX) — leaning CycloneDX for tooling
+  maturity, confirm during Phase 1.
+- Whether to model a real TPM (via software TPM / swtpm) or a fully custom
+  attestation stub — swtpm gives more credibility for the S3 claims.
+- Second cFS app or second software stack entirely, and when to add it.
+- Exact policy language for ground authorization (custom DSL vs. reusing
+  something like OPA/Rego).

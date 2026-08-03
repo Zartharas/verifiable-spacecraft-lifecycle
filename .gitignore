@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Node (if any tooling ends up JS-based)
+node_modules/
+
+# Build artifacts / local results (not yet in use, reserved for future phases)
+/results/
+/logs/
+*.log
+
+# Local secrets / keys — never commit real or test signing material
+*.pem
+*.key
+secrets/

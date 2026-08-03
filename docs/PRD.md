@@ -1,0 +1,131 @@
+# Product/Research Requirements Document (PRD)
+
+**Project:** Verifiable Spacecraft Software Lifecycle
+**Owner:** Independent researcher (Zartharas)
+**Status:** Draft v1 — documentation phase
+**Last updated:** 2026-08-02
+
+## 1. Problem statement
+
+Spacecraft flight software updates are typically deployed with minimal
+verifiable assurance beyond a digital signature, if that. There is no
+standard, measurable way to compare *how much* security assurance a given
+update pipeline actually provides, or to quantify the cost (time, storage,
+manual effort) of adding stronger assurance mechanisms. This makes it hard
+for mission designers to make informed tradeoffs, and hard for researchers
+to compare proposed supply-chain security schemes against each other.
+
+Terrestrial software supply-chain security (SLSA, in-toto, Sigstore, TUF)
+has matured rapidly since 2020, largely in response to incidents like
+SolarWinds. Spacecraft software has not seen an equivalent, empirically
+grounded treatment — despite operating under constraints (intermittent/
+high-latency links, no human-in-the-loop during anomalies, physical
+unrecoverability of a bad update) that make supply-chain failures more
+consequential and harder to recover from than in terrestrial systems.
+
+## 2. Goal
+
+Build a controlled, end-to-end software lifecycle pipeline for a spacecraft
+flight software application (cFS-based), instrument it with six discrete
+levels of supply-chain assurance (S0–S5), inject a standardized set of
+tampering/failure scenarios at each level, and measure detection accuracy,
+recovery success, and operational overhead as assurance increases.
+
+The **central research claim is comparative, not descriptive**: this project
+does not claim "we added a signature and an SBOM to spacecraft software." It
+claims to measure what each additional assurance mechanism buys you, and at
+what cost, under spacecraft-relevant constraints (link latency/loss,
+autonomous recovery, no live human intervention).
+
+## 3. Non-goals
+
+- This is **not** a production flight software security product. It is a
+  research prototype for a controlled empirical study.
+- This project does **not** use real operational spacecraft telemetry,
+  real mission signing infrastructure, or any export-controlled technical
+  data. See `Legal-Data-Sourcing-Notes.md`.
+- This project does **not** aim to build a new cryptographic signature
+  scheme — it composes existing, standard cryptographic tooling
+  (Sigstore/cosign or equivalent) rather than inventing new crypto.
+- Not attempting real RF/physical-layer simulation — the "uplink" is a
+  protocol-realistic (CCSDS-informed) simulation, not an RF simulation.
+
+## 4. Success criteria
+
+The project is successful if it produces:
+
+1. A working, reproducible pipeline that moves a cFS application through
+   the full lifecycle: source → reproducible build → provenance → SBOM →
+   signed release → ground authorization → simulated uplink → onboard
+   verification → installation → attestation → operational monitoring →
+   rollback/approval → updated authorization evidence.
+2. Six configurable assurance conditions (S0–S5, see `Threat-Model.md`)
+   that can be toggled independently for controlled comparison.
+3. A standardized battery of injected failure/attack scenarios (tampered
+   binary, incomplete SBOM, revoked key, downgrade attempt, stale
+   attestation, false telemetry, etc.) run against every condition.
+4. Quantitative results across all defined metrics (detection accuracy,
+   time-to-identification, recovery success, manual evidence-processing
+   effort, storage/link overhead, reproducibility rate) per condition.
+5. A public GitHub repository with full documentation, reproducible setup
+   instructions, and a clean issue/fix history suitable for citing as a
+   contribution artifact.
+6. A paper draft targeting the venue sequence defined in
+   `Research-Paper-Outline.md`.
+
+## 5. Assurance conditions (summary — full detail in Threat-Model.md)
+
+| Condition | Assurance available |
+|---|---|
+| S0 | Signature only |
+| S1 | Signature + SBOM |
+| S2 | Signature + SBOM + build provenance |
+| S3 | S2 + onboard attestation |
+| S4 | S3 + trusted rollback |
+| S5 | S4 + machine-readable authorization evidence |
+
+## 6. Target artifact under test
+
+A cFS (NASA Core Flight System) application, or a small set of them,
+representing realistic flight software components (e.g., a telemetry
+handler, a command ingest app). cFS is Apache 2.0 licensed and purpose-built
+for this kind of research use — see `Legal-Data-Sourcing-Notes.md`.
+
+## 7. Stakeholders / audience
+
+- Primary: the researcher (sole contributor).
+- Secondary: peer reviewers at target venues (IEEE Aerospace, SpaceSec,
+  AIAA JAIS, Computers & Security, stretch: TDSC/TSE/TOSEM).
+- Tertiary: open-source community / GitHub visitors who may cite, fork, or
+  build on the pipeline, and any security researchers who discover and
+  responsibly disclose issues via `SECURITY.md`.
+
+## 8. Key risks (see also Threat-Model.md and prior analysis in project history)
+
+- **Novelty risk:** SLSA/in-toto/Sigstore/TUF already formalize much of
+  S0–S3. The paper's contribution must rest on spacecraft-specific
+  constraints (latency, autonomy, unrecoverability) changing the
+  engineering problem, not just relabeling existing frameworks.
+- **Simulation realism risk:** an unrealistic "simulated uplink" (no
+  latency, no loss, no bandwidth ceiling) undermines the paper's spacecraft
+  claims. Must be CCSDS/DTN-informed or the paper must be scoped honestly
+  as "terrestrial-analog pipeline with spacecraft-motivated constraints."
+- **Generalizability risk:** a single cFS-stack evaluation caps the venue
+  ceiling at JAIS/Computers & Security. Reaching TDSC/TSE/TOSEM requires a
+  second stack or a formal, stack-agnostic model.
+- **Metric legitimacy risk:** metrics like "time to trusted restoration" or
+  "manual evidence-processing effort" need a credible baseline (what does
+  S0 represent operationally?) or they read as invented numbers.
+- **Scope creep into "tool collection":** explicitly flagged as the easiest
+  failure mode for this topic. The comparative S0–S5 framing exists
+  specifically to prevent this — every implementation decision should be
+  traceable back to "which condition(s) does this support, and what does
+  it let us measure?"
+
+## 9. Open questions (update as resolved — track in STATUS.md)
+
+- Second software stack for generalizability: pursue now, or defer to a
+  revision cycle after initial cFS results are in?
+- Baseline definition for S0 in operational-effort metrics — need to define
+  before data collection starts.
+- License for the repo (Apache 2.0 vs MIT) — decide before first public push.
