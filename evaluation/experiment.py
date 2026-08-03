@@ -224,7 +224,12 @@ def scenario_09(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
 def scenario_10(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, attack_version = version_pair
     baseline = run(condition_name="S4", version=baseline_version, stack=stack)
-    assert baseline.rollback_outcome == "confirmed"
+    assert baseline.rollback_outcome == "confirmed", (
+        f"baseline run did not confirm as expected (stack={stack!r}, "
+        f"condition=S4, version={baseline_version}): "
+        f"rollback_outcome={baseline.rollback_outcome!r}, "
+        f"health_ok={baseline.health_ok!r}, rejected_at={baseline.rejected_at!r}"
+    )
     elapsed, result, _ = _timed_run(
         condition_name="S4", version=attack_version, simulate_interrupted_install=True, stack=stack
     )
@@ -234,7 +239,12 @@ def scenario_10(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
 def scenario_11(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, attack_version = version_pair
     baseline = run(condition_name="S4", version=baseline_version, stack=stack)
-    assert baseline.rollback_outcome == "confirmed"
+    assert baseline.rollback_outcome == "confirmed", (
+        f"baseline run did not confirm as expected (stack={stack!r}, "
+        f"condition=S4, version={baseline_version}): "
+        f"rollback_outcome={baseline.rollback_outcome!r}, "
+        f"health_ok={baseline.health_ok!r}, rejected_at={baseline.rejected_at!r}"
+    )
     elapsed, result, _ = _timed_run(
         condition_name="S4", version=attack_version, force_health_fail=True, stack=stack
     )
@@ -244,7 +254,12 @@ def scenario_11(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
 def scenario_12(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, attack_version = version_pair
     baseline = run(condition_name="S4", version=baseline_version, stack=stack)
-    assert baseline.rollback_outcome == "confirmed"
+    assert baseline.rollback_outcome == "confirmed", (
+        f"baseline run did not confirm as expected (stack={stack!r}, "
+        f"condition=S4, version={baseline_version}): "
+        f"rollback_outcome={baseline.rollback_outcome!r}, "
+        f"health_ok={baseline.health_ok!r}, rejected_at={baseline.rejected_at!r}"
+    )
     elapsed, result, _ = _timed_run(
         condition_name="S4",
         version=attack_version,
@@ -269,7 +284,12 @@ def scenario_13(_: int, stack: str = "cfs") -> dict:
 def scenario_14(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, attack_version = version_pair
     baseline = run(condition_name="S4", version=baseline_version, stack=stack)
-    assert baseline.rollback_outcome == "confirmed"
+    assert baseline.rollback_outcome == "confirmed", (
+        f"baseline run did not confirm as expected (stack={stack!r}, "
+        f"condition=S4, version={baseline_version}): "
+        f"rollback_outcome={baseline.rollback_outcome!r}, "
+        f"health_ok={baseline.health_ok!r}, rejected_at={baseline.rejected_at!r}"
+    )
     state = partitions._load_state()
     slot_path = partitions._slot_path(state["active"])
     data = bytearray(slot_path.read_bytes())
@@ -284,7 +304,12 @@ def scenario_14(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
 def scenario_15(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     baseline_version, attack_version = version_pair
     baseline = run(condition_name="S5", version=baseline_version, stack=stack)
-    assert baseline.rollback_outcome == "confirmed"
+    assert baseline.rollback_outcome == "confirmed", (
+        f"baseline run did not confirm as expected (stack={stack!r}, "
+        f"condition=S5, version={baseline_version}): "
+        f"rollback_outcome={baseline.rollback_outcome!r}, "
+        f"health_ok={baseline.health_ok!r}, rejected_at={baseline.rejected_at!r}"
+    )
     elapsed, result, _ = _timed_run(
         condition_name="S5",
         version=attack_version,

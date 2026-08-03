@@ -473,6 +473,143 @@ different toolchain or OS could introduce other non-determinism this
 test wouldn't catch. This is a single comparison (one rebuild each), not
 a repeated-trial statistical result.
 
+## Phase 7 data-gathering finding: real health checks require Docker execution on non-Linux hosts (ISSUE-007, 2026-08-03)
+
+Attempting the actual repeated-trial statistical evaluation against the
+real binaries (`evaluation/experiment.py cfs-real`), for the paper's
+real-stack results section, surfaced a genuine capability gap that no
+prior testing had caught: running the harness on the user's own Mac (the
+machine that built the real binaries) crashed immediately, tracing back
+to `OSError: [Errno 8] Exec format error` when `health_check.py` tried to
+launch `core-cpu1` directly via `subprocess.Popen`.
+
+The reason: `core-cpu1` and `Ref` are Linux ELF binaries, compiled inside
+an Ubuntu 22.04 Docker container. Docker was only ever this project's
+*build* environment — nothing had ever actually executed either binary
+outside a container before this run. S0-S2 never surfaced this because
+those stages only hash/sign/copy the binary, never run it. Every prior
+individual S3+ verification of ISSUE-003's fix had been run in Claude's
+own Linux-based sandbox (which shares the same mounted files as the
+user's Mac but is a different, Linux machine), where direct execution
+happens to work — so the gap was invisible until the harness actually
+ran on the real target machine.
+
+A second, more serious bug was found in the same investigation:
+`_health_check_persistent_process`'s `except OSError` clause caught
+*any* launch failure and recorded it as an unhealthy build — meaning
+every real-stack health check on macOS was silently mislabeling a pure
+host/environment incompatibility as evidence about the artifact's
+health. This is precisely the kind of fabricated signal the
+persistent-process design was built to avoid (see ISSUE-003) — an
+oversight in that fix's own error handling, not a new category of
+problem.
+
+**Fix:** `target_stack.py` now records each real stack's Docker image
+name and the binary's path inside that image
+(`Stack.docker_image`/`Stack.container_binary_path`).
+`health_check.py`'s new `_launch_process()` tries direct execution
+first, and only on `ENOEXEC` specifically falls back to `docker run --rm
+<image> <container_binary_path>` — re-running the identical, already-
+built binary inside the environment it was actually compiled for.
+Environments that can execute the binary directly (Linux) never invoke
+Docker at all. If there's no Docker fallback configured, or Docker
+itself isn't available, this now raises a distinct, loud `RuntimeError`
+instead of a misleading per-run "fail" record. See
+ISSUES-AND-FIXES-LOG.md ISSUE-007 for the full write-up, including how
+this was verified without needing actual Docker or a real cross-
+architecture binary (a synthetic file reliably reproduces `ENOEXEC` on
+any host).
+
+**End-to-end confirmation, same day:** the user re-ran
+`evaluation/experiment.py fprime-real` and it completed successfully —
+the Docker fallback genuinely works, and F´'s full repeated-trial
+evaluation ran end-to-end against the real `Ref` binary via `docker run`.
+
+## Phase 7 data-gathering finding: cFS's Software Bus fails inside Docker Desktop's default container (ISSUE-008, 2026-08-03)
+
+`cfs-real`'s equivalent run, however, failed at the identical point as
+before ISSUE-007's fix — the same `scenario_10` baseline call,
+`health_ok=False`. Since `docker run --rm` gives every invocation a
+fresh, ephemeral container filesystem, the original "accumulated CDS/
+EEPROM runtime-artifact state" hypothesis (from before ISSUE-007 was
+even found) could no longer be the explanation. Rather than guess again,
+the actual evidence-store record for the failing health check was
+inspected directly: 59 lines of genuine `core-cpu1` output, ending in
+
+```
+CFE_EVS_TaskInit: Call to CFE_SB_CreatePipe Failed:RC=0xCA000005
+CFE_ES_ExitApp: CORE Application CFE_EVS Had an Init Error.
+CFE_ES_ResetCFE: PROCESSOR RESET called from CFE_ES_ResetCFE (Commanded).
+CFE_PSP: Exiting cFE with PROCESSOR Reset status.
+```
+
+Not a timeout, not a slow boot — a genuine initialization failure.
+`OS_QueueCreate_Impl`'s own log output named the exact cause: "Your
+queue depth may be too large for the OS to handle. Please check the
+msg_max parameter located in /proc/sys/fs/mqueue/msg_max." cFE's
+Software Bus creates pipes backed by POSIX message queues, and Docker
+Desktop's default Linux VM ships a `msg_max` too low for the queue depth
+cFE requests — a container-kernel configuration limit, unrelated to
+ISSUE-007's exec-format problem, and something Claude's own Linux
+sandbox (different kernel defaults, and prior to ISSUE-007 never
+actually invoked `docker run` at all) could never have surfaced.
+
+**Fix confirmed before writing any code**, to avoid a second
+guess-and-fail cycle: a manual, isolated test —
+`docker run --rm --sysctl fs.mqueue.msg_max=1024
+verifiable-spacecraft-lifecycle-cfs
+/build/cfs-src/build-native_std/exe/cpu1/core-cpu1` — showed `core-cpu1`
+reaching `CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state` and
+running indefinitely (FLYWHEEL heartbeat messages) until manually
+interrupted. Only then was `Stack.docker_sysctls` added to
+`target_stack.py` (set for `cfs-real` only; `fprime-real` doesn't hit
+this limit) and wired into `health_check.py`'s Docker-fallback command
+as `--sysctl key=value` flags — namespaced per-container, no host Docker
+Desktop settings changed. See ISSUES-AND-FIXES-LOG.md ISSUE-008 for the
+full write-up.
+
+**End-to-end confirmation, same day:** the user re-ran
+`evaluation/experiment.py cfs-real` and it completed successfully — see
+"Phase 7 real-stack statistical evaluation results" below.
+
+## Phase 7 real-stack statistical evaluation results (2026-08-03)
+
+With ISSUE-007 (Docker fallback) and ISSUE-008 (`fs.mqueue.msg_max`
+sysctl) both fixed, the full repeated-trial evaluation harness
+(`evaluation/experiment.py`, the same one used for Phase 5/6's
+stub-artifact results) ran successfully against **both** real binaries:
+5 trials × 6 conditions (happy path) × 15 attack matrix test cases each.
+
+**Results are structurally identical to the stub-artifact results**
+(Phase 5 `cfs`, Phase 6 `fprime`): 100% happy-path success and
+reproducibility across all 6 conditions for both `cfs-real` and
+`fprime-real`; 100% detection across all 15 attack cases for both; 0
+false positives/negatives in every condition's confusion matrix for
+both. See `evaluation/results/phase6_report_cfs-real.md` and
+`evaluation/results/phase6_report_fprime-real.md` for the full tables.
+
+As expected, S3+ timings are meaningfully higher than the stub-artifact
+or S0-S2 real-stack numbers — real health checks now launch an actual
+container per call (mean happy-path time at S3-S5: ~2.4-2.6s for
+`cfs-real`, ~1.8-2.1s for `fprime-real`, versus sub-second for the stub
+stacks and for S0-S2 against these same real binaries). This is Docker
+container-launch overhead plus the real boot-success-marker wait, not a
+detection-latency problem — none of it affects any pass/fail or
+detection-rate result, only the timing metric, and is exactly the kind
+of real-artifact cost the stub-only results couldn't have shown.
+
+**What this licenses claiming, precisely:** the S0-S5 assurance ladder's
+mechanisms and evidence schema, unmodified except for the two
+stack-specific adapters (`build.py`, `health_check.py`), now show
+structurally identical detection/recovery/reproducibility results across
+four stacks: two stand-in artifacts (`cfs`, `fprime`) and two genuine
+NASA flight-software frameworks (`cfs-real`, `fprime-real`). This is
+still `PRELIMINARY_INTERNAL_ONLY` per STATUS.md "Claims status" — one
+evaluation run each, on one machine (the user's Mac for the real stacks),
+not independently replicated elsewhere, and the timing metrics remain a
+sandbox/container-timing proxy per PRD.md § 10, not real flight-hardware
+timing.
+
 ## 4. Metrics (see PRD.md § success criteria for how these roll up)
 
 - Tampered-artifact detection (rate, per condition, per test case)

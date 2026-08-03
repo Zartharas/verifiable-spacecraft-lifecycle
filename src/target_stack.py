@@ -82,6 +82,40 @@ full stdout). `Stack.health_check_mode` picks the right mode; `"cfs"`/
 `"fprime"` keep `expected_health_output` and are unaffected. See
 `health_check.py` for the persistent-process implementation and
 `docs/Technical-Design-Document.md` § 7g for the decision writeup.
+
+**Docker-execution fallback (ISSUE-007).** Both real binaries are Linux
+ELF executables, built inside an Ubuntu 22.04 Docker container — they
+are only guaranteed to be directly executable on a Linux host. Running
+the pipeline on a non-Linux host (confirmed: macOS) hits `OSError: [Errno
+8] Exec format error` the moment `health_check.py` tries to launch the
+binary directly, since the host kernel can't exec a foreign binary
+format outside Docker's virtualization layer. `docker_image` +
+`container_binary_path` record how to re-run the exact same binary
+*inside* the already-built Docker image instead (`docker run --rm
+<image> <container_binary_path> <launch_args>`) — `health_check.py`
+tries direct execution first and only falls back to this when it hits
+`ENOEXEC` specifically, so environments that genuinely can run the
+binary directly (Linux CI, this project's own Linux-based test sandbox)
+never invoke Docker at all, while environments that can't (macOS)
+transparently do. See ISSUES-AND-FIXES-LOG.md ISSUE-007 for the full
+writeup of how this was found and why silently treating `ENOEXEC` as "the
+build is unhealthy" (the original, wrong behavior) would have been a
+fabricated signal, not a measured one.
+
+**Docker mqueue sysctl (ISSUE-008).** Once the Docker fallback above was
+actually exercised end-to-end, `cfs-real`'s health check still failed —
+not from a timeout, but because `core-cpu1` genuinely failed to
+initialize inside the container: cFE's Software Bus creates pipes backed
+by POSIX message queues, and Docker Desktop's internal Linux VM ships a
+default `/proc/sys/fs/mqueue/msg_max` too low for the queue depth cFE
+requests, so `CFE_SB_CreatePipe` fails, `CFE_EVS` reports an init error,
+and cFE self-triggers a commanded `PROCESSOR RESET` and exits — all
+before ever reaching `OPERATIONAL`. `Stack.docker_sysctls` records
+per-stack `--sysctl` overrides to pass to `docker run` (namespaced to the
+container, no host changes needed); confirmed fixed via manual `docker
+run --sysctl fs.mqueue.msg_max=1024 ...` before wiring it into
+`_launch_process`. `fprime-real` doesn't need this — its IPC model
+doesn't hit the same limit. See ISSUES-AND-FIXES-LOG.md ISSUE-008.
 """
 
 from __future__ import annotations
@@ -114,6 +148,16 @@ class Stack:
     launch_args: tuple[str, ...] = ()
     boot_success_markers: Optional[tuple[str, ...]] = None
     boot_timeout_seconds: float = 5.0
+    # Docker-execution fallback for persistent-process stacks whose binary
+    # isn't directly executable on the current host (ISSUE-007) — see
+    # module docstring. Both must be set together, or neither.
+    docker_image: Optional[str] = None
+    container_binary_path: Optional[str] = None
+    # Per-stack `docker run --sysctl` overrides (ISSUE-008) — e.g. cFS's
+    # Software Bus needs a higher POSIX-message-queue limit than Docker
+    # Desktop's Linux VM ships by default. Only used when launching via
+    # the Docker fallback above; ignored for direct execution.
+    docker_sysctls: tuple[tuple[str, str], ...] = ()
 
     def __post_init__(self):
         is_stub = self.source_dir is not None
@@ -128,6 +172,11 @@ class Stack:
                 f"Stack '{self.name}' must not set both expected_health_output "
                 f"(exact-match mode) and boot_success_markers (persistent-process "
                 f"mode) — pick exactly one health-check strategy."
+            )
+        if (self.docker_image is None) != (self.container_binary_path is None):
+            raise ValueError(
+                f"Stack '{self.name}' must set docker_image and "
+                f"container_binary_path together, or neither."
             )
 
     @property
@@ -169,6 +218,18 @@ STACKS: dict[str, Stack] = {
         # machine advances anyway; confirmed empirically, see ISSUE-003).
         boot_success_markers=("CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state",),
         boot_timeout_seconds=5.0,
+        # Docker fallback (ISSUE-007) — container path per cfs-app/Dockerfile's
+        # own build layout (WORKDIR /build/cfs-src, native_std build output).
+        docker_image="verifiable-spacecraft-lifecycle-cfs",
+        container_binary_path="/build/cfs-src/build-native_std/exe/cpu1/core-cpu1",
+        # ISSUE-008 — cFE's Software Bus creates POSIX-message-queue-backed
+        # pipes; Docker Desktop's Linux VM ships a default msg_max too low
+        # for the queue depth cFE requests, causing CFE_SB_CreatePipe to
+        # fail and cFE to self-trigger a commanded PROCESSOR RESET before
+        # ever reaching OPERATIONAL. Confirmed fixed via manual
+        # `docker run --sysctl fs.mqueue.msg_max=1024 ...` before wiring
+        # this in.
+        docker_sysctls=(("fs.mqueue.msg_max", "1024"),),
         description="Real NASA cFS build (tag v7.0.1), Docker-built on a Docker-capable machine — see cfs-app/confirmed-build.json",
     ),
     "fprime-real": Stack(
@@ -185,6 +246,10 @@ STACKS: dict[str, Stack] = {
         launch_args=("-a", "127.0.0.1", "-p", "50999"),
         boot_success_markers=("Hit Ctrl-C to quit",),
         boot_timeout_seconds=5.0,
+        # Docker fallback (ISSUE-007) — container path per fprime-app/Dockerfile's
+        # own build layout (WORKDIR /build/fprime-src/Ref, its build-artifacts output).
+        docker_image="verifiable-spacecraft-lifecycle-fprime",
+        container_binary_path="/build/fprime-src/Ref/build-artifacts/Linux/Ref/bin/Ref",
         description="Real NASA JPL F Prime Ref deployment (tag v4.2.2), Docker-built on a Docker-capable machine — see fprime-app/confirmed-build.json",
     ),
 }

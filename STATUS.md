@@ -8,20 +8,37 @@ session, however small.
 
 ## Current phase
 
-**Phase 7 — Real framework builds: COMPLETE.**
+**Phase 7 — Real framework builds and real-stack statistical evaluation:
+COMPLETE.**
 (see `docs/Implementation-Plan.md`) Both `cfs-app/Dockerfile` and
 `fprime-app/Dockerfile` run successfully on the user's Docker-capable Mac
-(after fixing real bugs in both — see below). Real `core-cpu1` (cFS) and
-`Ref` (F´) binaries are built, confirmed working, and wired into the
-pipeline as `"cfs-real"`/`"fprime-real"` stacks. Full S0-S5 lifecycle now
-exercised against both, including a persistent-process health-check
-strategy (ISSUE-003, resolved). Independent reproducibility verification
-also complete: a second, from-scratch Docker rebuild found F´'s `Ref`
-byte-for-byte reproducible, and cFS's `core-cpu1` **not** bit-identical —
-root cause precisely isolated to an embedded build timestamp (22 bytes
-differ, of ~915KB) rather than left as an open question. See
-`docs/Threat-Model.md` "Phase 7 reproducibility verification" for the
-full methodology. Next up: Phase 8 (paper drafting and repo polish).
+(after fixing real bugs in both). Real `core-cpu1` (cFS) and `Ref` (F´)
+binaries are built, confirmed working, and wired into the pipeline as
+`"cfs-real"`/`"fprime-real"` stacks. Full S0-S5 lifecycle exercised
+against both, including a persistent-process health-check strategy
+(ISSUE-003). Independent reproducibility verification complete: F´'s
+`Ref` is byte-for-byte reproducible across two from-scratch builds; cFS's
+`core-cpu1` is not, with the cause precisely isolated (an embedded build
+timestamp, 22 bytes of ~915KB). See `docs/Threat-Model.md` "Phase 7
+reproducibility verification."
+
+**Real-stack statistical evaluation (the paper's real-framework results
+section) also complete.** Getting there surfaced two real bugs, both
+found and fixed the same day: **ISSUE-007** (real health checks crashed
+with `Exec format error` outside Docker on macOS, and the error handling
+was silently mislabeling that as an unhealthy build — fixed with a
+transparent Docker-run fallback) and **ISSUE-008** (`cfs-real` still
+failed after that fix — Docker Desktop's default `fs.mqueue.msg_max`
+too low for cFE's Software Bus — fixed via a per-stack `docker_sysctls`
+override, confirmed manually before being coded). With both fixed, the
+full repeated-trial harness (5 trials × 6 conditions × 15 attack cases)
+ran successfully against **both** real binaries: 100% happy-path
+success/reproducibility, 100% detection, 0 false positives/negatives for
+both `cfs-real` and `fprime-real` — structurally identical to the
+stub-artifact results. 47/47 unit tests passing. See `docs/Threat-Model.md`
+"Phase 7 real-stack statistical evaluation results" and
+ISSUES-AND-FIXES-LOG.md ISSUE-007/ISSUE-008. Next up: Phase 8 (paper
+drafting and repo polish).
 
 ## Last session summary
 
@@ -317,38 +334,33 @@ not based on intent or partial progress.
   `PRELIMINARY_INTERNAL_ONLY` rather than fully citable: this is one
   non-cFS artifact in one sandbox environment, not yet the real cFS build
   and not yet cross-validated on a second machine/stack.
-- Detection-accuracy claims against real cFS or real F´ (S0-S2
-  mechanisms — signature, SBOM, provenance, ground authorization):
-  `PRELIMINARY_INTERNAL_ONLY` — **upgraded from `NOT_PERMITTED`, Phase 7
-  (2026-08-03).** Both real binaries (`core-cpu1` v7.0.1, `Ref` v4.2.2)
-  are now built and smoke-tested through the S0-S2 lifecycle
-  successfully. Still `PRELIMINARY_INTERNAL_ONLY`, not fully citable:
-  this is a single smoke-test run each, not a repeated-trial evaluation
-  (no Phase-5/6-style statistical run has been done against the real
-  binaries yet).
-- Detection-accuracy claims against real cFS or real F´ for S3-S5
-  mechanisms (attestation, health check, rollback, machine-readable
-  authorization evidence): `PRELIMINARY_INTERNAL_ONLY` — **upgraded from
-  `NOT_PERMITTED`, Phase 7/ISSUE-003 (2026-08-03).** A persistent-process
-  health-check strategy was designed and implemented (launch, watch
-  stdout for a real, empirically-confirmed boot-success marker within a
-  bounded window, terminate) so S3+ conditions can now be exercised
-  against both real binaries; happy-path and test-case-#11 (forced
-  health-check failure → rollback) both confirmed against both real
-  binaries. Still `PRELIMINARY_INTERNAL_ONLY`, not fully citable: this is
-  a handful of individual test runs, not a repeated-trial statistical
-  evaluation (no Phase-5/6-style run has been done against the real
-  binaries yet, for any condition).
+- Detection-accuracy claims across **all S0-S5 conditions**, **against
+  real cFS and real F´**: `PRELIMINARY_INTERNAL_ONLY` — **upgraded from
+  "individual test runs only," Phase 7 real-stack statistical evaluation
+  (2026-08-03).** The full repeated-trial evaluation harness (same one
+  used for Phase 5/6's stub-artifact results — 5 trials × 6 conditions ×
+  15 attack cases) ran successfully against both `core-cpu1` and `Ref`
+  after fixing ISSUE-007 (Docker execution fallback) and ISSUE-008 (cFS's
+  `fs.mqueue.msg_max` limit under Docker Desktop). Results: 100%
+  happy-path success/reproducibility across all 6 conditions for both
+  real stacks, 100% detection across all 15 attack cases for both, 0
+  false positives/negatives in every condition's confusion matrix for
+  both — structurally identical to the stub-artifact results. See
+  `evaluation/results/phase6_report_cfs-real.md` /
+  `phase6_report_fprime-real.md` and `docs/Threat-Model.md` "Phase 7
+  real-stack statistical evaluation results." Still
+  `PRELIMINARY_INTERNAL_ONLY` rather than fully citable: this is one
+  evaluation run each, on one machine, not independently replicated
+  elsewhere.
 - Recovery-success claims **against the stub artifacts**:
   `PRELIMINARY_INTERNAL_ONLY` — test cases #10/#11/#12/#14 demonstrate
   rollback working correctly across 5 repeated trials each (100% detection)
   against **both** stand-in stacks (Phase 5 `cfs`, Phase 6 `fprime`), with
   "time to trusted restoration" now a measured metric against the resolved
-  S0 baseline (PRD.md § 10), not just pass/fail. Against either real
-  framework: `PRELIMINARY_INTERNAL_ONLY` — **upgraded from
-  `NOT_PERMITTED`, Phase 7/ISSUE-003 (2026-08-03)** now that a working
-  health-check exists to gate rollback on; not yet a repeated-trial
-  evaluation against the real binaries.
+  S0 baseline (PRD.md § 10), not just pass/fail. **Against real cFS/F´:**
+  `PRELIMINARY_INTERNAL_ONLY` — upgraded alongside the detection-accuracy
+  claim above; the same statistical run covers rollback (test cases
+  #10/#11/#12/#14) with identical 100%/0-false-positive results.
 - Reproducible-build claims **against the stub artifacts**:
   `PRELIMINARY_INTERNAL_ONLY` — 100% reproducible across all Phase 5/6
   trials (5 per condition, 6 conditions, both stacks) in this sandbox.
@@ -378,18 +390,21 @@ not based on intent or partial progress.
   `"cfs-real"`/`"fprime-real"` remains a trivial copy-integrity check,
   distinct from the manual verification described here.
 - Generalizability claims (beyond a single stack): `PRELIMINARY_INTERNAL_ONLY`
-  — **resolved from `NOT_PERMITTED`, Phase 6 (2026-08-03), stub-artifact
-  scope only.** The S0-S5 ladder's mechanisms and evidence schema were
-  re-run, unmodified except for two adapter modules, against a second,
-  architecturally distinct stand-in stack (F Prime-informed) with
-  structurally identical results. Still `PRELIMINARY_INTERNAL_ONLY`, not
-  fully citable: this demonstrates architectural/tooling generalizability
-  between two *stand-in artifacts*. Phase 7 (real builds) extends this
-  claim to real artifacts across S0-S5 (ISSUE-003's fix removed the prior
-  S3-S5 hard blocker), but do not state or imply "the full S0-S5 ladder
-  validated on real cFS and F´" yet — individual test runs, not a
-  repeated-trial statistical evaluation, exist against the real binaries
-  so far.
+  — **strengthened, Phase 7 real-stack statistical evaluation
+  (2026-08-03).** The S0-S5 ladder's mechanisms and evidence schema, with
+  zero changes beyond the two stack-specific adapters, now show
+  structurally identical repeated-trial results across four stacks: two
+  stand-in artifacts (`cfs`, `fprime`, Phase 6) and two genuine NASA
+  flight-software frameworks (`cfs-real`, `fprime-real`, Phase 7). Still
+  `PRELIMINARY_INTERNAL_ONLY`, not fully citable: one evaluation run per
+  stack, on one or two machines, not independently replicated elsewhere.
+  This is nonetheless the strongest generalizability evidence gathered so
+  far — "the full S0-S5 ladder's mechanisms and evidence schema
+  generalize, with matching detection/recovery/reproducibility behavior,
+  across two architecturally distinct stand-in artifacts and two real
+  NASA flight-software frameworks" is a defensible characterization; "the
+  ladder is validated for operational use on real cFS/F´" is not (see
+  the permanent restriction below).
 - CCSDS/protocol-conformance claims: `NOT_PERMITTED` — uplink simulator is
   CCSDS-*informed*, not a conformance-tested implementation (see PRD.md
   non-goals)
@@ -460,3 +475,6 @@ are available. Install Python packages with `pip3 install
 | 2026-08-03 | ISSUE-003 resolved: designed and implemented a persistent-process health-check strategy (`_health_check_persistent_process` in `health_check.py`, selected via new `Stack.health_check_mode` in `target_stack.py`) so S3+ conditions (attestation, health check, rollback) can now be exercised against both real binaries — previously hard-blocked. Launch via `Popen`, watch stdout through a background reader thread for an empirically-confirmed boot-success marker (`core-cpu1`'s `CFE_ES_Main entering OPERATIONAL state`; `Ref`'s `Hit Ctrl-C to quit`, confirmed via direct testing incl. catching a shell-pipe artifact that had made `Ref`'s exit status look ambiguous) within a bounded window, then terminate. Never fabricates a pass — only a genuinely-observed marker counts. Replaced the two `NotImplementedError`-only tests with 4 real assertions (S4 happy path + test case #11 against both real binaries); 41/41 total passing, no regressions. Real-binary S3-S5 claims upgraded from `NOT_PERMITTED` to `PRELIMINARY_INTERNAL_ONLY` in STATUS.md "Claims status." | src/target_stack.py, src/health/health_check.py, tests/test_phase7_real_builds.py, cfs-app/confirmed-build.json, fprime-app/confirmed-build.json, ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |
 | 2026-08-03 | Phase 7 reproducibility verification complete: rebuilt both real frameworks from scratch a second time (`docker build --no-cache`, ~1 hour after the first) into a separate gitignored `build-output-verify/`, then hash-compared against the first build. F´'s `Ref` (v4.2.2) came back byte-for-byte identical (0 bytes differing via `cmp -l`) — genuinely reproducible. cFS's `core-cpu1` (v7.0.1) did not — 22 of ~915KB bytes differ; root cause isolated precisely (not guessed): a literal embedded build-timestamp string (`202608031808` vs `202608031907`, the two builds' actual wall-clock times) at two byte offsets, plus a 20-byte block that is the ELF `.note.gnu.build-id` SHA-1 note changing as a downstream consequence of that timestamp. Every other byte of `core-cpu1` — the actual flight-software logic — is identical across both builds. Updated both `confirmed-build.json` manifests, STATUS.md "Claims status" (F´ reproducibility upgraded to `PRELIMINARY_INTERNAL_ONLY`; cFS's `NOT_PERMITTED` now backed by a specific verified reason instead of "not yet tested"), Implementation-Plan.md Phase 7 checklist (now fully MET), and Threat-Model.md with the full byte-offset-level methodology. This was a real, upstream-framework finding, not a bug in this project's own code — no ISSUES-AND-FIXES-LOG entry, per that log's scope. | cfs-app/confirmed-build.json, fprime-app/confirmed-build.json, .gitignore, docs/Threat-Model.md, docs/Implementation-Plan.md, STATUS.md |
 | 2026-08-03 | Backfilled ISSUES-AND-FIXES-LOG.md with the three real bugs found during Phases 4-6 that had only ever been documented narratively (in Threat-Model.md/STATUS.md), not as proper log entries: ISSUE-004 (test case #6 tagged at the injection point instead of the detection point, surfaced by the Phase 4 automated comparison table), ISSUE-005 (authorization-evidence overhead inflated ~150x by a cross-run-aggregating lookup, found in the first Phase 5 evaluation run), ISSUE-006 (version ledger was a single global file rather than scoped per stack, surfaced immediately on testing the Phase 6 `fprime` stack). All three share a common root-cause pattern worth noting: state or a lookup keyed by something that doesn't uniquely identify "this run/target" silently aggregates cross-run/cross-stack noise instead of failing loudly — the same category of hazard ISSUE-003's non-fabrication principle addresses from a different angle. Numbered 004-006 (logged after 001-003) despite predating them chronologically, since log-entry numbers reflect logging order, not occurrence order. No code changes — documentation only. | ISSUES-AND-FIXES-LOG.md, STATUS.md |
+| 2026-08-03 | ISSUE-007 found and fixed: attempting the real repeated-trial evaluation (`evaluation/experiment.py cfs-real`) on the user's actual Mac — for the first time, since every prior individual verification had run in Claude's own Linux sandbox — crashed with `OSError: [Errno 8] Exec format error`. Root cause: `core-cpu1`/`Ref` are Linux ELF binaries (Docker-built) that can't execute directly on macOS outside Docker's virtualization layer; S0-S2 never surfaced this since those stages never execute the binary. A second, more serious bug was found alongside it: `_health_check_persistent_process`'s `except OSError` caught this and silently recorded it as an unhealthy build, fabricating a signal about the artifact that wasn't true. Fixed: `target_stack.py` now records each real stack's `docker_image`/`container_binary_path`; new `_launch_process()` in `health_check.py` tries direct execution first and transparently falls back to `docker run --rm <image> <container_binary_path>` only on `ENOEXEC` specifically — environments that can execute directly (Linux) never invoke Docker. No Docker fallback configured, or Docker itself failing, now raises a loud `RuntimeError` instead of a misleading fail record. New `tests/test_issue007_docker_fallback.py` (4 tests, no real Docker or binaries needed — uses a synthetic file that reliably reproduces ENOEXEC) confirms all three branches plus the Stack validation. 45/45 total passing, no regressions. **Still pending:** the user re-running the evaluation harness to confirm the Docker fallback actually works end-to-end and to gather the real S3-S5 statistical data this was all in service of. | src/target_stack.py, src/health/health_check.py, tests/test_issue007_docker_fallback.py (new), evaluation/experiment.py (diagnostic assert messages), ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, STATUS.md |
+| 2026-08-03 | User re-ran the evaluation harness with ISSUE-007's fix: `fprime-real` completed successfully end-to-end via the Docker fallback (confirming that fix genuinely works), but `cfs-real` failed again at the identical point. Since `docker run --rm` gives every invocation a fresh container filesystem, the pre-ISSUE-007 "accumulated CDS/EEPROM state" theory couldn't apply anymore, so the actual evidence-store record and a live re-run with a longer window were inspected directly instead of guessed at — found ISSUE-008: `core-cpu1` was genuinely failing to initialize inside the container (`CFE_SB_CreatePipe Failed` → commanded `PROCESSOR RESET` → exit), caused by Docker Desktop's default Linux VM shipping a `fs.mqueue.msg_max` too low for cFE's Software Bus queue depth. Confirmed the fix manually (`docker run --sysctl fs.mqueue.msg_max=1024 ...` reached `OPERATIONAL` and ran indefinitely) before writing any code. Added `Stack.docker_sysctls` (set for `cfs-real` only) and wired it into `health_check.py`'s Docker-fallback command as `--sysctl key=value` flags. 2 new tests (monkeypatched `subprocess.Popen`, no real Docker needed) confirm the flags are constructed and positioned correctly, and that a stack with no `docker_sysctls` never gets a stray flag. 47/47 total passing. **Still pending:** the user re-running `evaluation/experiment.py cfs-real` to confirm this fix works end-to-end and to actually gather the real S3-S5 statistical data. | src/target_stack.py, src/health/health_check.py, tests/test_issue007_docker_fallback.py, ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, cfs-app/confirmed-build.json, STATUS.md |
+| 2026-08-03 | Phase 7 real-stack statistical evaluation complete: user re-ran `evaluation/experiment.py cfs-real` with ISSUE-008's fix in place and it completed successfully — full repeated-trial harness (5 trials × 6 conditions × 15 attack cases) against both real binaries now done. Results for both `cfs-real` and `fprime-real`: 100% happy-path success/reproducibility, 100% detection across all 15 attack cases, 0 false positives/negatives — structurally identical to the Phase 5/6 stub-artifact results. Upgraded STATUS.md "Claims status": detection/recovery claims against real cFS/F´ across all S0-S5 conditions now `PRELIMINARY_INTERNAL_ONLY` (from "individual test runs only"), generalizability claim strengthened to cover four stacks (two stand-ins, two real frameworks) with matching results. Updated Implementation-Plan.md Phase 7 checklist and Threat-Model.md with the final results table summary. This closes out Phase 7 entirely, including the real-stack data gathering that motivated ISSUE-007/ISSUE-008. Next: Phase 8 (paper drafting and repo polish). | evaluation/results/phase6_raw_results_cfs-real.json (new), evaluation/results/phase6_summary_cfs-real.json (new), evaluation/results/phase6_report_cfs-real.md (new), evaluation/results/phase6_raw_results_fprime-real.json (new), evaluation/results/phase6_summary_fprime-real.json (new), evaluation/results/phase6_report_fprime-real.md (new), ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, docs/Implementation-Plan.md, STATUS.md |

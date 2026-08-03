@@ -283,6 +283,163 @@ debugging session.
   (100% detection/success/reproducibility, 0 false positives/negatives).
   See `docs/Threat-Model.md` "Phase 6 results" for the original write-up.
 
+## [ISSUE-007] Real-binary health checks crashed with "Exec format error" outside Docker, and the error handling silently mislabeled it as an unhealthy build
+
+- **Date found:** 2026-08-03
+- **Found during:** Phase 7 data-gathering — running the full repeated-trial
+  evaluation harness (`evaluation/experiment.py cfs-real`) on the user's
+  actual Mac (the machine that built the real binaries), for the first
+  time. Every prior individual verification of ISSUE-003's fix
+  (`tests/test_phase7_real_builds.py`, run via Claude's own Linux-based
+  sandbox) had passed — but that sandbox happens to be Linux, where
+  direct execution of the real binaries works, so it never exercised
+  this path.
+- **Category:** bug (two distinct ones, found together)
+- **Severity:** high for the error-handling bug (it silently mislabeled
+  an environment/config problem as evidence about the artifact's health —
+  exactly the kind of fabricated signal this project's health-check
+  design principle exists to prevent), medium for the missing
+  capability (real S3-S5 evaluation was simply impossible on macOS until
+  fixed, a real blocker for gathering paper data, not a security gap)
+- **Description:** running `evaluation/experiment.py cfs-real` on macOS
+  crashed with `AssertionError: baseline run did not confirm as
+  expected: rollback_outcome='recovery_failed', health_ok=False,
+  rejected_at='post_install_recovery_failed'`. Tracing it back: launching
+  `core-cpu1` (a Linux ELF binary, built inside an Ubuntu 22.04 Docker
+  container) directly via `subprocess.Popen` on macOS raises `OSError:
+  [Errno 8] Exec format error` — the host kernel refusing to execute a
+  foreign binary format, since Docker's virtualization layer (not the
+  bare host) is what actually runs Linux binaries on macOS.
+  `_health_check_persistent_process`'s original code caught *any*
+  `OSError` from `Popen` and recorded it as a "fail" health-check
+  evidence record — meaning every single real-stack health check on
+  macOS silently reported "unhealthy build" instead of surfacing that
+  the real problem was "this host cannot execute this binary format at
+  all," a fact true of every build of this stack on this host, not a
+  property of this one artifact.
+- **Root cause:** two compounding gaps. (1) `target_stack.py`/
+  `health_check.py` assumed the Docker-built binary would be executed on
+  the same OS it was compiled for, since Docker was only ever used as the
+  *build* environment in this project's design — nothing was ever
+  actually run outside Docker before this. (2) The `except OSError`
+  clause added for ISSUE-003 conflated two very different failure
+  classes: a genuinely broken/missing artifact (legitimate health-check
+  evidence) vs. a pure host/environment incompatibility (not evidence
+  about the artifact at all). Neither gap was caught earlier because
+  every previous individual verification happened to run in a Linux
+  environment (Claude's own sandbox) where direct execution silently
+  works — S0-S2 stages never execute the binary at all (they only hash/
+  sign/copy it), so this was the first time any pipeline stage actually
+  tried to run the real binary on the user's own Mac.
+- **Fix:** added `Stack.docker_image` / `Stack.container_binary_path` to
+  `target_stack.py` (both set for `"cfs-real"`/`"fprime-real"`, pointing
+  at the already-built Docker images and each binary's path inside its
+  container). New `_launch_process()` helper in `health_check.py`
+  attempts direct execution first; on `OSError` with `errno == ENOEXEC`
+  specifically (never any other `OSError`) it transparently retries via
+  `docker run --rm <image> <container_binary_path> <launch_args>`
+  instead. If there's no Docker fallback configured, or Docker itself
+  fails to launch, it raises `RuntimeError` — deliberately NOT caught by
+  the same `except OSError` the caller uses for genuine artifact
+  failures, so an environment/config problem can never be silently
+  recorded as a misleading per-run health-check "fail." Environments that
+  can execute the binary directly (Linux) never invoke Docker at all —
+  no added latency, no new dependency there.
+- **Disclosure status:** n/a (this project's own execution/error-handling
+  logic; not a cFS/F´ upstream issue — Docker being required to run a
+  Linux binary on macOS is expected OS behavior, not a bug in either
+  framework)
+- **Verified fixed:** yes — new `tests/test_issue007_docker_fallback.py`
+  (4 tests, run unconditionally, no real binaries or actual Docker
+  required) exercises `_launch_process` directly against a synthetic
+  "garbage" file that reliably triggers a real `ENOEXEC` on any host,
+  confirming: (1) `ENOEXEC` with no Docker fallback configured raises
+  `RuntimeError`, not a silent fail; (2) `ENOEXEC` with a Docker fallback
+  configured but Docker itself unavailable (true in this authoring
+  sandbox) also raises `RuntimeError`; (3) a genuinely missing binary
+  still raises a plain `OSError`, preserving the existing, correct
+  "artifact is unhealthy" behavior; (4) `Stack.__post_init__` rejects a
+  half-configured Docker fallback. Full suite: 45/45 passing (41 + 4 new,
+  no regressions). **End-to-end confirmation, same day:** the user
+  re-ran `evaluation/experiment.py fprime-real` and the Docker fallback
+  worked correctly end-to-end — the full repeated-trial evaluation
+  completed successfully against the real F´ binary via `docker run`,
+  with no direct-execution errors. (`cfs-real`'s run surfaced a second,
+  distinct bug in the same investigation — see ISSUE-008.)
+
+## [ISSUE-008] cFS's Software Bus fails to initialize inside Docker Desktop's default container due to a POSIX message-queue limit
+
+- **Date found:** 2026-08-03
+- **Found during:** Phase 7 data-gathering — immediately after ISSUE-007's
+  Docker fallback was confirmed working for `fprime-real`, `cfs-real`'s
+  evaluation run still failed at the identical point as before
+  (`evaluation/experiment.py cfs-real`, scenario_10's baseline call:
+  `health_ok=False, rollback_outcome='recovery_failed'`). Since `docker
+  run --rm` gives every invocation a fresh, ephemeral container
+  filesystem, the earlier "accumulated CDS/EEPROM state" theory (the
+  original hypothesis before ISSUE-007 was found) could no longer apply —
+  this had to be something else, so it was investigated directly rather
+  than re-guessed.
+- **Category:** bug (environment/configuration, not a code defect)
+- **Severity:** medium (blocked real S3-S5 statistical evaluation for
+  `cfs-real` specifically; `fprime-real` was unaffected)
+- **Description:** inspecting the actual evidence-store record for the
+  failing health check showed 59 lines of genuine `core-cpu1` output,
+  ending in: `CFE_EVS_TaskInit: Call to CFE_SB_CreatePipe Failed`,
+  `CFE_ES_ExitApp: CORE Application CFE_EVS Had an Init Error`,
+  `CFE_ES_ResetCFE: PROCESSOR RESET called from CFE_ES_ResetCFE
+  (Commanded)`, `CFE_PSP: Exiting cFE with PROCESSOR Reset status`. This
+  is not a timeout or a slow boot — `core-cpu1` was genuinely failing to
+  initialize and self-triggering a commanded reset, exiting entirely,
+  before ever reaching `OPERATIONAL`.
+- **Root cause:** cFE's Software Bus creates pipes backed by POSIX
+  message queues. `OS_QueueCreate_Impl`'s own log output pointed directly
+  at the cause: "Your queue depth may be too large for the OS to handle.
+  Please check the msg_max parameter located in
+  /proc/sys/fs/mqueue/msg_max." Docker Desktop's internal Linux VM ships
+  a default `msg_max` too low for the queue depth cFE requests — a
+  container-kernel configuration limit, unrelated to ISSUE-007's
+  exec-format problem, unrelated to the binary or this project's code,
+  and not something Claude's own Linux-based test sandbox (different
+  kernel defaults, and never actually invoking `docker run` at all) could
+  ever have surfaced.
+- **Fix:** confirmed via a manual, isolated test first — `docker run --rm
+  --sysctl fs.mqueue.msg_max=1024 verifiable-spacecraft-lifecycle-cfs
+  /build/cfs-src/build-native_std/exe/cpu1/core-cpu1` — before writing
+  any code, to avoid another guess-and-fail cycle. Confirmed: `core-cpu1`
+  reached `CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state` and ran
+  indefinitely (FLYWHEEL heartbeat messages) until manually interrupted.
+  Wired in as a new `Stack.docker_sysctls` field in `target_stack.py`
+  (set to `(("fs.mqueue.msg_max", "1024"),)` for `cfs-real` only —
+  `fprime-real` doesn't hit this limit and is unaffected), passed through
+  as `--sysctl key=value` flags in `health_check.py`'s `_launch_process`
+  Docker-fallback command construction. Docker's per-container `--sysctl`
+  is namespaced — no changes to the host's Docker Desktop VM or its
+  global settings were needed.
+- **Disclosure status:** n/a (a Docker Desktop default vs. cFE's resource
+  needs — not a cFS code defect, and not this project's own code defect
+  either; purely an environment-configuration mismatch between two
+  independently-reasonable defaults)
+- **Verified fixed:** yes — 2 new tests in
+  `tests/test_issue007_docker_fallback.py`
+  (`test_docker_sysctls_are_passed_to_docker_run`,
+  `test_no_sysctls_means_no_sysctl_flags`) confirm the `--sysctl` flags
+  are built correctly and positioned before the image name, and that a
+  stack with no `docker_sysctls` configured never gets a stray flag,
+  using a monkeypatched `subprocess.Popen` (no real Docker needed to
+  verify the command construction itself). Full suite: 47/47 passing.
+  **End-to-end confirmation, same day:** the user re-ran
+  `evaluation/experiment.py cfs-real` and it completed successfully —
+  the full repeated-trial evaluation (5 trials × 6 conditions × 15 attack
+  cases) ran against the real `core-cpu1` binary via the Docker fallback
+  with the `fs.mqueue.msg_max` sysctl applied. Results: 100%
+  happy-path success/reproducibility across all 6 conditions, 100%
+  detection across all 15 attack cases, 0 false positives/negatives —
+  structurally identical to the stub-artifact and `fprime-real` results.
+  See `evaluation/results/phase6_report_cfs-real.md` and
+  `docs/Threat-Model.md` "Phase 7 real-stack statistical evaluation
+  results."
+
 ---
 
 ## Notes on responsible disclosure

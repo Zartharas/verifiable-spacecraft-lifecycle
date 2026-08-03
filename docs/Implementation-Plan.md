@@ -360,16 +360,40 @@ cat evaluation/results/phase6_report_fprime.md
       verification" for the full byte-offset methodology and
       `cfs-app/confirmed-build.json` / `fprime-app/confirmed-build.json`
       for the recorded result.
+- [x] Ran the full repeated-trial statistical evaluation
+      (`evaluation/experiment.py`/`report.py`, the same harness used for
+      Phase 5/6's stub-artifact results) against both real binaries.
+      Getting there surfaced two more real bugs, fixed the same day:
+      **ISSUE-007** (real health checks crashed with `Exec format error`
+      outside Docker on macOS — both binaries are Linux ELF executables;
+      the original error handling also silently mislabeled this as an
+      unhealthy build rather than an environment problem — fixed with a
+      transparent `docker run` fallback, triggered only on `ENOEXEC`) and
+      **ISSUE-008** (`cfs-real` still failed after that fix — Docker
+      Desktop's default `fs.mqueue.msg_max` too low for cFE's Software
+      Bus, causing a genuine init failure and commanded reset — fixed
+      via a per-stack `docker_sysctls` override, confirmed manually with
+      a standalone `docker run --sysctl ...` test before being coded).
+      **Results:** 100% happy-path success/reproducibility across all 6
+      conditions, 100% detection across all 15 attack cases, 0 false
+      positives/negatives for both `cfs-real` and `fprime-real` —
+      structurally identical to the stub-artifact results. See
+      `evaluation/results/phase6_report_cfs-real.md` /
+      `phase6_report_fprime-real.md`, ISSUES-AND-FIXES-LOG.md
+      ISSUE-007/ISSUE-008, and Threat-Model.md "Phase 7 real-stack
+      statistical evaluation results."
 
 **Exit criteria: MET.** The real artifacts exist, are integrated into the
 stack registry, flow cleanly through S0-S5 including attestation, the
-persistent-process health check, and rollback, and have both been put
+persistent-process health check, and rollback, have both been put
 through an independent reproducibility test with a precise, honest
 result for each (one confirmed reproducible, one confirmed not, with the
-exact cause identified). See Threat-Model.md "Phase 7 findings" and
-"Phase 7 reproducibility verification" for the full writeup and
-STATUS.md "Claims status" for exactly what is and isn't citable from
-this work.
+exact cause identified), and have both completed the same repeated-trial
+statistical evaluation used for the stub artifacts, with matching
+results. See Threat-Model.md "Phase 7 findings," "Phase 7 reproducibility
+verification," and "Phase 7 real-stack statistical evaluation results"
+for the full writeup, and STATUS.md "Claims status" for exactly what is
+and isn't citable from this work.
 
 **Run it yourself** (requires having run the Docker builds first — see
 `cfs-app/README.md` / `fprime-app/README.md`):

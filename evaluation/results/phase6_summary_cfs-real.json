@@ -1,0 +1,293 @@
+{
+  "note": "See docs/PRD.md \u00a7 10 for metric definitions and baseline caveats before interpreting.",
+  "happy_path": {
+    "S0": {
+      "success_rate": 1.0,
+      "reproducible_rate": 1.0,
+      "mean_elapsed_seconds": 0.23988483282737433,
+      "stdev_elapsed_seconds": 0.017556357840285274,
+      "traceability_completeness": 1.0,
+      "record_count_mean": 7,
+      "storage_overhead_bytes": {
+        "sbom_bytes": 0,
+        "provenance_bytes": 0,
+        "attestation_bytes": 0,
+        "authorization_evidence_bytes": 0
+      },
+      "total_overhead_bytes": 0,
+      "overhead_vs_s0_bytes": 0,
+      "mean_attestation_age_seconds": null
+    },
+    "S1": {
+      "success_rate": 1.0,
+      "reproducible_rate": 1.0,
+      "mean_elapsed_seconds": 0.24782574917189776,
+      "stdev_elapsed_seconds": 0.0031077151281698676,
+      "traceability_completeness": 1.0,
+      "record_count_mean": 9,
+      "storage_overhead_bytes": {
+        "sbom_bytes": 595,
+        "provenance_bytes": 0,
+        "attestation_bytes": 0,
+        "authorization_evidence_bytes": 0
+      },
+      "total_overhead_bytes": 595,
+      "overhead_vs_s0_bytes": 595,
+      "mean_attestation_age_seconds": null
+    },
+    "S2": {
+      "success_rate": 1.0,
+      "reproducible_rate": 1.0,
+      "mean_elapsed_seconds": 0.279121703770943,
+      "stdev_elapsed_seconds": 0.02597963920600797,
+      "traceability_completeness": 1.0,
+      "record_count_mean": 12,
+      "storage_overhead_bytes": {
+        "sbom_bytes": 595,
+        "provenance_bytes": 642,
+        "attestation_bytes": 0,
+        "authorization_evidence_bytes": 0
+      },
+      "total_overhead_bytes": 1237,
+      "overhead_vs_s0_bytes": 1237,
+      "mean_attestation_age_seconds": null
+    },
+    "S3": {
+      "success_rate": 1.0,
+      "reproducible_rate": 1.0,
+      "mean_elapsed_seconds": 2.3783570329891517,
+      "stdev_elapsed_seconds": 0.014038370638922534,
+      "traceability_completeness": 1.0,
+      "record_count_mean": 15,
+      "storage_overhead_bytes": {
+        "sbom_bytes": 595,
+        "provenance_bytes": 642,
+        "attestation_bytes": 357,
+        "authorization_evidence_bytes": 0
+      },
+      "total_overhead_bytes": 1594,
+      "overhead_vs_s0_bytes": 1594,
+      "mean_attestation_age_seconds": 0.005057811737060547
+    },
+    "S4": {
+      "success_rate": 1.0,
+      "reproducible_rate": 1.0,
+      "mean_elapsed_seconds": 2.3781525168102235,
+      "stdev_elapsed_seconds": 0.024158287121271237,
+      "traceability_completeness": 1.0,
+      "record_count_mean": 17,
+      "storage_overhead_bytes": {
+        "sbom_bytes": 595,
+        "provenance_bytes": 642,
+        "attestation_bytes": 360,
+        "authorization_evidence_bytes": 0
+      },
+      "total_overhead_bytes": 1597,
+      "overhead_vs_s0_bytes": 1597,
+      "mean_attestation_age_seconds": 0.004980659484863282
+    },
+    "S5": {
+      "success_rate": 1.0,
+      "reproducible_rate": 1.0,
+      "mean_elapsed_seconds": 2.6059354099910705,
+      "stdev_elapsed_seconds": 0.045821227082141515,
+      "traceability_completeness": 1.0,
+      "record_count_mean": 21,
+      "storage_overhead_bytes": {
+        "sbom_bytes": 595,
+        "provenance_bytes": 642,
+        "attestation_bytes": 360,
+        "authorization_evidence_bytes": 4124
+      },
+      "total_overhead_bytes": 5721,
+      "overhead_vs_s0_bytes": 5721,
+      "mean_attestation_age_seconds": 0.004343557357788086
+    }
+  },
+  "attack_cases": {
+    "1": {
+      "condition": "S2",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.2362277487758547,
+      "stdev_elapsed_seconds": 0.019669170316830808
+    },
+    "2": {
+      "condition": "S2",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.05580006518866867,
+      "stdev_elapsed_seconds": 0.0019585774510333465
+    },
+    "3": {
+      "condition": "S1",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.20382846742868424,
+      "stdev_elapsed_seconds": 0.002028960607311507
+    },
+    "4": {
+      "condition": "S1",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.20887309440877289,
+      "stdev_elapsed_seconds": 0.018039941528376804
+    },
+    "5": {
+      "condition": "S2",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.21704194177873432,
+      "stdev_elapsed_seconds": 0.009074946163345051
+    },
+    "6": {
+      "condition": "S0",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.2108642508275807,
+      "stdev_elapsed_seconds": 0.007274132097773938
+    },
+    "7": {
+      "condition": "S0",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.2047967218561098,
+      "stdev_elapsed_seconds": 0.017540896065448196
+    },
+    "8": {
+      "condition": "S5",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.21504945701453834,
+      "stdev_elapsed_seconds": 0.007486650177456124
+    },
+    "9": {
+      "condition": "S2",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.22209453519899397,
+      "stdev_elapsed_seconds": 0.01247043265604769
+    },
+    "10": {
+      "condition": "S4",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_trusted_restoration",
+      "mean_elapsed_seconds": 0.2632463226094842,
+      "stdev_elapsed_seconds": 0.007442861689291746
+    },
+    "11": {
+      "condition": "S4",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_trusted_restoration",
+      "mean_elapsed_seconds": 0.291634186799638,
+      "stdev_elapsed_seconds": 0.0163667630273247
+    },
+    "12": {
+      "condition": "S4",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_trusted_restoration",
+      "mean_elapsed_seconds": 2.36818000942003,
+      "stdev_elapsed_seconds": 0.028695655232142698
+    },
+    "13": {
+      "condition": "S5",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.0001861831871792674,
+      "stdev_elapsed_seconds": 2.8480266902638698e-05
+    },
+    "14": {
+      "condition": "S4",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_trusted_restoration",
+      "mean_elapsed_seconds": 0.2926506322110072,
+      "stdev_elapsed_seconds": 0.032622346254333655
+    },
+    "15": {
+      "condition": "S5",
+      "detection_rate": 1.0,
+      "n_trials": 5,
+      "metric_label": "time_to_identify",
+      "mean_elapsed_seconds": 0.5051256007980556,
+      "stdev_elapsed_seconds": 0.05051153037992293
+    }
+  },
+  "confusion_matrix": {
+    "S0": {
+      "TP": 5,
+      "FN": 0,
+      "TN": 10,
+      "FP": 0,
+      "attack_cases_covered": [
+        "6",
+        "7"
+      ]
+    },
+    "S1": {
+      "TP": 5,
+      "FN": 0,
+      "TN": 10,
+      "FP": 0,
+      "attack_cases_covered": [
+        "3",
+        "4"
+      ]
+    },
+    "S2": {
+      "TP": 5,
+      "FN": 0,
+      "TN": 20,
+      "FP": 0,
+      "attack_cases_covered": [
+        "1",
+        "2",
+        "5",
+        "9"
+      ]
+    },
+    "S3": {
+      "TP": 5,
+      "FN": 0,
+      "TN": 0,
+      "FP": 0,
+      "attack_cases_covered": []
+    },
+    "S4": {
+      "TP": 5,
+      "FN": 0,
+      "TN": 20,
+      "FP": 0,
+      "attack_cases_covered": [
+        "10",
+        "11",
+        "12",
+        "14"
+      ]
+    },
+    "S5": {
+      "TP": 5,
+      "FN": 0,
+      "TN": 15,
+      "FP": 0,
+      "attack_cases_covered": [
+        "8",
+        "13",
+        "15"
+      ]
+    }
+  }
+}

@@ -46,10 +46,32 @@ transcript. `Stack.health_check_mode` picks the right strategy per
 stack; nothing about test case #11 (`force_fail`) changes — that check
 runs before either strategy and short-circuits identically for all
 stacks.
+
+Phase 7 (ISSUE-007) scope: both real binaries are Linux ELF executables
+(built inside an Ubuntu 22.04 Docker container). Running the pipeline on
+a non-Linux host hits `OSError: [Errno 8] Exec format error` the moment
+this module tries to launch the binary directly — the host kernel can't
+exec a foreign binary format outside Docker's virtualization layer.
+Confirmed the hard way: gathering real-stack evaluation data on a Mac,
+after every prior individual verification of this module had (without
+realizing it) been run in a Linux environment where direct execution
+happens to work. The original code caught *any* `OSError` from `Popen`
+and recorded it as an unhealthy build — which silently mislabeled a pure
+host/environment incompatibility as if it were evidence about the
+artifact itself, exactly the kind of fabricated signal this module's
+whole design is supposed to avoid. `_launch_process` below fixes this:
+it attempts direct execution first, and only on `ENOEXEC` specifically
+(never any other `OSError`) falls back to re-running the identical
+binary *inside* its already-built Docker image
+(`Stack.docker_image`/`Stack.container_binary_path`) via `docker run`.
+If there's no Docker fallback configured, or Docker itself isn't
+available, this raises a distinct, loud error rather than recording a
+misleading per-run "fail" — see ISSUES-AND-FIXES-LOG.md ISSUE-007.
 """
 
 from __future__ import annotations
 
+import errno
 import subprocess
 import sys
 import threading
@@ -140,6 +162,75 @@ def run_health_check(
     return healthy, None if healthy else "unexpected output or nonzero exit"
 
 
+def _launch_process(installed_binary_path: Path, stack_def: "target_stack.Stack") -> subprocess.Popen:
+    """
+    Launch a persistent-process stack's binary, transparently falling
+    back to Docker execution if the host can't run this binary format
+    directly (ISSUE-007 — see health_check.py module docstring).
+
+    Three distinct outcomes, deliberately not conflated:
+    1. Direct execution works (e.g., a Linux host) — used as-is, no
+       Docker involved, no extra startup latency.
+    2. Direct execution fails with ENOEXEC (a foreign binary format for
+       this host, e.g. macOS trying to run a Linux ELF binary) and a
+       Docker fallback is configured — transparently retried via
+       `docker run --rm [--sysctl k=v ...] <image> <container_binary_path>
+       <launch_args>`, which runs the identical binary inside the
+       environment it was actually built for. `Stack.docker_sysctls`
+       covers container-kernel limits that differ from what the binary
+       needs (ISSUE-008 — cFS's Software Bus needs a higher POSIX
+       message-queue limit than Docker Desktop's Linux VM ships by
+       default; passed as a namespaced `--sysctl`, no host changes
+       needed).
+    3. Anything else (the binary is genuinely missing, not executable,
+       ENOEXEC with no Docker fallback configured, or Docker itself is
+       unavailable/fails) — raised, not silently recorded as "unhealthy."
+       An artifact-genuinely-broken failure (case: missing/corrupt file)
+       is still a legitimate health-check "fail" and is handled by the
+       caller's `except OSError`; a pure environment/configuration
+       problem (case: ENOEXEC with nothing to fall back to, or Docker
+       missing) is raised as `RuntimeError` instead, specifically so it
+       is NOT caught by that same `except OSError` — it isn't evidence
+       about the artifact at all, and recording it as a per-run "fail"
+       would fabricate a misleading signal.
+    """
+    direct_cmd = [str(installed_binary_path), *stack_def.launch_args]
+    try:
+        return subprocess.Popen(
+            direct_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
+        )
+    except OSError as e:
+        if e.errno != errno.ENOEXEC:
+            raise  # genuine artifact problem (missing file, not executable, etc.) — let caller record it
+        if not stack_def.docker_image:
+            raise RuntimeError(
+                f"Cannot execute '{installed_binary_path}' on this host: {e}. "
+                f"This is a Linux binary with no Docker fallback configured for "
+                f"stack '{stack_def.name}' in target_stack.py. See "
+                f"ISSUES-AND-FIXES-LOG.md ISSUE-007."
+            ) from e
+
+        sysctl_flags = []
+        for key, value in stack_def.docker_sysctls:
+            sysctl_flags += ["--sysctl", f"{key}={value}"]
+        docker_cmd = [
+            "docker", "run", "--rm", *sysctl_flags, stack_def.docker_image,
+            stack_def.container_binary_path, *stack_def.launch_args,
+        ]
+        try:
+            return subprocess.Popen(
+                docker_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
+            )
+        except OSError as docker_e:
+            raise RuntimeError(
+                f"Cannot execute '{installed_binary_path}' directly on this host "
+                f"({e}), and the Docker fallback also failed to launch "
+                f"({docker_e}). Is Docker installed, running, and is the image "
+                f"'{stack_def.docker_image}' present (docker images)? See "
+                f"ISSUES-AND-FIXES-LOG.md ISSUE-007."
+            ) from docker_e
+
+
 def _health_check_persistent_process(
     installed_binary_path: Path,
     condition_name: str,
@@ -167,12 +258,12 @@ def _health_check_persistent_process(
     nothing, or exits early, is correctly reported unhealthy. See
     ISSUES-AND-FIXES-LOG.md ISSUE-003 for why this replaced an earlier,
     rejected approach of treating a subprocess timeout as an implicit pass.
+
+    Execution itself may need a Docker fallback (ISSUE-007) — see
+    `_launch_process`.
     """
-    cmd = [str(installed_binary_path), *stack_def.launch_args]
     try:
-        proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
-        )
+        proc = _launch_process(installed_binary_path, stack_def)
     except OSError as e:
         store.record(
             pipeline_stage="health_validation",
