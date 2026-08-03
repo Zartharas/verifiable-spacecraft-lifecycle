@@ -69,6 +69,6 @@ phase), no code has been written yet.
 
 ## License
 
-Not yet decided — recommend Apache 2.0 or MIT to match cFS's own license and
-to keep the prototype maximally reusable/citable. To be finalized before
-first public push.
+Apache License 2.0 (see `LICENSE`) — matches cFS's own license and includes
+an explicit patent grant, appropriate for research code composing multiple
+licensed components.

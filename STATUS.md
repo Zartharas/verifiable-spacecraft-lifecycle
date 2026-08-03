@@ -8,18 +8,25 @@ session, however small.
 
 ## Current phase
 
-**Phase 0 — Project setup / documentation** (see `docs/Implementation-Plan.md`)
+**Phase 1 — Minimal S0 pipeline: COMPLETE.** (see `docs/Implementation-Plan.md`)
+Next up: Phase 2 (SBOM + provenance, S1/S2).
 
 ## Last session summary
 
-**Date:** 2026-08-02
+**Date:** 2026-08-03
 
-Set up full documentation scaffold: README, PRD, Threat-Model,
-Pipeline-Flow-Document, Technical-Design-Document, Implementation-Plan,
-Research-Paper-Outline, Legal-Data-Sourcing-Notes, this STATUS file,
-ISSUES-AND-FIXES-LOG, and SECURITY.md. No code written yet. No GitHub repo
-created yet (pending user authorization of the GitHub connector or manual
-push).
+Built and verified the full Phase 1 S0 pipeline end-to-end: reproducible
+build, Ed25519 signing, ground authorization, simulated uplink (with
+tamper hook), onboard verification, installation, evidence store, metrics
+collector. All against a stand-in stub artifact — the authoring sandbox
+had no Docker/cmake/root, so the real cFS build (pinned and documented in
+`cfs-app/Dockerfile`) could not be run here; needs to be run on a
+Docker-capable machine (user has Docker locally) before any Phase 1+
+result is cited as being about real spacecraft software. Added Apache 2.0
+LICENSE per user decision. 4/4 pytest tests passing, including the Phase 1
+exit criterion (test case #6) and a bonus finding on test case #7 (see
+Threat-Model.md "Phase 1 results" — revoked key caught one stage earlier
+than hypothesized).
 
 ## What's done
 
@@ -33,17 +40,26 @@ push).
       policy
 - [x] Project folder structure created under
       `Satellite-Cybersecurity-Research/verifiable-spacecraft-lifecycle/`
+- [x] Apache 2.0 LICENSE added
+- [x] GitHub repo live and pushed
+- [x] **Phase 1 (S0 pipeline) complete** — see Implementation-Plan.md for
+      full breakdown; all code under `src/`, tests under `tests/`,
+      real cFS build pinned/documented but not yet run (needs Docker)
 
 ## What's next (immediate)
 
-- [ ] Decide repo license (Apache 2.0 vs MIT) — see PRD.md § 9
-- [ ] Begin Phase 1 of Implementation-Plan.md: minimal S0 pipeline
-- [ ] Resolve open technical decisions in Technical-Design-Document.md § 7
-      (SBOM format, attestation approach, policy language)
+- [ ] **You:** run `cfs-app/Dockerfile` on your Mac (has Docker) to build
+      the real cFS sample app; report back so Phase 1's target artifact
+      can be swapped from the stub to the real thing
+- [ ] **You:** commit + push this session's changes (see git commands at
+      the end of this session's summary in chat)
+- [ ] Begin Phase 2 of Implementation-Plan.md: SBOM + provenance (S1, S2)
+- [ ] Resolve remaining open technical decisions in
+      Technical-Design-Document.md § 7 (SBOM format — needed for Phase 2)
 - [ ] Consider reviewing prior related projects already present in the
       Development Projects folder (`mission-aware-satellite-cyber-recovery`,
       `satcom-ttc-post-compromise-recovery`) for reusable components or
-      lessons learned before starting Phase 1 from scratch
+      lessons learned
 
 ## Blockers
 
@@ -77,12 +93,18 @@ data exists. Update these labels only when the corresponding phase in
 `docs/Implementation-Plan.md` actually completes with passing results —
 not based on intent or partial progress.
 
-- Detection-accuracy claims (any S-condition): `NOT_PERMITTED` — no test
-  cases implemented yet (Phase 1+)
+- Detection-accuracy claims at **S0 only**, **against the stand-in stub
+  artifact only**: `PRELIMINARY_INTERNAL_ONLY` — test cases #6 and #7
+  pass in automated tests (see Threat-Model.md "Phase 1 results"), but
+  this is one condition, one non-cFS artifact, no statistical repetition.
+  Not citable as a research result yet.
+- Detection-accuracy claims for S1-S5 or against real cFS: `NOT_PERMITTED`
+  — not implemented / not run yet
 - Recovery-success / time-to-trusted-restoration claims: `NOT_PERMITTED` —
   requires Phase 3 (rollback) complete
-- Reproducible-build claims: `NOT_PERMITTED` — requires Phase 1 build
-  environment implemented and verified bit-identical across runs
+- Reproducible-build claims **against the stub artifact**:
+  `PRELIMINARY_INTERNAL_ONLY` — verified bit-identical across 2 runs in
+  this sandbox; not yet demonstrated for the real cFS build (needs Docker)
 - Generalizability claims (beyond single cFS stack): `NOT_PERMITTED` —
   requires Phase 6
 - CCSDS/protocol-conformance claims: `NOT_PERMITTED` — uplink simulator is
@@ -103,11 +125,29 @@ this section has been updated to reflect it.
 
 See PRD.md § 9 and Technical-Design-Document.md § 7 for the full list.
 Key ones:
-1. Repo license
+1. ~~Repo license~~ — resolved: Apache 2.0
 2. Second software stack — pursue now or defer to Phase 6?
 3. Baseline definition for S0 in effort/overhead metrics
-4. SBOM format (CycloneDX vs SPDX)
-5. Attestation approach (swtpm vs custom stub)
+4. SBOM format (CycloneDX vs SPDX) — needed for Phase 2, decide next session
+5. Attestation approach (swtpm vs custom stub) — needed for Phase 3
+
+## Environment notes (for future Claude sessions)
+
+The Claude sandbox's mounted-folder filesystem has repeatedly rejected
+`unlink()`/`rmtree()` on files or directories created by a prior process,
+even with matching ownership — seen with git lock files (see Repository
+section) and with `shutil.rmtree()` in `src/build/build.py` (fixed by
+removing the rmtree call and overwriting build outputs in place instead).
+**Pattern to follow in new code:** always overwrite files in place
+(`open(..., 'w')`, `write_bytes()`, compiler `-o` output) rather than
+delete-then-recreate. If you hit `PermissionError`/`Operation not
+permitted` on a delete, this is almost certainly why — don't spend time
+debugging it as a logic bug.
+
+No Docker, no cmake, no root (`apt-get` fails) in the sandbox. Python 3.10,
+git, gcc/make, gpg, openssl, and internet access (via allowlisted proxy)
+are available. Install Python packages with `pip3 install
+--break-system-packages <pkg>`.
 
 ## Session log
 
@@ -116,3 +156,4 @@ Key ones:
 | 2026-08-02 | Initial documentation scaffold created | All docs (v1) |
 | 2026-08-02 | Adopted cFS source-handling policy and claims-status governance from adjacent workspace projects | STATUS.md, Legal-Data-Sourcing-Notes.md |
 | 2026-08-02 | Initial commit pushed to GitHub (private repo live), README structure diagram fixed | README.md, STATUS.md, repo now on GitHub |
+| 2026-08-03 | Phase 1 (S0 pipeline) built and verified end-to-end: build, signing, ground auth, uplink sim, onboard verification, installation, evidence store, metrics collector. LICENSE added. Real cFS build pinned/documented but not run (no Docker in sandbox). 4/4 tests passing. | LICENSE, README.md, requirements.txt, requirements-dev.txt, .gitignore, src/ (new), cfs-app/ (new), tests/ (new), evaluation/metrics.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, docs/Legal-Data-Sourcing-Notes.md, STATUS.md |

@@ -106,9 +106,33 @@ network/hardware dependency.
 ## 7. Open technical decisions (track resolution in STATUS.md)
 
 - Exact SBOM format (CycloneDX vs SPDX) — leaning CycloneDX for tooling
-  maturity, confirm during Phase 1.
+  maturity, confirm during Phase 2.
 - Whether to model a real TPM (via software TPM / swtpm) or a fully custom
   attestation stub — swtpm gives more credibility for the S3 claims.
+  Decide during Phase 3.
 - Second cFS app or second software stack entirely, and when to add it.
 - Exact policy language for ground authorization (custom DSL vs. reusing
-  something like OPA/Rego).
+  something like OPA/Rego) — Phase 1 uses a trivial hardcoded policy
+  (approve iff signature valid); real policy language decision deferred
+  to Phase 4 (S5 machine-readable authorization).
+
+## 7a. Phase 1 decisions actually made (resolved, not just planned)
+
+- **Signing: Ed25519 via the `cryptography` Python package**, not
+  Sigstore/cosign. Rationale: S0's assurance claim is "signature only" —
+  a standard, composable Ed25519 signature satisfies that without needing
+  Sigstore's transparency-log infrastructure, which is more relevant to
+  S2+ provenance/transparency claims. Revisit if a later phase specifically
+  needs keyless signing or a public transparency log.
+- **Target artifact: a stand-in stub (`cfs-app/stub-telemetry-app`), not
+  real cFS**, because the authoring sandbox had no Docker/cmake/root. The
+  real cFS build is pinned and documented in `cfs-app/Dockerfile`
+  (tag `v7.0.0`, commit `b4ec679b2fd9d825610515ceb186cbfa80c60cfc`) but
+  untested — run it on a Docker-capable machine and confirm before citing
+  any Phase 1+ result as being about "spacecraft software." See
+  `cfs-app/README.md`.
+- **Condition switching: implemented as designed** — `src/condition.py`
+  loads a `condition.yaml` with one boolean per mechanism; every stage
+  checks its own flag. No condition-specific code forks.
+- **Evidence store: implemented as designed** — append-only JSON-Lines at
+  `evaluation/evidence_log.jsonl`, matching the § 4 schema exactly.

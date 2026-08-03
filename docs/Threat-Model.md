@@ -86,6 +86,24 @@ catch things earlier or later than the naive expectation (e.g., S0 alone
 should already catch #6 via signature mismatch; if it doesn't in the
 prototype, that's a bug, not a finding).
 
+**Phase 1 results (2026-08-03), against the stand-in artifact — see
+cfs-app/README.md for why it's not the real cFS target yet:**
+
+- **Test case #6 (modified update in transit): confirmed detected at S0**,
+  matching the hypothesis. Onboard signature verification correctly
+  rejects a binary tampered after signing; evidence record logged with
+  `test_case_injected: "6"`. See `tests/test_phase1_pipeline.py::test_case_06_modified_update_in_transit_is_rejected`.
+- **Test case #7 (revoked signing key): detected at S0, but one stage
+  earlier than the Threat-Model.md hypothesis of "S0/S2".** In this
+  implementation, `ground_authorization` and `onboard_verification` both
+  call the same revocation-aware signature check, so a revoked key is
+  caught at the ground-authorization gate before uplink even happens,
+  rather than only on the spacecraft side after transmission. This is an
+  earlier catch than hypothesized, not a worse one — worth discussing
+  explicitly in the paper's Results/Discussion section as an example of a
+  condition catching something earlier than the naive expectation (see
+  note above and Research-Paper-Outline.md § 4).
+
 ## 4. Metrics (see PRD.md § success criteria for how these roll up)
 
 - Tampered-artifact detection (rate, per condition, per test case)

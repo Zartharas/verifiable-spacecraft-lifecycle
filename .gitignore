@@ -11,10 +11,17 @@ venv/
 # Node (if any tooling ends up JS-based)
 node_modules/
 
-# Build artifacts / local results (not yet in use, reserved for future phases)
+# Build artifacts / local results
 /results/
 /logs/
 *.log
+/work/
+/evaluation/evidence_log.jsonl
+/cfs-app/build-output/
+*.bin
+*.o
+*.sig
+.pytest_cache/
 
 # Local secrets / keys — never commit real or test signing material
 *.pem

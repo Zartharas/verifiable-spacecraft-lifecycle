@@ -90,3 +90,11 @@ traceable.
   submodule only, never vendor upstream source), adopted from the
   equivalent convention in the adjacent `mission-aware-satellite-cyber-
   recovery` project in this workspace.
+- 2026-08-03: Pinned the real cFS target to tag `v7.0.0` ("Draco" bundle),
+  commit `b4ec679b2fd9d825610515ceb186cbfa80c60cfc`, Apache 2.0, NASA
+  Docket No. GSC-19,200-1 — confirmed via github.com/nasa/cFS/releases.
+  Recorded in `cfs-app/Dockerfile` per § 3a (pinned checkout, not
+  vendored). Not yet built/verified — requires a Docker-capable machine
+  (the Claude sandbox that wrote this has no Docker). Phase 1 pipeline
+  work proceeds against a stand-in stub artifact in the interim; see
+  `cfs-app/README.md`.

@@ -1,0 +1,8 @@
+condition: S0
+mechanisms:
+  signature: true
+  sbom: false
+  provenance: false
+  onboard_attestation: false
+  trusted_rollback: false
+  machine_readable_authorization: false

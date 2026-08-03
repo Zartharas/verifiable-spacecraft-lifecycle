@@ -16,28 +16,50 @@ and got fixed along the way.
 - [ ] Confirm SBOM format, attestation approach, policy language (open
       questions in Technical-Design-Document.md § 7)
 
-## Phase 1 — Minimal S0 pipeline (baseline)
+## Phase 1 — Minimal S0 pipeline (baseline) — COMPLETE (2026-08-03)
 
 Goal: get a single cFS app moving through the full 12-stage lifecycle at
 condition S0 (signature only), end to end, with all other mechanisms
 present in the architecture but inactive (per condition-switching design).
 
-- [ ] Select and build target cFS sample app
-- [ ] Reproducible build environment (Docker/Nix-pinned)
-- [ ] Basic signing (cosign or equivalent)
-- [ ] Ground authorization stub (approve/deny, minimal policy)
-- [ ] Uplink simulator v1 (can start with no latency/loss modeling, refine
-      in Phase 2)
-- [ ] Onboard verification agent (signature check only at S0)
-- [ ] Installation (simple, no A/B yet at S0)
-- [ ] Evidence store v1 (schema from TDD § 4)
-- [ ] End-to-end smoke test: artifact moves source → installed with a
-      valid evidence trail
-- [ ] Metrics collector v1 (even if most metrics are trivial at S0)
+- [x] Select and build target cFS sample app — **partially**: a stand-in
+      stub artifact is built and tested end-to-end; the real cFS build is
+      documented and pinned in `cfs-app/Dockerfile` but not yet run
+      (authoring sandbox had no Docker). Run it on a Docker-capable
+      machine before treating any result as being about real cFS/spacecraft
+      software — see `cfs-app/README.md` and STATUS.md "Claims status."
+- [x] Reproducible build environment — implemented via `src/build/build.py`
+      (gcc, deterministic flags); verified bit-identical across two
+      independent compiles. Docker/cmake version for real cFS documented,
+      not yet run.
+- [x] Basic signing — **Ed25519 via `cryptography`**, not cosign (see
+      Technical-Design-Document.md § 7a for rationale).
+- [x] Ground authorization stub (approve/deny, minimal policy) —
+      `src/ground_authorization/ground_auth.py`
+- [x] Uplink simulator v1 (no latency/loss modeling yet, per plan;
+      Phase 2) — `src/uplink_sim/uplink.py`, includes tamper-injection hook
+- [x] Onboard verification agent (signature check only at S0) —
+      `src/onboard_verification/onboard.py`
+- [x] Installation (simple, no A/B yet at S0) — `src/installation/install.py`
+- [x] Evidence store v1 (schema from TDD § 4) — `src/evidence_store/`
+- [x] End-to-end smoke test: artifact moves source → installed with a
+      valid evidence trail — `src/pipeline.py`, `tests/test_phase1_pipeline.py`
+- [x] Metrics collector v1 — `evaluation/metrics.py`
 
-**Exit criteria:** a clean run of test case #6 (modified update in
-transit) is correctly rejected by signature verification, with an evidence
-record showing the rejection.
+**Exit criteria: MET.** `tests/test_phase1_pipeline.py::test_case_06_modified_update_in_transit_is_rejected`
+passes — modified update in transit is correctly rejected by onboard
+signature verification, with an evidence record showing the rejection
+(`test_case_injected: "6"`, `result: "fail"`). Bonus: test case #7
+(revoked signing key) also implemented and passing, with an interesting
+early-detection result — see Threat-Model.md "Phase 1 results."
+
+**Run it yourself:**
+```
+pip install -r requirements-dev.txt
+python3 src/pipeline.py                        # happy path + test case #6, printed
+python3 -m pytest tests/test_phase1_pipeline.py -v
+python3 evaluation/metrics.py                  # evidence store summary
+```
 
 ## Phase 2 — SBOM + Provenance (S1, S2)
 
