@@ -208,15 +208,64 @@ attack matrix test cases now implemented:**
   automated, evidence-store-driven evaluation matters: a manual pass/fail
   test suite had already "passed" this case for three phases without
   anyone noticing the evidence trail itself was incomplete.
-- **Known limitation of the current comparison table, to refine in
+- **Known limitation of the current comparison table, refined in
   Phase 5:** because test case #6 now has two tagged records (injection
   point + detection point) for one conceptual test instance, the table
   reports `seen=2, caught=1` rather than `seen=1, caught=1` — a
   double-count, not a correctness bug (the pass/fail signal is right).
-  Phase 5's more rigorous evaluation should count *test instances* (one
-  per pipeline run), not *tagged evidence records* (which can be
-  multiple per instance), to avoid this kind of inflation across the
-  board.
+  **Resolved in Phase 5** (see "Phase 5 results" below): the evaluation
+  harness (`evaluation/experiment.py`) counts *test instances* directly —
+  each scenario function returns one `caught: bool` per trial from
+  `PipelineResult` fields, not from counting evidence-store records — so
+  this double-count doesn't propagate into any Phase 5 metric.
+  `evaluation/metrics.py::build_comparison_table` (the Phase 4 tool) still
+  has the underlying record-counting behavior and should be treated as a
+  quick-look debugging aid, not a source of cited numbers; cite Phase 5's
+  `evaluation/results/phase5_report.md` instead.
+
+## Phase 5 results (evaluation and metrics collection, 2026-08-03)
+
+Ran 5 repeated trials of the happy path at every condition (S0-S5) and of
+every one of the 15 attack matrix test cases at its expected condition
+(`evaluation/experiment.py`), then aggregated per PRD.md § 10's resolved
+metric definitions (`evaluation/report.py`). Full numbers in
+`evaluation/results/phase5_report.md`; summary here:
+
+- **Happy path:** 100% success rate and 100% build-reproducibility rate
+  across all 6 conditions, all 5 trials each. Traceability completeness is
+  100% at every condition — every expected pipeline stage for that
+  condition produced at least one evidence record in every trial.
+- **Attack matrix:** all 15 test cases show a 100% detection rate (5/5
+  trials each) at their expected condition, confirming the Phase 1-4
+  single-run results hold up under repetition, not just as one-off passes.
+- **Update acceptance accuracy (confusion matrix):** 0 false positives and
+  0 false negatives in every condition — no legitimate update was ever
+  wrongly rejected, and no attack trial was ever wrongly approved.
+- **Storage/link overhead vs. S0:** grows monotonically and sensibly with
+  each added assurance mechanism (S1 adds an SBOM; S2 adds provenance on
+  top; S3/S4 add attestation; S5 adds authorization evidence). S5's total
+  overhead is 5,748 bytes — small in absolute terms, which is itself a
+  useful data point: for this artifact size, machine-readable authorization
+  evidence at S5 is not the dominant cost of the ladder.
+- **Methodological finding worth keeping for the paper (second one of this
+  kind):** the first full evaluation run showed S5's storage overhead
+  ballooning to ~855,655 bytes — a genuine correctness bug, not noise. The
+  cause: `authorization_evidence.py`'s internal `store.for_artifact(hash)`
+  lookup aggregated every evidence record ever logged for the stand-in
+  stub's (constant) build hash across the *entire* evaluation session, not
+  just the current run. Fixed by having `src/pipeline.py` pass an explicit,
+  index-sliced `records` list for just the current run. This is the same
+  underlying trap as the test case #6 tagging bug above (a lookup keyed by
+  something that doesn't uniquely identify "this run" silently pulls in
+  cross-run noise) — worth stating in the paper as a recurring hazard of
+  building evaluation tooling against a non-varying stand-in artifact, not
+  a one-off mistake.
+- **Caveats (see PRD.md § 10 and STATUS.md "Claims status"):** timing
+  numbers are a sandbox-timing proxy, not hardware/real-mission timing;
+  "manual evidence-processing effort" is an evidence-record-count proxy,
+  not measured human time; all results are against the stand-in stub
+  artifact, not the real cFS build. Not yet citable as an external research
+  result — still `PRELIMINARY_INTERNAL_ONLY`.
 
 ## 4. Metrics (see PRD.md § success criteria for how these roll up)
 
@@ -226,8 +275,8 @@ attack matrix test cases now implemented:**
 - Update acceptance accuracy (true positive / false positive / false negative)
 - Attestation freshness (age of last valid attestation at time of check)
 - Recovery success rate
-- Time to trusted restoration (needs baseline definition — open question, see PRD.md § 9)
-- Manual evidence-processing effort (needs baseline definition — open question)
+- Time to trusted restoration (baseline definition resolved — PRD.md § 10)
+- Manual evidence-processing effort (baseline definition resolved — PRD.md § 10)
 - Traceability completeness (fraction of lifecycle stages with linked evidence)
 - Storage and link overhead (bytes added per condition vs. S0)
 - Reproducibility of the deployed binary (bit-for-bit reproducible build rate)

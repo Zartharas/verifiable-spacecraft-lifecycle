@@ -8,15 +8,55 @@ session, however small.
 
 ## Current phase
 
-**Phase 4 — Machine-Readable Authorization Evidence (S5): COMPLETE.**
-(see `docs/Implementation-Plan.md`) All 6 assurance conditions (S0-S5) now
-implemented, all 15 attack matrix test cases passing. Next up: Phase 5
-(full statistical evaluation) or Phase 6 (generalizability), or run
-`cfs-app/Dockerfile` to bring the real cFS build online.
+**Phase 5 — Evaluation and metrics collection: COMPLETE.**
+(see `docs/Implementation-Plan.md`) All 6 assurance conditions × 5 repeated
+trials each for the happy path, and all 15 attack matrix test cases × 5
+trials each at their expected condition. 100% detection across every
+attack case, 100% happy-path success/reproducibility, 0 false positives/
+negatives in every condition's confusion matrix, S5 storage overhead a
+sane 5,748 bytes over S0. Next up: Phase 6 (generalizability), or run
+`cfs-app/Dockerfile` to bring the real cFS build online — the latter was
+explicitly deferred until Phase 5 completed.
 
 ## Last session summary
 
-**Date:** 2026-08-03 (session 4)
+**Date:** 2026-08-03 (session 5)
+
+Built and ran the Phase 5 evaluation harness (`evaluation/experiment.py`,
+`evaluation/report.py`). Along the way, found and fixed a real correctness
+bug in `src/evidence_store/authorization_evidence.py`: its internal
+`store.for_artifact(artifact_hash)` lookup aggregated every evidence
+record ever logged for the (constant, since the stub artifact never
+changes) hash across the whole evaluation session, not just the current
+run — inflating S5's measured storage overhead to ~855,655 bytes. Fixed
+by changing the function to accept an explicit `records` list from the
+caller; `src/pipeline.py` now tracks an evidence-log index at the start
+of `run()` and passes only that run's slice. Confirmed via the full
+pytest suite (26/26, no regressions) and via a corrected evaluation run:
+S5 overhead vs. S0 is now 5,748 bytes. This is the second time this
+category of bug (a constant-hash lookup silently aggregating cross-run
+noise) has been caught by the project's own evidence-driven evaluation
+tooling — the first was the Phase 4 comparison table's discovery of the
+test case #6 tagging bug. Good, citable pattern for the paper's
+methodology section.
+
+Full corrected results: 100% happy-path success and reproducibility
+across all 6 conditions; 100% detection rate across all 15 attack matrix
+test cases, 5/5 trials each; 0 false positives/negatives in every
+condition's confusion matrix. Full numbers in
+`evaluation/results/phase5_report.md`. Per PRD.md § 10, all timing figures
+are a sandbox-timing proxy, not hardware/real-mission timing, and all
+results are against the stand-in stub artifact, not real cFS.
+
+Sandbox note worth remembering: the full evaluation (~135
+`pipeline.run()` calls) takes ~45-60s cumulatively, which exceeded a
+single command's execution ceiling in this environment even though each
+individual run is fast (~0.2-0.5s). Ran it in three chunks (happy path;
+attack cases 1-11; attack cases 12-15) and merged results before running
+`report.py` — documented in Implementation-Plan.md's Phase 5 section so
+future sessions don't waste time treating this as a pipeline slowdown.
+
+**Previous session (2026-08-03, session 4):**
 
 Built and verified all three remaining S5 mechanisms: prohibited-
 configuration policy (`src/policy/policy.py`, custom deny-list — not
@@ -105,20 +145,22 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
 - [x] **Phase 4 (S5: machine-readable authorization evidence) complete** —
       see Implementation-Plan.md for full breakdown; **26/26 tests
       passing, all 15 attack matrix test cases implemented**
+- [x] **Phase 5 (evaluation and metrics collection) complete** —
+      `evaluation/experiment.py` + `evaluation/report.py`; 5 repeated
+      trials per condition and per attack case; 100% detection/success/
+      reproducibility, 0 false positives/negatives; S5 overhead vs. S0 a
+      sane 5,748 bytes (see Implementation-Plan.md Phase 5 for the
+      correctness bug found and fixed along the way)
 
 ## What's next (immediate)
 
 - [ ] **You:** run `cfs-app/Dockerfile` on your Mac (has Docker) to build
       the real cFS sample app; report back so the target artifact can be
-      swapped from the stub to the real thing
+      swapped from the stub to the real thing — this was explicitly
+      deferred until Phase 5 completed, and Phase 5 is now done
 - [ ] **You:** commit + push this session's changes
-- [ ] Begin Phase 5 of Implementation-Plan.md: full statistical
-      evaluation (repeated trials, all metrics from PRD.md § success
-      criteria, credible baselines) — or Phase 6 (second software stack,
-      for generalizability) if pursuing that before evaluation
-- [ ] Fix the comparison-table double-counting limitation noted in
-      Threat-Model.md "Phase 4 results" as part of Phase 5's more
-      rigorous evaluation (count test instances, not tagged records)
+- [ ] Begin Phase 6 (second software stack, for generalizability) or
+      Phase 7 (paper drafting) — or pursue the real-cFS Docker build first
 - [ ] Consider reviewing prior related projects already present in the
       Development Projects folder (`mission-aware-satellite-cyber-recovery`,
       `satcom-ttc-post-compromise-recovery`) for reusable components or
@@ -158,21 +200,23 @@ not based on intent or partial progress.
 
 - Detection-accuracy claims across **all S0-S5 conditions**, **against
   the stand-in stub artifact only**: `PRELIMINARY_INTERNAL_ONLY` — all 15
-  attack matrix test cases now pass in automated tests (see
-  Threat-Model.md "Phase 1/2/3/4 results"), and an automated comparison
-  table can be generated, but this is still one non-cFS artifact with no
-  statistical repetition (single run per test case, not repeated trials).
-  Not citable as a research result yet — that's exactly what Phase 5 is for.
+  attack matrix test cases now pass with 100% detection across 5 repeated
+  trials each (Phase 5, see `evaluation/results/phase5_report.md`), with a
+  documented, resolved metric-definition baseline (PRD.md § 10). Still
+  `PRELIMINARY_INTERNAL_ONLY` rather than fully citable: this is one
+  non-cFS artifact in one sandbox environment, not yet the real cFS build
+  and not yet cross-validated on a second machine/stack.
 - Detection-accuracy claims against real cFS: `NOT_PERMITTED` — not run yet
 - Recovery-success claims **against the stub artifact**:
-  `PRELIMINARY_INTERNAL_ONLY` — test cases #10/#11/#14 demonstrate
-  rollback working correctly in automated tests (see Threat-Model.md
-  "Phase 3 results"), but "time to trusted restoration" as a *measured
-  metric* (not just pass/fail) still needs Phase 5 (evaluation) and a
-  defined baseline (PRD.md § 8) before it's citable.
+  `PRELIMINARY_INTERNAL_ONLY` — test cases #10/#11/#12/#14 demonstrate
+  rollback working correctly across 5 repeated trials each (100% detection,
+  Phase 5), with "time to trusted restoration" now a measured metric
+  against the resolved S0 baseline (PRD.md § 10), not just pass/fail. Still
+  not against real cFS.
 - Reproducible-build claims **against the stub artifact**:
-  `PRELIMINARY_INTERNAL_ONLY` — verified bit-identical across 2 runs in
-  this sandbox; not yet demonstrated for the real cFS build (needs Docker)
+  `PRELIMINARY_INTERNAL_ONLY` — 100% reproducible across all Phase 5
+  trials (5 per condition, 6 conditions) in this sandbox; not yet
+  demonstrated for the real cFS build (needs Docker)
 - Generalizability claims (beyond single cFS stack): `NOT_PERMITTED` —
   requires Phase 6
 - CCSDS/protocol-conformance claims: `NOT_PERMITTED` — uplink simulator is
@@ -181,9 +225,11 @@ not based on intent or partial progress.
 - Flight-software or operational-spacecraft applicability claims:
   `NOT_PERMITTED` — this is a simulated research prototype only, and this
   restriction is permanent, not phase-gated (see PRD.md non-goals)
-- Publication-evidence status: `NOT_PERMITTED` until Phase 5 (evaluation)
-  produces results with a credible baseline (see PRD.md § 8 metric
-  legitimacy risk)
+- Publication-evidence status: `PRELIMINARY_INTERNAL_ONLY` — Phase 5 now
+  has a full evaluation with a credible, documented baseline (PRD.md § 10),
+  resolving the "metric legitimacy" risk from PRD.md § 8. Still not
+  `PERMITTED` for external citation until run against the real cFS build
+  and, ideally, a second software stack (Phase 6).
 
 Mandatory stop point: do not submit any manuscript, external write-up, or
 public claim of a result until the specific phase above has completed and
@@ -233,3 +279,4 @@ are available. Install Python packages with `pip3 install
 | 2026-08-03 | Phase 2 (S1/S2: SBOM + provenance) built and verified: SBOM generation/checks, provenance generation/verification, version ledger (downgrade detection), condition-gated ground authorization, uplink v2 with link profiles. 10 new tests covering attack cases #1,#2,#3,#4,#5,#9; 14/14 total passing, no regressions. | src/sbom/ (new), src/provenance/ (new), src/ground_authorization/version_ledger.py (new), src/ground_authorization/ground_auth.py, src/uplink_sim/uplink.py, src/pipeline.py, tests/test_phase2_pipeline.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |
 | 2026-08-03 | Phase 3 (S3/S4: attestation + rollback) built and verified: software attestation stub (no swtpm available), A/B partition manager (tentative-activate/confirm/revert), health check harness, rollback controller with recovery-image integrity check. 6 new tests covering attack cases #10,#11,#12,#14; 20/20 total passing, no regressions. | src/attestation/ (new), src/installation/partitions.py (new), src/health/ (new), src/rollback/ (new), src/pipeline.py, tests/test_phase3_pipeline.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |
 | 2026-08-03 | Phase 4 (S5: machine-readable authorization evidence) built and verified: prohibited-configuration policy (custom deny-list, not OPA/Rego), inventory reconciliation, false-telemetry detection, OSCAL-informed authorization evidence aggregator, automated S0-S5 comparison table. 6 new tests covering attack cases #8,#13,#15; 26/26 total passing (all 15 attack matrix cases now implemented). Comparison table generator caught a real Phase 1 evidence-tagging bug (test case #6 tagged at wrong stage) — fixed. | src/policy/ (new), src/operational_monitoring/ (new), src/evidence_store/authorization_evidence.py (new), src/ground_authorization/ground_auth.py, src/pipeline.py, evaluation/metrics.py, tests/test_phase4_pipeline.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |
+| 2026-08-03 | Phase 5 (evaluation and metrics collection) built and run: 5 repeated trials for the happy path at every condition and every one of the 15 attack matrix test cases at its expected condition. Found and fixed a real correctness bug in `authorization_evidence.py` (constant-hash lookup aggregating cross-run evidence, inflating S5 overhead to ~855,655 bytes); corrected figure is 5,748 bytes. Final results: 100% happy-path success/reproducibility across all 6 conditions, 100% detection across all 15 attack cases, 0 false positives/negatives in every condition's confusion matrix. 26/26 tests still passing, no regressions. | src/evidence_store/authorization_evidence.py, src/pipeline.py, evaluation/experiment.py (new), evaluation/report.py (new), evaluation/results/ (new), docs/PRD.md, docs/Implementation-Plan.md, STATUS.md |

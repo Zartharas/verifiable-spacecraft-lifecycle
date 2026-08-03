@@ -106,6 +106,10 @@ def run(
     cond = preset(condition_name)
     configuration = configuration or {}
 
+    from evidence_store import EvidenceStore as _EvidenceStore
+
+    _run_evidence_start = len(_EvidenceStore().read_all())
+
     build_result = build(condition_name=condition_name)
     result.build_result = build_result
     binary_path = Path(build_result["binary_path"])
@@ -254,8 +258,9 @@ def run(
             )
             result.telemetry_consistent = telemetry_ok
 
+            this_run_records = _EvidenceStore().read_all()[_run_evidence_start:]
             result.authorization_evidence_path = generate_authorization_evidence(
-                artifact_hash, condition_name=condition_name
+                artifact_hash, this_run_records, condition_name=condition_name
             )
 
         return result

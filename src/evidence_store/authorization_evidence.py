@@ -1,7 +1,7 @@
 """
 Machine-readable authorization evidence — S5 assurance mechanism.
 
-Aggregates all evidence-store records for a given artifact into a single
+Aggregates evidence-store records for a single pipeline run into one
 structured document, loosely informed by OSCAL's assessment-results shape
 (subject, assessed controls/checks, findings, overall result) rather than
 a full OSCAL schema implementation — the point being tested is "can the
@@ -9,6 +9,21 @@ full lifecycle's evidence be assembled into one machine-readable
 authorization record automatically," which is also what satisfies the
 Phase 4 exit criterion about generating a full comparison table from the
 evidence store automatically (see evaluation/metrics.py).
+
+**Important:** this takes an explicit `records` list from the caller
+rather than looking records up by `artifact_hash` internally. The
+stand-in stub artifact's source never changes, so its build hash is
+IDENTICAL across every run and every condition — an internal
+`store.for_artifact(artifact_hash)` lookup would silently aggregate every
+record ever logged for that hash across the *entire* evaluation session,
+not just this one release's evidence trail. That's not a reporting
+nuance, it's a correctness bug in the S5 mechanism itself (the document
+is supposed to represent *this* release's evidence, not accumulated
+cross-run noise) — caught while building the Phase 5 evaluation harness,
+which showed S5's storage overhead ballooning to ~850KB before this fix.
+Callers (see `src/pipeline.py`) must pass only the records generated
+during the current run, obtained by index-slicing the evidence log
+around the `run()` call, not a hash-based lookup.
 """
 
 from __future__ import annotations
@@ -25,9 +40,10 @@ from evidence_store import EvidenceStore  # noqa: E402
 AUTHORIZATION_EVIDENCE_DIR = REPO_ROOT / "work" / "authorization_evidence"
 
 
-def generate_authorization_evidence(artifact_hash: str, condition_name: str = "S5") -> Path:
+def generate_authorization_evidence(
+    artifact_hash: str, records: list[dict], condition_name: str = "S5"
+) -> Path:
     store = EvidenceStore()
-    records = store.for_artifact(artifact_hash)
 
     findings = [
         {

@@ -229,5 +229,48 @@ network/hardware dependency.
   test-case tag. Known limitation (see Threat-Model.md "Phase 4 results"
   discussion of test case #6): counts tagged *records*, not test
   *instances*, which can double-count when a test case is tagged at both
-  an injection point and a detection point. Fix in Phase 5 by counting
-  per pipeline-run instance instead.
+  an injection point and a detection point. **Resolved in Phase 5** — see
+  § 7e below — by having the evaluation harness count test instances
+  directly instead of extending this tool.
+
+## 7e. Phase 5 decisions actually made
+
+- **Evaluation harness structure: one scenario function per attack matrix
+  test case, returning an explicit `{"caught": bool, "elapsed_seconds":
+  float, ...}` dict, not a record-counting pass over the evidence store.**
+  `evaluation/experiment.py`. This was a deliberate choice to sidestep the
+  Phase 4 comparison table's double-counting limitation (§ 7d above):
+  detection is read directly off `PipelineResult` fields
+  (`rejected_at`, `rollback_outcome`, `telemetry_consistent`) for each
+  trial, which correctly counts one outcome per trial regardless of how
+  many evidence records that trial happened to generate.
+- **Baselines resolved before generating numbers, not after.** PRD.md § 10
+  states, for every metric, what it's measured against (S0 itself as
+  baseline) and what it is and isn't a proxy for. Written and reviewed
+  before `evaluation/experiment.py` produced its first number, specifically
+  to prevent the "metric legitimacy" risk (PRD.md § 8) from being
+  resolved retroactively by whatever the numbers happened to show.
+- **`generate_authorization_evidence()` signature change: explicit
+  `records` parameter, not internal `for_artifact()` lookup.**
+  `src/evidence_store/authorization_evidence.py`. Forced by a real bug
+  found while building the evaluation harness (see Threat-Model.md
+  "Phase 5 results" for the full writeup): the stand-in stub artifact's
+  build hash never changes, so a hash-keyed lookup silently aggregates
+  every record ever logged for that hash across an entire evaluation
+  session, not just one run. `src/pipeline.py` now tracks
+  `len(EvidenceStore().read_all())` at the start of `run()` and passes
+  only the slice generated during that call. This is a durable API
+  contract, not a one-off patch — any future caller of
+  `generate_authorization_evidence()` must supply its own run-scoped
+  records list, never rely on hash-based lookup for anything meant to
+  represent "this run only."
+- **Chunked evaluation execution, not a design change but worth recording
+  for future sessions:** the full evaluation (~135 `pipeline.run()` calls
+  across happy path + attack matrix, 5 trials each) takes ~45-60s
+  cumulatively, longer than a single command's execution ceiling in the
+  authoring sandbox, even though each individual run is fast (~0.2-0.5s).
+  No code change was needed — `evaluation/experiment.py` and
+  `evaluation/report.py` are unchanged in structure — this was purely an
+  execution-environment workaround (run in three chunks, merge into
+  `phase5_raw_results.json`, then run `report.py` once). See
+  Implementation-Plan.md's Phase 5 section for the exact commands.

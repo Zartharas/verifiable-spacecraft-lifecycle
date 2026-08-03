@@ -126,6 +126,57 @@ for this kind of research use — see `Legal-Data-Sourcing-Notes.md`.
 
 - Second software stack for generalizability: pursue now, or defer to a
   revision cycle after initial cFS results are in?
-- Baseline definition for S0 in operational-effort metrics — need to define
-  before data collection starts.
-- License for the repo (Apache 2.0 vs MIT) — decide before first public push.
+- ~~Baseline definition for S0 in operational-effort metrics~~ — resolved,
+  see § 10.
+- ~~License for the repo~~ — resolved: Apache 2.0.
+
+## 10. Metric definitions and baselines (resolved 2026-08-03, Phase 5)
+
+This section closes the "metric legitimacy" risk from § 8 by stating,
+explicitly, what each metric means and what it's measured against —
+before any numbers get generated, not after. **Baseline = S0 itself**,
+not an external real-world process. The project's actual research claim
+is comparative (S0 vs. S1 vs. ... vs. S5), so S0's own cost/effort is the
+correct zero-point for every overhead metric — there's no need to invent
+a "real mission's manual process" baseline that this project has no way
+to validate anyway.
+
+- **Tampered-artifact / incomplete-component detection rate:** fraction
+  of attack trials at a given condition where the pipeline correctly
+  rejects, per Threat-Model.md's attack matrix. Measured directly from
+  `PipelineResult.rejected_at` / `rollback_outcome`, not inferred.
+- **Time to identify / time to trusted restoration:** wall-clock seconds
+  for the relevant `pipeline.run()` call in this sandbox, using
+  `time.perf_counter()`. **This is a sandbox-timing proxy, not a hardware
+  or real-mission timing claim** — flag explicitly wherever cited. It's
+  useful for *relative* comparison across conditions (does S5 take
+  measurably longer than S0 to reach a verdict?), not as an absolute
+  number meaningful outside this environment.
+- **Manual evidence-processing effort:** number of evidence-store records
+  generated per run, per condition. **This is a proxy for review burden,
+  not a measured human-hours metric** — no human-factors study exists or
+  is planned for this phase. More evidence records at S5 than S0 is the
+  expected, measurable direction; how that maps to real operator effort
+  is explicitly out of scope and should never be stated as if it were
+  measured.
+- **Traceability completeness:** for each condition, the pipeline stages
+  *expected to be active* at that condition (per `condition.py`'s
+  mechanism flags) that actually produced at least one evidence record
+  during a given run. Denominator is condition-specific — S0 is not
+  penalized for lacking SBOM-stage evidence it was never supposed to
+  produce.
+- **Storage and link overhead:** byte size of the additional artifacts
+  (SBOM, provenance, attestation, authorization evidence) a condition
+  produces, relative to S0 (which produces none of them). Measured
+  directly from file sizes on disk, not estimated.
+- **Reproducibility of the deployed binary:** fraction of build trials
+  where two independent compiles produced a bit-identical hash. Currently
+  measured against the stand-in stub artifact only — see STATUS.md
+  "Claims status" for why this isn't yet a claim about the real cFS build.
+- **Update acceptance accuracy:** a confusion-matrix-style measure per
+  condition — true positive (legitimate update correctly approved), true
+  negative (attack correctly rejected), false positive (attack wrongly
+  approved), false negative (legitimate update wrongly rejected).
+
+See `evaluation/experiment.py` for the implementation and
+`evaluation/results/` for generated output.

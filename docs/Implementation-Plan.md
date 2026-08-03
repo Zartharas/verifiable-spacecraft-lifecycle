@@ -166,14 +166,67 @@ python3 -m pytest tests/ -v                    # all 26 tests
 python3 evaluation/metrics.py                  # summary + S0-S5 comparison table
 ```
 
-## Phase 5 — Evaluation and metrics collection
+## Phase 5 — Evaluation and metrics collection — COMPLETE (2026-08-03)
 
-- [ ] Run full test suite (all 15 cases × all 6 conditions) with repeated
-      trials for statistical validity
-- [ ] Compute all metrics from PRD.md § success criteria / Threat-Model.md § 4
-- [ ] Produce comparison tables/plots
-- [ ] Sanity-check every metric against a credible baseline (resolve the
-      "metric legitimacy" open question from PRD.md before trusting results)
+- [x] Metric definitions and baselines resolved and written down *before*
+      generating any numbers — PRD.md § 10 (baseline = S0 itself, sandbox-
+      timing proxy caveat, evidence-record-count proxy for "manual effort,"
+      condition-specific traceability denominator)
+- [x] Evaluation harness (`evaluation/experiment.py`) — 5 repeated trials
+      for the happy path at every condition (S0-S5) and for every one of
+      the 15 attack matrix test cases at its expected condition
+- [x] Metric aggregation and reporting (`evaluation/report.py`) — computes
+      success/reproducibility rates, mean/stdev timing, traceability
+      completeness, storage overhead vs. S0, detection rate per test case,
+      and a per-condition TP/FN/TN/FP confusion matrix; writes
+      `evaluation/results/phase5_summary.json` and `phase5_report.md`
+- [x] Run full evaluation and sanity-check results
+- [x] Run full pytest suite to confirm no regressions (26/26 passing)
+
+**Exit criteria: MET.** All 6 conditions: 100% happy-path success and
+reproducibility. All 15 attack matrix test cases: 100% detection rate
+across 5 trials each, 0 false positives/negatives in every condition's
+confusion matrix. S5's storage overhead over S0 is 5,748 bytes (mean,
+across all four added artifact types combined) — a real, sane number.
+
+This last figure replaced a materially wrong one: the evaluation harness's
+first run showed S5 overhead ballooning to ~855,655 bytes, which turned
+out to be a genuine correctness bug (not a reporting artifact) in
+`src/evidence_store/authorization_evidence.py` — its `generate_authorization_evidence()`
+looked records up by `artifact_hash` internally, and because the stand-in
+stub artifact's build hash never changes, that lookup silently aggregated
+*every* evidence record ever logged across the whole evaluation session
+into each run's "authorization evidence" document, not just that run's
+own trail. Fixed by changing the function to take an explicit `records`
+list from the caller, with `src/pipeline.py` now tracking an evidence-log
+index at the start of `run()` and slicing only the current run's records.
+Confirmed via the full pytest suite (26/26 still passing) that the fix
+caused no regressions. See the module docstring in
+`authorization_evidence.py` and `evaluation/experiment.py`'s module
+docstring for the full writeup — this is the same category of
+"evidence-store lookups keyed by a constant hash silently aggregate
+cross-run noise" trap that the Phase 4 comparison table caught for test
+case #6, now caught a second time by the evaluation harness itself. Worth
+a sentence in the paper's methodology section: two independent, real bugs
+were found purely by the act of building automated, evidence-driven
+evaluation tooling, not by manual review.
+
+**Sandbox note:** the full evaluation run (happy path × 6 conditions +
+attack trials × 15 test cases, 5 trials each ≈ 135 `pipeline.run()` calls)
+takes roughly 45-60 seconds end to end, which exceeds this session's
+per-command execution ceiling. Run in three chunks (happy path; attack
+cases 1-11; attack cases 12-15, or similar), writing each chunk's results
+to a temp file, then merge into `evaluation/results/phase5_raw_results.json`
+before running `report.py`. Not a pipeline bug — each individual
+`pipeline.run()` call is ~0.2-0.5s; the cumulative total across the whole
+matrix is just larger than one command's execution budget.
+
+**Run it yourself:**
+```
+python3 evaluation/experiment.py               # ~45-60s: writes phase5_raw_results.json
+python3 evaluation/report.py                   # writes phase5_summary.json + phase5_report.md
+cat evaluation/results/phase5_report.md
+```
 
 ## Phase 6 — Generalizability (stretch, needed for TDSC/TSE/TOSEM)
 
