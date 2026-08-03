@@ -48,11 +48,12 @@ than hypothesized).
 
 ## What's next (immediate)
 
+- [x] Cross-platform verification: Phase 1 confirmed passing on macOS
+      (user's machine) as well as the Linux sandbox, after fixing a
+      macOS-specific build reproducibility bug (see below).
 - [ ] **You:** run `cfs-app/Dockerfile` on your Mac (has Docker) to build
       the real cFS sample app; report back so Phase 1's target artifact
       can be swapped from the stub to the real thing
-- [ ] **You:** commit + push this session's changes (see git commands at
-      the end of this session's summary in chat)
 - [ ] Begin Phase 2 of Implementation-Plan.md: SBOM + provenance (S1, S2)
 - [ ] Resolve remaining open technical decisions in
       Technical-Design-Document.md § 7 (SBOM format — needed for Phase 2)
@@ -157,3 +158,4 @@ are available. Install Python packages with `pip3 install
 | 2026-08-02 | Adopted cFS source-handling policy and claims-status governance from adjacent workspace projects | STATUS.md, Legal-Data-Sourcing-Notes.md |
 | 2026-08-02 | Initial commit pushed to GitHub (private repo live), README structure diagram fixed | README.md, STATUS.md, repo now on GitHub |
 | 2026-08-03 | Phase 1 (S0 pipeline) built and verified end-to-end: build, signing, ground auth, uplink sim, onboard verification, installation, evidence store, metrics collector. LICENSE added. Real cFS build pinned/documented but not run (no Docker in sandbox). 4/4 tests passing. | LICENSE, README.md, requirements.txt, requirements-dev.txt, .gitignore, src/ (new), cfs-app/ (new), tests/ (new), evaluation/metrics.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, docs/Legal-Data-Sourcing-Notes.md, STATUS.md |
+| 2026-08-03 | Fixed macOS-specific build reproducibility failure: ld64 embeds a non-deterministic UUID load command in Mach-O binaries; disabled via `-Wl,-no_uuid` on Darwin only (Linux GNU ld unaffected). Confirmed 4/4 tests passing on both Linux sandbox and user's macOS. Phase 1 now cross-platform verified. | src/build/build.py |
