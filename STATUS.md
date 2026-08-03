@@ -8,25 +8,40 @@ session, however small.
 
 ## Current phase
 
-**Phase 1 — Minimal S0 pipeline: COMPLETE.** (see `docs/Implementation-Plan.md`)
-Next up: Phase 2 (SBOM + provenance, S1/S2).
+**Phase 2 — SBOM + Provenance (S1/S2): COMPLETE.** (see `docs/Implementation-Plan.md`)
+Next up: Phase 3 (attestation + rollback, S3/S4), or run `cfs-app/Dockerfile`
+to bring the real cFS build online.
 
 ## Last session summary
 
-**Date:** 2026-08-03
+**Date:** 2026-08-03 (session 2)
 
-Built and verified the full Phase 1 S0 pipeline end-to-end: reproducible
-build, Ed25519 signing, ground authorization, simulated uplink (with
-tamper hook), onboard verification, installation, evidence store, metrics
-collector. All against a stand-in stub artifact — the authoring sandbox
-had no Docker/cmake/root, so the real cFS build (pinned and documented in
-`cfs-app/Dockerfile`) could not be run here; needs to be run on a
-Docker-capable machine (user has Docker locally) before any Phase 1+
-result is cited as being about real spacecraft software. Added Apache 2.0
-LICENSE per user decision. 4/4 pytest tests passing, including the Phase 1
-exit criterion (test case #6) and a bonus finding on test case #7 (see
-Threat-Model.md "Phase 1 results" — revoked key caught one stage earlier
-than hypothesized).
+Built and verified SBOM generation (`src/sbom/sbom.py`, CycloneDX-shaped),
+provenance generation/verification (`src/provenance/provenance.py`,
+SLSA-shaped), a version ledger for downgrade detection
+(`src/ground_authorization/version_ledger.py`), condition-gated ground
+authorization covering S1/S2, and an upgraded uplink simulator with
+configurable link profiles (`src/uplink_sim/uplink.py`). 10 new tests
+covering attack matrix cases #1, #2, #3, #4, #5, #9 — all passing, plus
+all 4 Phase 1 tests still passing (14/14 total, no regressions). One
+methodological catch worth remembering: an early version of the test case
+#2 test failed for the wrong reason (missing SBOM masked the intended
+provenance failure) because S2's preset is signature+SBOM+provenance
+together, not provenance alone — see Threat-Model.md "Phase 2 results"
+for the full note, it's a real trap worth mentioning in the paper's
+methodology section.
+
+**Previous session (2026-08-03, session 1):** Built and verified the full
+Phase 1 S0 pipeline end-to-end: reproducible build, Ed25519 signing,
+ground authorization, simulated uplink (with tamper hook), onboard
+verification, installation, evidence store, metrics collector. All
+against a stand-in stub artifact — the authoring sandbox had no
+Docker/cmake/root, so the real cFS build (pinned and documented in
+`cfs-app/Dockerfile`) could not be run there; needs to be run on a
+Docker-capable machine (user has Docker locally) before any result is
+cited as being about real spacecraft software. Added Apache 2.0 LICENSE.
+Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
+— confirmed 4/4 tests passing on both Linux sandbox and user's macOS.
 
 ## What's done
 
@@ -42,21 +57,19 @@ than hypothesized).
       `Satellite-Cybersecurity-Research/verifiable-spacecraft-lifecycle/`
 - [x] Apache 2.0 LICENSE added
 - [x] GitHub repo live and pushed
-- [x] **Phase 1 (S0 pipeline) complete** — see Implementation-Plan.md for
-      full breakdown; all code under `src/`, tests under `tests/`,
-      real cFS build pinned/documented but not yet run (needs Docker)
+- [x] **Phase 1 (S0 pipeline) complete**, cross-platform verified
+      (Linux + macOS)
+- [x] **Phase 2 (S1/S2: SBOM + provenance) complete** — see
+      Implementation-Plan.md for full breakdown; 14/14 tests passing
 
 ## What's next (immediate)
 
-- [x] Cross-platform verification: Phase 1 confirmed passing on macOS
-      (user's machine) as well as the Linux sandbox, after fixing a
-      macOS-specific build reproducibility bug (see below).
 - [ ] **You:** run `cfs-app/Dockerfile` on your Mac (has Docker) to build
-      the real cFS sample app; report back so Phase 1's target artifact
-      can be swapped from the stub to the real thing
-- [ ] Begin Phase 2 of Implementation-Plan.md: SBOM + provenance (S1, S2)
-- [ ] Resolve remaining open technical decisions in
-      Technical-Design-Document.md § 7 (SBOM format — needed for Phase 2)
+      the real cFS sample app; report back so the target artifact can be
+      swapped from the stub to the real thing
+- [ ] **You:** commit + push this session's changes
+- [ ] Begin Phase 3 of Implementation-Plan.md: attestation + rollback
+      (S3, S4) — needs the swtpm-vs-custom-stub decision first (TDD § 7)
 - [ ] Consider reviewing prior related projects already present in the
       Development Projects folder (`mission-aware-satellite-cyber-recovery`,
       `satcom-ttc-post-compromise-recovery`) for reusable components or
@@ -94,12 +107,13 @@ data exists. Update these labels only when the corresponding phase in
 `docs/Implementation-Plan.md` actually completes with passing results —
 not based on intent or partial progress.
 
-- Detection-accuracy claims at **S0 only**, **against the stand-in stub
-  artifact only**: `PRELIMINARY_INTERNAL_ONLY` — test cases #6 and #7
-  pass in automated tests (see Threat-Model.md "Phase 1 results"), but
-  this is one condition, one non-cFS artifact, no statistical repetition.
-  Not citable as a research result yet.
-- Detection-accuracy claims for S1-S5 or against real cFS: `NOT_PERMITTED`
+- Detection-accuracy claims at **S0, S1, S2 only**, **against the
+  stand-in stub artifact only**: `PRELIMINARY_INTERNAL_ONLY` — test cases
+  #1, #2, #3, #4, #5, #6, #7, #9 all pass in automated tests (see
+  Threat-Model.md "Phase 1/2 results"), but this is 3 of 6 conditions, one
+  non-cFS artifact, no statistical repetition. Not citable as a research
+  result yet.
+- Detection-accuracy claims for S3-S5 or against real cFS: `NOT_PERMITTED`
   — not implemented / not run yet
 - Recovery-success / time-to-trusted-restoration claims: `NOT_PERMITTED` —
   requires Phase 3 (rollback) complete
@@ -129,8 +143,8 @@ Key ones:
 1. ~~Repo license~~ — resolved: Apache 2.0
 2. Second software stack — pursue now or defer to Phase 6?
 3. Baseline definition for S0 in effort/overhead metrics
-4. SBOM format (CycloneDX vs SPDX) — needed for Phase 2, decide next session
-5. Attestation approach (swtpm vs custom stub) — needed for Phase 3
+4. ~~SBOM format (CycloneDX vs SPDX)~~ — resolved: CycloneDX (see TDD § 7b)
+5. Attestation approach (swtpm vs custom stub) — needed for Phase 3, decide next session
 
 ## Environment notes (for future Claude sessions)
 
@@ -159,3 +173,4 @@ are available. Install Python packages with `pip3 install
 | 2026-08-02 | Initial commit pushed to GitHub (private repo live), README structure diagram fixed | README.md, STATUS.md, repo now on GitHub |
 | 2026-08-03 | Phase 1 (S0 pipeline) built and verified end-to-end: build, signing, ground auth, uplink sim, onboard verification, installation, evidence store, metrics collector. LICENSE added. Real cFS build pinned/documented but not run (no Docker in sandbox). 4/4 tests passing. | LICENSE, README.md, requirements.txt, requirements-dev.txt, .gitignore, src/ (new), cfs-app/ (new), tests/ (new), evaluation/metrics.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, docs/Legal-Data-Sourcing-Notes.md, STATUS.md |
 | 2026-08-03 | Fixed macOS-specific build reproducibility failure: ld64 embeds a non-deterministic UUID load command in Mach-O binaries; disabled via `-Wl,-no_uuid` on Darwin only (Linux GNU ld unaffected). Confirmed 4/4 tests passing on both Linux sandbox and user's macOS. Phase 1 now cross-platform verified. | src/build/build.py |
+| 2026-08-03 | Phase 2 (S1/S2: SBOM + provenance) built and verified: SBOM generation/checks, provenance generation/verification, version ledger (downgrade detection), condition-gated ground authorization, uplink v2 with link profiles. 10 new tests covering attack cases #1,#2,#3,#4,#5,#9; 14/14 total passing, no regressions. | src/sbom/ (new), src/provenance/ (new), src/ground_authorization/version_ledger.py (new), src/ground_authorization/ground_auth.py, src/uplink_sim/uplink.py, src/pipeline.py, tests/test_phase2_pipeline.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |

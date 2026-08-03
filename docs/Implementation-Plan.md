@@ -61,19 +61,42 @@ python3 -m pytest tests/test_phase1_pipeline.py -v
 python3 evaluation/metrics.py                  # evidence store summary
 ```
 
-## Phase 2 — SBOM + Provenance (S1, S2)
+## Phase 2 — SBOM + Provenance (S1, S2) — COMPLETE (2026-08-03)
 
-- [ ] SBOM generation, wired into signed release bundle
-- [ ] Provenance generation (in-toto/SLSA), wired into signed release bundle
-- [ ] Ground authorization policy checks expanded to consider SBOM/provenance
-- [ ] Uplink simulator v2: add configurable latency/loss/bandwidth ceiling,
-      CCSDS-informed
-- [ ] Test cases #1–5 implemented and passing at expected conditions
-- [ ] Test case #9 (downgrade attempt) — provenance version check
+- [x] SBOM generation, wired into signed release bundle —
+      `src/sbom/sbom.py` (CycloneDX-shaped JSON, hand-rolled — see TDD § 7a)
+- [x] Provenance generation (in-toto/SLSA-shaped), wired into signed
+      release bundle — `src/provenance/provenance.py`
+- [x] Ground authorization policy checks expanded to consider
+      SBOM/provenance — `src/ground_authorization/ground_auth.py`, now
+      condition-gated via `condition.py`
+- [x] Uplink simulator v2: configurable latency/bandwidth/loss via
+      `LinkProfile` (LEO_TYPICAL, DEEP_SPACE_TYPICAL, IDEAL presets),
+      CCSDS-order-of-magnitude-informed, not RF-accurate (per PRD non-goals)
+      — `src/uplink_sim/uplink.py`
+- [x] Test cases #1–5 implemented and passing at expected conditions —
+      `tests/test_phase2_pipeline.py`
+- [x] Test case #9 (downgrade attempt) — version ledger at
+      `src/ground_authorization/version_ledger.py`, wired into S2 ground
+      authorization
 
-**Exit criteria:** S1 and S2 conditions each demonstrably catch a superset
-of what S0 catches, with evidence records showing the mechanism that
-caught each case.
+**Exit criteria: MET.** 14/14 tests pass (4 Phase 1 + 10 Phase 2), no
+regressions. S1 catches test cases #3 (incomplete SBOM) and #4 (known
+test vulnerability), which S0 has no mechanism to catch at all. S2 catches
+test cases #1 (binary/source mismatch), #2 (missing provenance), #5
+(unauthorized builder), and #9 (downgrade attempt), none of which S0 or S1
+can catch. This is the superset property the assurance ladder is supposed
+to demonstrate. See Threat-Model.md "Phase 2 results" for the full
+breakdown and one interesting scoping note (S2's preset requires SBOM
+*and* provenance together, not provenance alone — this tripped up a test
+before it tripped up the pipeline itself, see Threat-Model.md).
+
+**Run it yourself:**
+```
+python3 src/pipeline.py                        # S0 scenarios + S2 happy path
+python3 -m pytest tests/ -v                    # all 14 tests
+python3 evaluation/metrics.py                  # evidence store summary
+```
 
 ## Phase 3 — Attestation + Rollback (S3, S4)
 

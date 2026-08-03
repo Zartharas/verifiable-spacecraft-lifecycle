@@ -136,3 +136,32 @@ network/hardware dependency.
   checks its own flag. No condition-specific code forks.
 - **Evidence store: implemented as designed** — append-only JSON-Lines at
   `evaluation/evidence_log.jsonl`, matching the § 4 schema exactly.
+
+## 7b. Phase 2 decisions actually made
+
+- **SBOM format: CycloneDX**, confirming the § 7 lean. Hand-rolled
+  minimal JSON generator (`src/sbom/sbom.py`) rather than invoking Syft —
+  the stub artifact has no real dependency graph for Syft to discover.
+  Swap in real Syft output once pointed at the real cFS build; the shape
+  is deliberately CycloneDX-compatible so that swap should be low-friction.
+- **Provenance format: hand-rolled, SLSA v1/in-toto-statement-shaped
+  JSON** (`src/provenance/provenance.py`), not a full in-toto/SLSA library
+  invocation, for the same reason as SBOM — schema shape matters for
+  testing the assurance-ladder comparison, not spec conformance, at this
+  stage. Source identity is this repo's own `git rev-parse HEAD` (the stub
+  artifact lives inside this repo) — revisit once the real cFS build has
+  its own separate source repo to attest against.
+- **Known-vulnerability detection: a small synthetic table**
+  (`KNOWN_VULNERABLE_COMPONENTS`), not a real CVE/OSV feed lookup. Tests
+  the detection *mechanism*, not real-world vulnerability coverage — don't
+  conflate the two when writing up results.
+- **Version/downgrade tracking: a single-file JSON ledger**
+  (`src/ground_authorization/version_ledger.py`), explicitly flagged in
+  its own docstring as a Phase 2 simplification — a real system would tie
+  this into the evidence/authorization chain (S5), not a side file.
+- **Uplink link profiles: three fixed presets** (`IDEAL`,
+  `LEO_TYPICAL`, `DEEP_SPACE_TYPICAL`) in `src/uplink_sim/uplink.py`,
+  loosely order-of-magnitude informed by CCSDS-class link budgets, not
+  tied to a specific real mission. Loss/latency values are illustrative,
+  not validated against a specific reference system — flag this
+  explicitly if cited in the paper's methodology.

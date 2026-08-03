@@ -104,6 +104,42 @@ cfs-app/README.md for why it's not the real cFS target yet:**
   condition catching something earlier than the naive expectation (see
   note above and Research-Paper-Outline.md § 4).
 
+**Phase 2 results (2026-08-03), against the stand-in artifact:**
+
+- **Test case #3 (incomplete SBOM): confirmed detected at S1**, matching
+  the hypothesis. `sbom_verification` evidence record logged with
+  `test_case_injected: "3"`.
+- **Test case #4 (dependency with known test vulnerability): confirmed
+  detected at S1**, matching the hypothesis. Uses a small synthetic
+  vulnerability table (`KNOWN_VULNERABLE_COMPONENTS` in `src/sbom/sbom.py`)
+  rather than a real CVE feed — sufficient to test the detection
+  *mechanism*, not a claim about real vulnerability coverage.
+- **Test case #1 (binary does not match source): confirmed detected at
+  S2**, matching the hypothesis. Simulated by corrupting the binary
+  *after* provenance generation but *before* signing (`corrupt_binary_
+  after_provenance` in `src/pipeline.py`) — models an attacker or faulty
+  process substituting the artifact between attestation and release.
+- **Test case #2 (missing/false provenance): confirmed detected at S2**,
+  matching the hypothesis.
+- **Test case #5 (unauthorized build runner): confirmed detected at S2**,
+  matching the hypothesis, via a builder-ID allowlist
+  (`ALLOWED_BUILDER_IDS` in `src/provenance/provenance.py`).
+- **Test case #9 (downgrade attempt): confirmed detected at S2**, at the
+  earlier end of the hypothesized "S2/S4" range. Implemented via a simple
+  version ledger (`src/ground_authorization/version_ledger.py`) tracking
+  the last ground-approved version number.
+- **Scoping note worth keeping for the paper's Methods/Discussion
+  section:** S2's preset is *signature + SBOM + provenance* (additive per
+  the ladder design), not provenance alone. A test for test case #2
+  originally failed for the wrong reason — it omitted a valid SBOM, so
+  ground authorization rejected on the *missing SBOM* check before ever
+  reaching provenance verification, masking the intended failure mode.
+  This is a useful illustration of a real methodological trap in this kind
+  of layered-condition testing: injecting a single-mechanism failure at a
+  multi-mechanism condition requires satisfying every *other* active
+  mechanism first, or the test isn't isolating what it claims to isolate.
+  Worth a sentence in the paper's evaluation methodology section.
+
 ## 4. Metrics (see PRD.md § success criteria for how these roll up)
 
 - Tampered-artifact detection (rate, per condition, per test case)
