@@ -8,19 +8,20 @@ session, however small.
 
 ## Current phase
 
-**Phase 7 — Real framework builds: PARTIALLY COMPLETE.**
+**Phase 7 — Real framework builds: COMPLETE.**
 (see `docs/Implementation-Plan.md`) Both `cfs-app/Dockerfile` and
-`fprime-app/Dockerfile` now run successfully on the user's Docker-capable
-Mac (after fixing real bugs in both — see below). Real `core-cpu1` (cFS)
-and `Ref` (F´) binaries are built, confirmed working, and wired into the
-pipeline as `"cfs-real"`/`"fprime-real"` stacks, smoke-tested through the
-full S0-S2 lifecycle. **Not yet done:** S3+ conditions against the real
-binaries (blocked on a persistent-process health-check design — both
-real binaries are long-running, not short-lived CLI programs) and
-independent reproducibility verification (today's builds are one sample
-each, not a two-build comparison). Next up: decide how to health-check a
-persistent process, or move to Phase 8 (paper drafting) treating the
-current real-build integration as sufficient for now.
+`fprime-app/Dockerfile` run successfully on the user's Docker-capable Mac
+(after fixing real bugs in both — see below). Real `core-cpu1` (cFS) and
+`Ref` (F´) binaries are built, confirmed working, and wired into the
+pipeline as `"cfs-real"`/`"fprime-real"` stacks. Full S0-S5 lifecycle now
+exercised against both, including a persistent-process health-check
+strategy (ISSUE-003, resolved). Independent reproducibility verification
+also complete: a second, from-scratch Docker rebuild found F´'s `Ref`
+byte-for-byte reproducible, and cFS's `core-cpu1` **not** bit-identical —
+root cause precisely isolated to an embedded build timestamp (22 bytes
+differ, of ~915KB) rather than left as an open question. See
+`docs/Threat-Model.md` "Phase 7 reproducibility verification" for the
+full methodology. Next up: Phase 8 (paper drafting and repo polish).
 
 ## Last session summary
 
@@ -260,17 +261,16 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       for ISSUE-003 (both real binaries are long-running processes that
       don't fit the original run-to-completion model — see ISSUE-003 for
       the fix). 41/41 tests passing (35 + 6 new, auto-skip if binaries
-      absent). **Not complete:** independent reproducibility verification
-      (a real second-build comparison, not yet done)
+      absent). Independent reproducibility verification also complete:
+      F´'s `Ref` is byte-for-byte reproducible across two from-scratch
+      Docker builds; cFS's `core-cpu1` is not, with the exact cause
+      (an embedded build-timestamp string and its downstream effect on
+      the ELF build-id) isolated precisely — see
+      `docs/Threat-Model.md` "Phase 7 reproducibility verification"
 
 ## What's next (immediate)
 
 - [ ] **You:** commit + push this session's changes
-- [ ] Optionally: independently verify reproducibility of either real
-      build (rebuild from scratch a second time, e.g.
-      `docker build --no-cache`, compare hashes) — not done yet, current
-      "reproducible=True" for real stacks is a trivial copy-check, not a
-      real test
 - [ ] Retroactively backfill ISSUES-AND-FIXES-LOG.md entries for the
       Phase 4/5/6 bugs that were found but only documented narratively in
       Threat-Model.md/STATUS.md before the log was actually put into use
@@ -355,14 +355,31 @@ not based on intent or partial progress.
 - Reproducible-build claims **against the stub artifacts**:
   `PRELIMINARY_INTERNAL_ONLY` — 100% reproducible across all Phase 5/6
   trials (5 per condition, 6 conditions, both stacks) in this sandbox.
-  Reproducible-build claims **against either real framework**:
-  `NOT_PERMITTED` — a real binary now exists for each, but `build.py`
-  deliberately does not recompile a real framework from scratch per
-  pipeline call (see `build.py` module docstring), so the pipeline's own
-  `reproducible=True` for `"cfs-real"`/`"fprime-real"` is a trivial
-  copy-integrity check, not a genuine two-independent-builds comparison.
-  That comparison has not been performed. Do not cite either real
-  framework as "reproducibly built" until it has.
+  Reproducible-build claims **against real F´ (`Ref`, v4.2.2)**:
+  `PRELIMINARY_INTERNAL_ONLY` — **upgraded from `NOT_PERMITTED`, Phase 7
+  reproducibility verification (2026-08-03).** A genuine, independent
+  two-from-scratch-builds comparison (`docker build --no-cache`, ~1 hour
+  apart) produced a byte-for-byte identical binary (0 bytes differing via
+  `cmp -l`). Still `PRELIMINARY_INTERNAL_ONLY` rather than fully citable:
+  this is a single comparison (one rebuild), not a repeated-trial result,
+  and only covers this project's specific pinned tag + Ubuntu 22.04
+  Docker environment.
+  Reproducible-build claims **against real cFS (`core-cpu1`, v7.0.1)**:
+  `NOT_PERMITTED`, and now for a specific, verified reason rather than
+  "not yet tested" — the same independent rebuild comparison found
+  `core-cpu1` is **not** bit-identical: 22 bytes differ (of ~915KB),
+  precisely isolated to an embedded build-timestamp string and its
+  downstream effect on the ELF build-id hash (see
+  `docs/Threat-Model.md` "Phase 7 reproducibility verification" for the
+  full byte-offset-level methodology). The compiled flight-software logic
+  itself is otherwise identical across both builds — this is a real,
+  narrow, well-understood non-determinism, not "the build is broken" —
+  but bit-identical reproducibility cannot be claimed for cFS as currently
+  built. `build.py` still does not recompile either real framework from
+  scratch per pipeline call regardless of this result (see its module
+  docstring) — the pipeline's own per-run `reproducible=True` for
+  `"cfs-real"`/`"fprime-real"` remains a trivial copy-integrity check,
+  distinct from the manual verification described here.
 - Generalizability claims (beyond a single stack): `PRELIMINARY_INTERNAL_ONLY`
   — **resolved from `NOT_PERMITTED`, Phase 6 (2026-08-03), stub-artifact
   scope only.** The S0-S5 ladder's mechanisms and evidence schema were
@@ -444,3 +461,4 @@ are available. Install Python packages with `pip3 install
 | 2026-08-03 | Phase 6 (generalizability) built and run: added a second target stack (NASA JPL's F Prime, pinned to tag v4.2.2, Apache 2.0) via a new `src/target_stack.py` registry, parameterizing `build.py`/`health_check.py` by `stack`. Every other pipeline module generalized unmodified. Found and fixed a real bug: the version ledger was a single global file, not scoped per stack, wrongly flagging fprime's first release as a downgrade. 9 new tests (35/35 total passing, no regressions). Re-ran the Phase 5 evaluation harness against `fprime`: results structurally identical to stack #1 (100% detection/success/reproducibility, 0 false positives/negatives, matching storage overhead). | src/target_stack.py (new), src/build/build.py, src/health/health_check.py, src/pipeline.py, src/ground_authorization/version_ledger.py, src/ground_authorization/ground_auth.py, fprime-app/ (new), evaluation/experiment.py, evaluation/report.py, evaluation/results/ (phase6 files), tests/test_phase6_generalizability.py (new), docs/PRD.md, docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, docs/Legal-Data-Sourcing-Notes.md, STATUS.md |
 | 2026-08-03 | Phase 7 (real framework builds, partial): ran both Dockerfiles for the first time on the user's Docker-capable Mac; both failed on the first attempt (ISSUE-001 cFS wrong build invocation, ISSUE-002 F´ wrong install method), fixed by consulting each framework's own authoritative build docs. Both builds succeeded on retry — real `core-cpu1` (v7.0.1) and `Ref` (v4.2.2) confirmed working. Wired in as `"cfs-real"`/`"fprime-real"` stacks (prebuilt-binary mode in `target_stack.py`, since a real framework build is too slow to redo per pipeline call); smoke-tested through S0-S2. Found a genuine architectural mismatch testing S3+ (ISSUE-003): both real binaries are long-running processes, incompatible with `health_check.py`'s run-to-completion model — fixed to fail loudly (`NotImplementedError`) rather than silently mislabel a healthy process as broken. 4 new tests, auto-skip if binaries absent (39/39 total passing). Renumbered Implementation-Plan.md's old Phase 7 (paper drafting) to Phase 8 to make room. | src/target_stack.py, src/build/build.py, src/health/health_check.py, cfs-app/Dockerfile, cfs-app/README.md, cfs-app/confirmed-build.json (new), fprime-app/Dockerfile, fprime-app/README.md, fprime-app/confirmed-build.json (new), .gitignore, tests/test_phase7_real_builds.py (new), docs/PRD.md, docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, docs/Legal-Data-Sourcing-Notes.md, ISSUES-AND-FIXES-LOG.md, STATUS.md |
 | 2026-08-03 | ISSUE-003 resolved: designed and implemented a persistent-process health-check strategy (`_health_check_persistent_process` in `health_check.py`, selected via new `Stack.health_check_mode` in `target_stack.py`) so S3+ conditions (attestation, health check, rollback) can now be exercised against both real binaries — previously hard-blocked. Launch via `Popen`, watch stdout through a background reader thread for an empirically-confirmed boot-success marker (`core-cpu1`'s `CFE_ES_Main entering OPERATIONAL state`; `Ref`'s `Hit Ctrl-C to quit`, confirmed via direct testing incl. catching a shell-pipe artifact that had made `Ref`'s exit status look ambiguous) within a bounded window, then terminate. Never fabricates a pass — only a genuinely-observed marker counts. Replaced the two `NotImplementedError`-only tests with 4 real assertions (S4 happy path + test case #11 against both real binaries); 41/41 total passing, no regressions. Real-binary S3-S5 claims upgraded from `NOT_PERMITTED` to `PRELIMINARY_INTERNAL_ONLY` in STATUS.md "Claims status." | src/target_stack.py, src/health/health_check.py, tests/test_phase7_real_builds.py, cfs-app/confirmed-build.json, fprime-app/confirmed-build.json, ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |
+| 2026-08-03 | Phase 7 reproducibility verification complete: rebuilt both real frameworks from scratch a second time (`docker build --no-cache`, ~1 hour after the first) into a separate gitignored `build-output-verify/`, then hash-compared against the first build. F´'s `Ref` (v4.2.2) came back byte-for-byte identical (0 bytes differing via `cmp -l`) — genuinely reproducible. cFS's `core-cpu1` (v7.0.1) did not — 22 of ~915KB bytes differ; root cause isolated precisely (not guessed): a literal embedded build-timestamp string (`202608031808` vs `202608031907`, the two builds' actual wall-clock times) at two byte offsets, plus a 20-byte block that is the ELF `.note.gnu.build-id` SHA-1 note changing as a downstream consequence of that timestamp. Every other byte of `core-cpu1` — the actual flight-software logic — is identical across both builds. Updated both `confirmed-build.json` manifests, STATUS.md "Claims status" (F´ reproducibility upgraded to `PRELIMINARY_INTERNAL_ONLY`; cFS's `NOT_PERMITTED` now backed by a specific verified reason instead of "not yet tested"), Implementation-Plan.md Phase 7 checklist (now fully MET), and Threat-Model.md with the full byte-offset-level methodology. This was a real, upstream-framework finding, not a bug in this project's own code — no ISSUES-AND-FIXES-LOG entry, per that log's scope. | cfs-app/confirmed-build.json, fprime-app/confirmed-build.json, .gitignore, docs/Threat-Model.md, docs/Implementation-Plan.md, STATUS.md |

@@ -349,18 +349,27 @@ cat evaluation/results/phase6_report_fprime.md
       `NotImplementedError` gate. See ISSUES-AND-FIXES-LOG.md ISSUE-003
       for the full writeup and Threat-Model.md "Phase 7 findings" for the
       design rationale.
-- [ ] **Not yet done:** independently verify reproducibility of either
-      real framework build (rebuild from scratch a second time, e.g. via
-      `docker build --no-cache`, and compare hashes) — today's builds are
-      each a single sample, not yet a reproducibility test
+- [x] Independently verified reproducibility of both real framework
+      builds — rebuilt each from scratch a second time
+      (`docker build --no-cache`, ~1 hour after the first) and
+      hash-compared. Result: **F´'s `Ref` is byte-for-byte reproducible**
+      (0 bytes differing); **cFS's `core-cpu1` is not** — 22 of ~915KB
+      bytes differ, precisely isolated (not guessed at) to an embedded
+      build-timestamp string and its downstream effect on the ELF
+      build-id hash. See `docs/Threat-Model.md` "Phase 7 reproducibility
+      verification" for the full byte-offset methodology and
+      `cfs-app/confirmed-build.json` / `fprime-app/confirmed-build.json`
+      for the recorded result.
 
-**Exit criteria: MET**, aside from the separately-tracked reproducibility
-item above (not part of ISSUE-003 — a distinct, still-open verification
-task). The real artifacts exist, are integrated into the stack registry,
-and now flow cleanly through S0-S5 including attestation, the
-persistent-process health check, and rollback. See
-Threat-Model.md "Phase 7 findings" for the full writeup and STATUS.md
-"Claims status" for exactly what is and isn't citable from this work.
+**Exit criteria: MET.** The real artifacts exist, are integrated into the
+stack registry, flow cleanly through S0-S5 including attestation, the
+persistent-process health check, and rollback, and have both been put
+through an independent reproducibility test with a precise, honest
+result for each (one confirmed reproducible, one confirmed not, with the
+exact cause identified). See Threat-Model.md "Phase 7 findings" and
+"Phase 7 reproducibility verification" for the full writeup and
+STATUS.md "Claims status" for exactly what is and isn't citable from
+this work.
 
 **Run it yourself** (requires having run the Docker builds first — see
 `cfs-app/README.md` / `fprime-app/README.md`):

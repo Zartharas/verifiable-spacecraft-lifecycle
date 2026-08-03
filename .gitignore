@@ -19,6 +19,11 @@ node_modules/
 /evaluation/evidence_log.jsonl
 /cfs-app/build-output/
 /fprime-app/build-output/
+# Second, independent rebuild used for reproducibility verification only
+# (see Implementation-Plan.md Phase 7 "reproducibility verification") —
+# never the artifact the pipeline actually points at.
+/cfs-app/build-output-verify/
+/fprime-app/build-output-verify/
 
 # Runtime artifacts from actually executing the real cFS binary
 # (core-cpu1 writes these to its current working directory — critical

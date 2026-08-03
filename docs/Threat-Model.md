@@ -408,19 +408,70 @@ against each. This is still individual test runs, not a repeated-trial
 statistical evaluation — see STATUS.md "Claims status" for exactly what
 that upgrades and what it doesn't.
 
-**Reproducibility claims are explicitly NOT extended to the real
-frameworks by this work.** `build.py` no longer compiles `"cfs-real"`/
-`"fprime-real"` from source on every pipeline call — a real framework
-build takes minutes (confirmed: ~230s for cFS's install step, ~24s for
-F´'s final compile alone), incompatible with a pipeline built around
-sub-second calls (the Phase 5/6 evaluation harness makes ~135 calls per
-stack). Instead, the one confirmed Docker-built binary is copied for both
-"independent" hash comparisons the stub stacks perform for real — meaning
-`reproducible=True` for these two stacks is a trivial file-copy-integrity
-check, not evidence that rebuilding cFS/F´ from scratch twice produces a
-bit-identical binary. That real question has not been tested. See
-`cfs-app/confirmed-build.json` / `fprime-app/confirmed-build.json` and
-STATUS.md "Claims status."
+**Reproducibility claims were NOT extended to the real frameworks by the
+work above.** `build.py` does not compile `"cfs-real"`/`"fprime-real"`
+from source on every pipeline call — a real framework build takes minutes
+(confirmed: ~230s for cFS's install step, ~24s for F´'s final compile
+alone), incompatible with a pipeline built around sub-second calls (the
+Phase 5/6 evaluation harness makes ~135 calls per stack). Instead, the
+one confirmed Docker-built binary is copied for both "independent" hash
+comparisons the stub stacks perform for real — meaning `reproducible=True`
+for these two stacks, as recorded by the pipeline itself, is a trivial
+file-copy-integrity check, not evidence about rebuilding from scratch.
+That real question is answered separately, below.
+
+## Phase 7 reproducibility verification (real second builds, 2026-08-03)
+
+To test whether cFS/F´ rebuild bit-identically — independent of the
+pipeline's own trivial copy-check — both Dockerfiles were rebuilt a
+second time from scratch (`docker build --no-cache`, ~1 hour after the
+first build, output kept separate in `build-output-verify/`, gitignored)
+and the resulting binaries hash-compared against the first build's
+recorded sha256 in each `confirmed-build.json`.
+
+**F´'s `Ref` (v4.2.2): bit-for-bit reproducible.** The second build's
+sha256 (`e271e22c37d11d3b27f03b0d033291af727e4d11f8bdffa1c6a8aa83b47f4b9b`)
+matched the first build's exactly; `cmp -l` confirmed 0 differing bytes
+across the entire binary.
+
+**cFS's `core-cpu1` (v7.0.1): NOT bit-for-bit reproducible — root cause
+isolated precisely, not guessed at.** The second build's hash differed.
+`cmp -l` showed exactly 22 differing bytes total (out of ~915KB), in two
+locations:
+
+1. Two isolated byte offsets (393508, 393510) carry a literal
+   build-timestamp string baked into the binary by cFS's own build
+   system. A raw `strings` diff (no filtering) showed the actual embedded
+   values: `202608031808` (first build) vs `202608031907` (second
+   build) — i.e., the two Docker builds' real wall-clock start times,
+   ~59 minutes apart, in `YYYYMMDDHHMM` format.
+2. A contiguous 20-byte block (offsets 889-908 — exactly the length of a
+   SHA-1 digest) is the ELF `.note.gnu.build-id` section. GNU ld computes
+   this as a SHA-1 hash over the final linked binary's contents by
+   default; since (1) changes those contents, the derived build-id
+   necessarily changes too. This is a downstream consequence of the
+   embedded timestamp, not a second, independent source of
+   non-determinism.
+
+Every other byte in `core-cpu1` — the actual compiled flight-software
+logic — was identical across two independent from-scratch builds. The
+non-determinism is fully attributable to a build-timestamp string the
+cFS build system embeds (likely into a generated version/build-info
+source file compiled into the binary), not to compiler flag differences,
+link order, or genuine nondeterministic compilation.
+
+**What this licenses claiming, precisely (see STATUS.md "Claims
+status" for the full label):** F´'s build process, as pinned and
+Dockerized by this project, is independently verified reproducible.
+cFS's is not — bit-identical reproducibility for `core-cpu1` would
+require either patching out or normalizing the embedded build timestamp
+(e.g., via `SOURCE_DATE_EPOCH`-style techniques, if cFS's build system
+supports them — not investigated here) before a bit-identical claim
+could be made. Neither result generalizes beyond these two specific,
+pinned tags and this specific Ubuntu 22.04 Docker build environment; a
+different toolchain or OS could introduce other non-determinism this
+test wouldn't catch. This is a single comparison (one rebuild each), not
+a repeated-trial statistical result.
 
 ## 4. Metrics (see PRD.md § success criteria for how these roll up)
 
