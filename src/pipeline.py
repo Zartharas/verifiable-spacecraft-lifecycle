@@ -46,6 +46,9 @@ from provenance.provenance import generate_provenance  # noqa: E402
 from attestation.attestation import generate_attestation, verify_attestation  # noqa: E402
 from health.health_check import run_health_check  # noqa: E402
 from rollback import rollback  # noqa: E402
+from policy.policy import PROHIBITED_CONFIGURATIONS  # noqa: E402,F401 (re-export for tests)
+from operational_monitoring import monitoring  # noqa: E402
+from evidence_store.authorization_evidence import generate_authorization_evidence  # noqa: E402
 from condition import preset  # noqa: E402
 
 
@@ -61,6 +64,9 @@ class PipelineResult:
         self.health_ok = None
         self.rollback_outcome = None  # "confirmed" | "rolled_back" | "recovery_failed" | None
         self.rejected_at = None
+        self.inventory_reconciled = None
+        self.telemetry_consistent = None
+        self.authorization_evidence_path = None
 
     def __repr__(self):
         return (
@@ -93,13 +99,20 @@ def run(
     simulate_interrupted_install: bool = False,
     force_health_fail: bool = False,
     attestation_backdate_seconds: int = 0,
+    configuration: Optional[dict] = None,
+    claimed_telemetry_success: Optional[bool] = None,
 ) -> PipelineResult:
     result = PipelineResult()
     cond = preset(condition_name)
+    configuration = configuration or {}
 
     build_result = build(condition_name=condition_name)
     result.build_result = build_result
     binary_path = Path(build_result["binary_path"])
+
+    import hashlib
+
+    artifact_hash = hashlib.sha256(binary_path.read_bytes()).hexdigest()
 
     prov_path = None
     if cond.active("provenance"):
@@ -129,6 +142,7 @@ def run(
         sbom_path=sbom_path,
         prov_path=prov_path,
         version=version,
+        configuration=configuration,
     )
     result.ground_approved = approved
     if not approved:
@@ -148,6 +162,24 @@ def run(
     result.onboard_verified = verified
     if not verified:
         result.rejected_at = "onboard_verification"
+        if tamper_in_transit:
+            # signing.verify() already logged a "fail" record for this
+            # rejection, but without a test_case_injected tag (it's a
+            # generic signature-mismatch check, not case-#6-specific).
+            # Tag the detection explicitly so evaluation/metrics.py's
+            # automated comparison table can find it — see Threat-Model.md
+            # "Phase 4 results" for why this was missing and worth noting.
+            from evidence_store import EvidenceStore
+
+            EvidenceStore().record(
+                pipeline_stage="onboard_signature_verification",
+                condition=condition_name,
+                artifact_ref=artifact_hash,
+                actor="onboard_verification_agent",
+                result="fail",
+                detail={"reason": "test case #6 (modified update in transit) confirmed detected"},
+                test_case_injected="6",
+            )
         return result
 
     if cond.active("trusted_rollback"):
@@ -192,6 +224,40 @@ def run(
         result.installed_path = partitions.get_active_path()
         if outcome != "confirmed":
             result.rejected_at = f"post_install_{outcome}"
+
+        if cond.active("machine_readable_authorization"):
+            state = partitions._load_state()
+            active_slot = state["active"]
+            spacecraft_confirmed_version = (
+                state[active_slot]["version"] if state[active_slot]["confirmed"] else None
+            )
+
+            _, _ = monitoring.reconcile_inventory(
+                ground_expected_version=version,
+                spacecraft_confirmed_version=spacecraft_confirmed_version,
+                artifact_hash=artifact_hash,
+                condition_name=condition_name,
+            )
+            result.inventory_reconciled = spacecraft_confirmed_version == version
+
+            actual_confirmed = outcome == "confirmed"
+            claimed = (
+                claimed_telemetry_success
+                if claimed_telemetry_success is not None
+                else actual_confirmed
+            )
+            telemetry_ok, _ = monitoring.check_telemetry(
+                claimed_success=claimed,
+                actual_confirmed=actual_confirmed,
+                artifact_hash=artifact_hash,
+                condition_name=condition_name,
+            )
+            result.telemetry_consistent = telemetry_ok
+
+            result.authorization_evidence_path = generate_authorization_evidence(
+                artifact_hash, condition_name=condition_name
+            )
+
         return result
 
     elif cond.active("onboard_attestation"):
@@ -240,3 +306,8 @@ if __name__ == "__main__":
     print("\n=== S4 happy path (A/B rollback active) ===")
     r4 = run(condition_name="S4", version=4)
     print(r4)
+
+    print("\n=== S5 happy path (full machine-readable authorization evidence) ===")
+    r5 = run(condition_name="S5", version=5)
+    print(r5)
+    print(f"authorization evidence written to: {r5.authorization_evidence_path}")

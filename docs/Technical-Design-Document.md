@@ -198,3 +198,36 @@ network/hardware dependency.
   Kept separate to match the named "Rollback controller" actor in
   Pipeline-Flow-Document.md, not because the logic is complex enough to
   need its own module on merits alone.
+
+## 7d. Phase 4 decisions actually made
+
+- **Policy language: custom Python deny-list, not OPA/Rego.**
+  `src/policy/policy.py`. Real OPA would require fetching an external
+  binary release with no clean verification path from this sandbox — a
+  small explicit policy table tests the assurance mechanism (can a
+  correctly-signed release still be rejected on policy grounds?) without
+  pulling in unverified infrastructure. The check-shape (deny-list of
+  prohibited config patterns) maps cleanly onto a Rego `deny` rule set if
+  a real ground-system migration happens later.
+- **Inventory reconciliation and telemetry checks: plain value
+  comparisons, not signed/chained evidence.**
+  `src/operational_monitoring/monitoring.py`. Ground's "expectation" and
+  the spacecraft's "actual" state are passed as plain arguments rather
+  than derived from a tamper-evident chain — sufficient to test the
+  comparison logic, not a claim about how a real ground system would
+  authenticate its own inventory records.
+- **Authorization evidence: OSCAL-*informed* JSON aggregation, not a full
+  OSCAL schema implementation.** `src/evidence_store/authorization_
+  evidence.py` assembles all evidence-store records for an artifact into
+  one document with a subject/findings/overall-result shape. This is
+  intentionally the same "shape over spec-conformance" choice made for
+  SBOM (§ 7b) and provenance (§ 7b) — real OSCAL conformance would matter
+  for a paper claiming OSCAL compatibility specifically; this project
+  doesn't make that claim.
+- **Comparison table generator: `evaluation/metrics.py::
+  build_comparison_table`** groups evidence records by condition and
+  test-case tag. Known limitation (see Threat-Model.md "Phase 4 results"
+  discussion of test case #6): counts tagged *records*, not test
+  *instances*, which can double-count when a test case is tagged at both
+  an injection point and a detection point. Fix in Phase 5 by counting
+  per pipeline-run instance instead.

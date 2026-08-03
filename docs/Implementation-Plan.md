@@ -136,18 +136,35 @@ python3 -m pytest tests/ -v                    # all 20 tests
 python3 evaluation/metrics.py                  # evidence store summary
 ```
 
-## Phase 4 — Machine-readable authorization evidence (S5)
+## Phase 4 — Machine-readable authorization evidence (S5) — COMPLETE (2026-08-03)
 
-- [ ] OSCAL-informed (or similar) structured evidence output across the
-      whole lifecycle
-- [ ] Ground authorization policy checks for prohibited configurations
-      (test case #8) using machine-readable policy
-- [ ] Inventory reconciliation logic (test case #13)
-- [ ] False-telemetry detection logic (test case #15)
+- [x] OSCAL-*informed* structured evidence output across the whole
+      lifecycle — `src/evidence_store/authorization_evidence.py`
+      (aggregation shape, not full OSCAL schema conformance — see TDD § 7d)
+- [x] Ground authorization policy checks for prohibited configurations
+      (test case #8) using machine-readable policy — `src/policy/policy.py`
+      (custom deny-list, not OPA/Rego — see TDD § 7d for why)
+- [x] Inventory reconciliation logic (test case #13) —
+      `src/operational_monitoring/monitoring.py`
+- [x] False-telemetry detection logic (test case #15) — same module
 
-**Exit criteria:** all 15 test cases from Threat-Model.md pass at their
-expected detection condition; full S0–S5 comparison table can be generated
-from the evidence store automatically.
+**Exit criteria: MET.** All 15 test cases from Threat-Model.md now
+implemented and passing at their expected condition (26/26 tests total,
+no regressions). `evaluation/metrics.py::build_comparison_table` generates
+a full S0-S5 detection matrix automatically from the evidence store —
+and immediately caught a real evidence-tagging inconsistency from Phase 1
+(test case #6 tagged at the injection point, not the detection point),
+fixed in `src/pipeline.py`. See Threat-Model.md "Phase 4 results" for the
+full writeup — this is a good concrete example for the paper of why
+automated, evidence-driven evaluation catches things manual pass/fail
+testing alone had missed for three phases.
+
+**Run it yourself:**
+```
+python3 src/pipeline.py                        # includes S4/S5 happy paths
+python3 -m pytest tests/ -v                    # all 26 tests
+python3 evaluation/metrics.py                  # summary + S0-S5 comparison table
+```
 
 ## Phase 5 — Evaluation and metrics collection
 

@@ -8,13 +8,41 @@ session, however small.
 
 ## Current phase
 
-**Phase 3 — Attestation + Rollback (S3/S4): COMPLETE.** (see `docs/Implementation-Plan.md`)
-Next up: Phase 4 (S5 — machine-readable authorization evidence), or run
+**Phase 4 — Machine-Readable Authorization Evidence (S5): COMPLETE.**
+(see `docs/Implementation-Plan.md`) All 6 assurance conditions (S0-S5) now
+implemented, all 15 attack matrix test cases passing. Next up: Phase 5
+(full statistical evaluation) or Phase 6 (generalizability), or run
 `cfs-app/Dockerfile` to bring the real cFS build online.
 
 ## Last session summary
 
-**Date:** 2026-08-03 (session 3)
+**Date:** 2026-08-03 (session 4)
+
+Built and verified all three remaining S5 mechanisms: prohibited-
+configuration policy (`src/policy/policy.py`, custom deny-list — not
+OPA/Rego, see TDD § 7d for why), inventory reconciliation and false-
+telemetry detection (`src/operational_monitoring/monitoring.py`), and an
+OSCAL-informed authorization evidence aggregator
+(`src/evidence_store/authorization_evidence.py`). 6 new tests covering
+attack matrix cases #8, #13, #15 — all passing, plus all 20 Phase 1-3
+tests still passing (26/26 total). **All 15 attack matrix test cases are
+now implemented and passing** — the full S0-S5 assurance ladder is built.
+
+Best moment this session: `evaluation/metrics.py::build_comparison_table`
+(the automated S0-S5 detection matrix required by the Phase 4 exit
+criteria) immediately surfaced a real evidence-tagging bug from Phase 1 —
+test case #6 was tagged at the injection point instead of the detection
+point, so it silently showed `caught=0` in the table despite being
+correctly caught all along (the Phase 1 test had passed for three phases
+without anyone noticing the evidence trail was incomplete). Fixed in
+`src/pipeline.py`. This is genuinely a good example for the paper's
+methodology section of why automated, evidence-store-driven evaluation
+catches things a manual pass/fail test suite alone won't. Full writeup in
+Threat-Model.md "Phase 4 results," including a known remaining limitation
+(double-counting when a test case is tagged at two stages) flagged for
+Phase 5 to fix properly.
+
+**Previous session (2026-08-03, session 3):
 
 Built and verified software attestation (`src/attestation/attestation.py`
 — a custom stub, NOT swtpm/real TPM; no swtpm/tpm2-tools available and no
@@ -73,8 +101,10 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
 - [x] **Phase 1 (S0 pipeline) complete**, cross-platform verified
       (Linux + macOS)
 - [x] **Phase 2 (S1/S2: SBOM + provenance) complete** — 14/14 tests passing
-- [x] **Phase 3 (S3/S4: attestation + rollback) complete** — see
-      Implementation-Plan.md for full breakdown; 20/20 tests passing
+- [x] **Phase 3 (S3/S4: attestation + rollback) complete** — 20/20 tests passing
+- [x] **Phase 4 (S5: machine-readable authorization evidence) complete** —
+      see Implementation-Plan.md for full breakdown; **26/26 tests
+      passing, all 15 attack matrix test cases implemented**
 
 ## What's next (immediate)
 
@@ -82,10 +112,13 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       the real cFS sample app; report back so the target artifact can be
       swapped from the stub to the real thing
 - [ ] **You:** commit + push this session's changes
-- [ ] Begin Phase 4 of Implementation-Plan.md: machine-readable
-      authorization evidence (S5) — includes test case #13 (deferred from
-      Phase 3), prohibited-configuration policy (test case #8), inventory
-      reconciliation, false-telemetry detection (test case #15)
+- [ ] Begin Phase 5 of Implementation-Plan.md: full statistical
+      evaluation (repeated trials, all metrics from PRD.md § success
+      criteria, credible baselines) — or Phase 6 (second software stack,
+      for generalizability) if pursuing that before evaluation
+- [ ] Fix the comparison-table double-counting limitation noted in
+      Threat-Model.md "Phase 4 results" as part of Phase 5's more
+      rigorous evaluation (count test instances, not tagged records)
 - [ ] Consider reviewing prior related projects already present in the
       Development Projects folder (`mission-aware-satellite-cyber-recovery`,
       `satcom-ttc-post-compromise-recovery`) for reusable components or
@@ -123,15 +156,14 @@ data exists. Update these labels only when the corresponding phase in
 `docs/Implementation-Plan.md` actually completes with passing results —
 not based on intent or partial progress.
 
-- Detection-accuracy claims at **S0-S4 only**, **against the stand-in
-  stub artifact only**: `PRELIMINARY_INTERNAL_ONLY` — test cases #1, #2,
-  #3, #4, #5, #6, #7, #9, #10, #11, #12, #14 all pass in automated tests
-  (see Threat-Model.md "Phase 1/2/3 results"), but this is 5 of 6
-  conditions, one non-cFS artifact, no statistical repetition. Not
-  citable as a research result yet. Test case #13 remains unimplemented
-  (Phase 4/S5), and test cases #8, #15 also await Phase 4.
-- Detection-accuracy claims for S5 or against real cFS: `NOT_PERMITTED` —
-  not implemented / not run yet
+- Detection-accuracy claims across **all S0-S5 conditions**, **against
+  the stand-in stub artifact only**: `PRELIMINARY_INTERNAL_ONLY` — all 15
+  attack matrix test cases now pass in automated tests (see
+  Threat-Model.md "Phase 1/2/3/4 results"), and an automated comparison
+  table can be generated, but this is still one non-cFS artifact with no
+  statistical repetition (single run per test case, not repeated trials).
+  Not citable as a research result yet — that's exactly what Phase 5 is for.
+- Detection-accuracy claims against real cFS: `NOT_PERMITTED` — not run yet
 - Recovery-success claims **against the stub artifact**:
   `PRELIMINARY_INTERNAL_ONLY` — test cases #10/#11/#14 demonstrate
   rollback working correctly in automated tests (see Threat-Model.md
@@ -168,8 +200,8 @@ Key ones:
 5. ~~Attestation approach (swtpm vs custom stub)~~ — resolved: custom
    stub, no swtpm available (see TDD § 7c) — revisit if swtpm becomes
    available on a capable machine
-6. Ground authorization policy language for S5 (custom DSL vs OPA/Rego) —
-   needed for Phase 4
+6. ~~Ground authorization policy language for S5~~ — resolved: custom
+   deny-list, not OPA/Rego (see TDD § 7d)
 
 ## Environment notes (for future Claude sessions)
 
@@ -200,3 +232,4 @@ are available. Install Python packages with `pip3 install
 | 2026-08-03 | Fixed macOS-specific build reproducibility failure: ld64 embeds a non-deterministic UUID load command in Mach-O binaries; disabled via `-Wl,-no_uuid` on Darwin only (Linux GNU ld unaffected). Confirmed 4/4 tests passing on both Linux sandbox and user's macOS. Phase 1 now cross-platform verified. | src/build/build.py |
 | 2026-08-03 | Phase 2 (S1/S2: SBOM + provenance) built and verified: SBOM generation/checks, provenance generation/verification, version ledger (downgrade detection), condition-gated ground authorization, uplink v2 with link profiles. 10 new tests covering attack cases #1,#2,#3,#4,#5,#9; 14/14 total passing, no regressions. | src/sbom/ (new), src/provenance/ (new), src/ground_authorization/version_ledger.py (new), src/ground_authorization/ground_auth.py, src/uplink_sim/uplink.py, src/pipeline.py, tests/test_phase2_pipeline.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |
 | 2026-08-03 | Phase 3 (S3/S4: attestation + rollback) built and verified: software attestation stub (no swtpm available), A/B partition manager (tentative-activate/confirm/revert), health check harness, rollback controller with recovery-image integrity check. 6 new tests covering attack cases #10,#11,#12,#14; 20/20 total passing, no regressions. | src/attestation/ (new), src/installation/partitions.py (new), src/health/ (new), src/rollback/ (new), src/pipeline.py, tests/test_phase3_pipeline.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |
+| 2026-08-03 | Phase 4 (S5: machine-readable authorization evidence) built and verified: prohibited-configuration policy (custom deny-list, not OPA/Rego), inventory reconciliation, false-telemetry detection, OSCAL-informed authorization evidence aggregator, automated S0-S5 comparison table. 6 new tests covering attack cases #8,#13,#15; 26/26 total passing (all 15 attack matrix cases now implemented). Comparison table generator caught a real Phase 1 evidence-tagging bug (test case #6 tagged at wrong stage) — fixed. | src/policy/ (new), src/operational_monitoring/ (new), src/evidence_store/authorization_evidence.py (new), src/ground_authorization/ground_auth.py, src/pipeline.py, evaluation/metrics.py, tests/test_phase4_pipeline.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |

@@ -10,8 +10,8 @@ Phase 2 (S1/S2) adds, condition-gated via condition.py:
     (test case #2), builder is authorized (test case #5) — plus a
     downgrade check against the version ledger (test case #9).
 
-Richer policy (prohibited-configuration detection for test case #8) is
-Phase 4 (S5), not here yet.
+Phase 4 (S5) adds: prohibited-configuration policy check (test case #8),
+condition-gated the same way.
 """
 
 from __future__ import annotations
@@ -29,6 +29,7 @@ from signing.signing import verify as signature_verify  # noqa: E402
 from sbom.sbom import verify_sbom  # noqa: E402
 from provenance.provenance import verify_provenance  # noqa: E402
 from ground_authorization import version_ledger  # noqa: E402
+from policy.policy import check_configuration  # noqa: E402
 from condition import preset  # noqa: E402
 
 
@@ -39,6 +40,7 @@ def authorize(
     sbom_path: Optional[Path] = None,
     prov_path: Optional[Path] = None,
     version: int = 1,
+    configuration: Optional[dict] = None,
 ) -> bool:
     store = EvidenceStore()
     cond = preset(condition_name)
@@ -84,6 +86,14 @@ def authorize(
         ):
             checks_passed = False
             denial_reasons.append("downgrade attempt")
+
+    if checks_passed and cond.active("machine_readable_authorization"):
+        config_ok, reason = check_configuration(
+            configuration or {}, artifact_hash, condition_name=condition_name
+        )
+        if not config_ok:
+            checks_passed = False
+            denial_reasons.append(reason)
 
     store.record(
         pipeline_stage="ground_authorization",

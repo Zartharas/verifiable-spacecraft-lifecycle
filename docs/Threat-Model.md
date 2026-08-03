@@ -175,6 +175,49 @@ cfs-app/README.md for why it's not the real cFS target yet:**
   — it requires machine-readable authorization evidence to reconcile
   ground and spacecraft state, which doesn't exist until S5.
 
+**Phase 4 results (2026-08-03), against the stand-in artifact — all 15
+attack matrix test cases now implemented:**
+
+- **Test case #8 (correct signature but prohibited configuration):
+  confirmed detected at S5**, matching the hypothesis, via a hand-rolled
+  policy check (not OPA/Rego — see TDD § 7d for why).
+- **Test case #13 (ground/spacecraft inventory disagreement): confirmed
+  detected at S5**, matching the hypothesis. The natural trigger for this
+  in a real system — a Phase 3 rollback the ground was never told
+  about — is exactly what the reconciliation check compares against.
+- **Test case #15 (false "successful installation" telemetry): confirmed
+  detected at S5**, matching the hypothesis (S5/S3 range), by cross-
+  checking claimed telemetry against the actual rollback outcome recorded
+  in the evidence store.
+- **All 15 test cases from the attack matrix are now implemented and
+  passing at their expected condition.** `evaluation/metrics.py::build_
+  comparison_table` generates the full S0-S5 detection matrix
+  automatically from the evidence store — this satisfies the Phase 4
+  exit criterion directly and is the tool that surfaced the finding below.
+- **Methodological finding worth keeping for the paper:** building the
+  automated comparison table immediately surfaced that test case #6
+  (modified update in transit, from Phase 1) was tagged at the *injection*
+  point (`uplink`, logged `n/a`) rather than the *detection* point
+  (`onboard_signature_verification`, logged `fail`), so it silently showed
+  `caught=0` in the table despite genuinely being caught (confirmed by the
+  Phase 1 test passing all along). Every other test case in Phases 2-4
+  tags the catching record directly — #6 was the one inconsistency,
+  introduced in Phase 1 before this convention was established. Fixed by
+  explicitly tagging the detection record in `src/pipeline.py`. This is a
+  good concrete example for the paper's methodology section of *why*
+  automated, evidence-store-driven evaluation matters: a manual pass/fail
+  test suite had already "passed" this case for three phases without
+  anyone noticing the evidence trail itself was incomplete.
+- **Known limitation of the current comparison table, to refine in
+  Phase 5:** because test case #6 now has two tagged records (injection
+  point + detection point) for one conceptual test instance, the table
+  reports `seen=2, caught=1` rather than `seen=1, caught=1` — a
+  double-count, not a correctness bug (the pass/fail signal is right).
+  Phase 5's more rigorous evaluation should count *test instances* (one
+  per pipeline run), not *tagged evidence records* (which can be
+  multiple per instance), to avoid this kind of inflation across the
+  board.
+
 ## 4. Metrics (see PRD.md § success criteria for how these roll up)
 
 - Tampered-artifact detection (rate, per condition, per test case)
