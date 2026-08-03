@@ -26,25 +26,53 @@ address that directly.
 - **Publicly hosted with a stable, tagged release**: latest tag `v4.2.2`
   as of 2026-08-03 (verified via `github.com/nasa/fprime/releases`).
 
-## Current state (Phase 6, sandbox-constrained — same limitation as cfs-app/)
+## Current state (Phase 7, 2026-08-03): real F´ build CONFIRMED WORKING
 
-The authoring sandbox still has no Docker, no cmake, and no root access,
-so the real F´ framework (cloning the repo, running its code generator,
-building a component) could not be built or tested there — the same
-constraint documented in `cfs-app/README.md` for the real cFS build.
+The real F´ build now works — confirmed on the user's Docker-capable Mac
+after fixing the Dockerfile's install step (the original assumed `pip
+install -e .` on a bare framework clone, which has no setup.py/
+pyproject.toml; see `Legal-Data-Sourcing-Notes.md` § 5 change log). See
+`confirmed-build.json` for the exact pinned tag, binary hash, and build
+date.
 
-To keep Phase 6 honest and unblocked, the pipeline runs against a small
+The resulting binary (the framework's own bundled `Ref` reference
+deployment, at `build-artifacts/Linux/Ref/bin/Ref` inside the Docker
+run's `build-output/`, gitignored) is wired into the pipeline as the
+**`"fprime-real"` stack** in `src/target_stack.py`, alongside the
+original stand-in (`"fprime"`). Smoke-tested through the full S0-S2
+lifecycle successfully.
+
+**Two things this does NOT mean**, stated plainly:
+
+1. **Reproducibility has not been verified** — `build.py` copies this
+   one confirmed binary rather than recompiling F´ from scratch on every
+   pipeline call (a full build takes ~24s just for the final compile
+   step, incompatible with this pipeline's sub-second-call design). The
+   pipeline's `reproducible=True` for this stack is a trivial copy-
+   integrity check, not a real two-independent-builds comparison. See
+   `confirmed-build.json`'s `reproducibility_note`.
+2. **S3+ conditions don't work yet against this real binary** — the
+   `Ref` binary is a network server that waits for a GDS connection
+   (`-a`/`-p` flags), not a short-lived deterministic CLI program.
+   `health_check.py` raises `NotImplementedError` for this stack rather
+   than silently mislabeling it. See Threat-Model.md "Phase 7 findings."
+
+## Background (Phase 6, sandbox-constrained — same limitation as cfs-app/ originally had)
+
+The authoring sandbox had no Docker, no cmake, and no root access, so the
+real F´ framework could not be built or tested there originally. To keep
+Phase 6 honest and unblocked, the pipeline ran against a small
 **stand-in artifact** (`stub-component-app/`) instead — a trivial C++
-program that mimics an F´ component's telemetry-producing role (compiled
-binary produced by source, moved through the same lifecycle as stack #1)
-without being F´ itself.
+program that mimics an F´ component's telemetry-producing role without
+being F´ itself. That stand-in (`"fprime"` in `target_stack.py`) still
+exists and is still the fast, fully-reproducible stack the Phase 6
+automated evaluation ran against — it is not being retired.
 
-**This file exists so nobody mistakes the stub for the real F´ framework
-when reading results later.** Any metrics collected against
-`stub-component-app` are pipeline/architecture-generalization validation
-only, not spacecraft-software results, and not a claim that the assurance
-ladder has been validated against two real flight-software frameworks —
-see STATUS.md "Claims status" for the exact wording to use.
+**Any metrics collected against `stub-component-app` remain
+pipeline/architecture-generalization validation only, not
+spacecraft-software results** — see STATUS.md "Claims status" for the
+exact wording to use. Metrics against `"fprime-real"` are a step closer
+but still capped at `PRELIMINARY_INTERNAL_ONLY` per the two caveats above.
 
 ## What Phase 6 actually demonstrates
 
@@ -76,16 +104,17 @@ by `src/target_stack.py`'s registry. See Technical-Design-Document.md
    policy, never vendored into this repo) and builds a reference
    component, writing the resulting binary and a build log to
    `build-output/`.
-3. Once that works, `src/target_stack.py`'s `"fprime"` entry should be
-   pointed at the real binary output instead of the stub — update
-   `source_dir`/`binary_name` there. Update this README and
-   `docs/Technical-Design-Document.md` § 7f with confirmation once
-   verified working.
+3. `src/target_stack.py`'s `"fprime-real"` entry already points at
+   `build-output/build-artifacts/Linux/Ref/bin/Ref` — no code change
+   needed, just run the Docker build to (re)populate that path locally.
 
 ## Directory contents
 
 - `stub-component-app/` — the Phase 6 stand-in artifact (trivial C++
   program, architecturally distinct from stack #1's C stub)
 - `Dockerfile` — reproducible build environment for the real F´ framework
-  (untested in the authoring sandbox; needs to be run and verified on a
-  Docker-capable machine, same status as `cfs-app/Dockerfile`)
+  (confirmed working 2026-08-03 — see `confirmed-build.json`)
+- `confirmed-build.json` — provenance record for the real build (pinned
+  tag, binary hash, build date, known limitations)
+- `build-output/` — gitignored; created locally by running the Docker
+  build above

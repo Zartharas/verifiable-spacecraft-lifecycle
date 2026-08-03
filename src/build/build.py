@@ -17,10 +17,36 @@ filename, and compiler from the stack registry — see
 Technical-Design-Document.md § 7f. Default remains `"cfs"`, so every
 Phase 1-5 call site (and every existing test) is unaffected.
 
-Swap a stack's `source_dir`/`binary_name` in `src/target_stack.py` to
-point at a real build output once the corresponding Dockerfile
-(`cfs-app/Dockerfile` or `fprime-app/Dockerfile`) has been run on a
-Docker-capable machine — see each stack's README.
+Phase 7 scope ("cfs-real"/"fprime-real"): these stacks set
+`prebuilt_binary_path` instead of `source_dir` (see `target_stack.py`).
+For these, this function does NOT compile anything — it copies the
+already-Docker-built real framework binary for both "run_a" and "run_b"
+and hashes each copy. **This is a deliberate, documented departure from
+the compile-twice-and-diff model**, not a shortcut applied without
+thought: a real NASA cFS/F´ build takes minutes (confirmed: ~230s for
+cFS, ~24s for F´'s final compile step alone, on top of clone/install
+time), and this pipeline is designed around calls that complete in a
+fraction of a second — the Phase 5/6 evaluation harness alone makes
+~135 `pipeline.run()` calls per stack. Recompiling a full NASA framework
+twice on every single call is not a performance tuning problem, it is
+architecturally incompatible with how this pipeline is used.
+
+**Because of this, `reproducible=True` for a prebuilt-binary stack does
+NOT mean "two independent framework builds were compared this run."** It
+means "the same already-built file was copied twice and both copies
+hash identically" — a trivial, always-true integrity check, not a
+build-reproducibility test. The evidence record for these stacks makes
+this explicit via `"build_mode": "prebuilt_real_framework"` and
+`"reproducibility_claim_status"`. The *actual* reproducibility question
+for a real framework (does rebuilding cFS/F´ from scratch twice produce
+a bit-identical binary?) has not yet been tested — see
+`cfs-app/confirmed-build.json` / `fprime-app/confirmed-build.json` for
+the honest status of that question, and STATUS.md "Claims status" for
+why reproducible-build claims against the real frameworks remain
+unresolved even though the artifact itself is now real.
+
+Swap a stack's `source_dir`/`binary_name` (stub) or `prebuilt_binary_path`
+(real) in `src/target_stack.py` to point at a different build output.
 """
 
 from __future__ import annotations
@@ -85,12 +111,69 @@ def _compile(source: Path, output: Path, compiler: str) -> None:
         raise RuntimeError(f"compile failed: {result.stderr}")
 
 
-def build(condition_name: str = "S0", stack: str = "cfs") -> dict:
+def _build_prebuilt(condition_name: str, stack: str, stack_def) -> dict:
+    """Real-framework stacks: copy the already-Docker-built binary rather
+    than compiling. See module docstring for why this is NOT equivalent
+    to the stub stacks' compile-twice-and-diff reproducibility check."""
     store = EvidenceStore()
-    stack_def = target_stack.get(stack)
-    source = stack_def.source_dir / stack_def.source_filename
+
+    if not stack_def.prebuilt_binary_path.exists():
+        raise RuntimeError(
+            f"Stack '{stack}' has no prebuilt binary at "
+            f"{stack_def.prebuilt_binary_path}. Run the Docker build first "
+            f"— see the stack's README for instructions."
+        )
+
     build_a = WORK_DIR / stack / "run_a" / stack_def.binary_name
     build_b = WORK_DIR / stack / "run_b" / stack_def.binary_name
+    build_a.parent.mkdir(parents=True, exist_ok=True)
+    build_b.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(stack_def.prebuilt_binary_path, build_a)
+    shutil.copy(stack_def.prebuilt_binary_path, build_b)
+
+    hash_a = _sha256(build_a)
+    hash_b = _sha256(build_b)
+    reproducible = hash_a == hash_b  # trivially true — see module docstring
+
+    artifact_ref = hash_a
+
+    store.record(
+        pipeline_stage="build",
+        condition=condition_name,
+        artifact_ref=artifact_ref,
+        actor="build_system",
+        result="pass",
+        detail={
+            "stack": stack,
+            "build_mode": "prebuilt_real_framework",
+            "source": str(stack_def.prebuilt_binary_path.relative_to(REPO_ROOT)),
+            "hash_run_a": hash_a,
+            "hash_run_b": hash_b,
+            "reproducible": reproducible,
+            "reproducibility_claim_status": "NOT_INDEPENDENTLY_VERIFIED_THIS_RUN",
+            "note": (
+                f"real framework build ({stack_def.description}); "
+                "hash_a==hash_b here only confirms the file wasn't corrupted "
+                "while being copied twice, NOT that two independent framework "
+                "builds are bit-identical — see build.py module docstring and "
+                f"{stack}-app/confirmed-build.json"
+            ),
+        },
+    )
+
+    final_output = WORK_DIR / stack / stack_def.binary_name
+    shutil.copy(build_a, final_output)
+
+    return {
+        "binary_path": str(final_output),
+        "artifact_hash": artifact_ref,
+        "reproducible": reproducible,
+        "stack": stack,
+    }
+
+
+def build(condition_name: str = "S0", stack: str = "cfs") -> dict:
+    stack_def = target_stack.get(stack)
 
     # Note: deliberately not deleting WORK_DIR between runs. The sandbox's
     # mounted-folder filesystem has been observed to reject unlink() on
@@ -99,8 +182,16 @@ def build(condition_name: str = "S0", stack: str = "cfs") -> dict:
     # place (O_TRUNC via compiler output / write_bytes) rather than
     # removed and recreated. This is safe here because build output paths
     # are fixed and always fully overwritten before use. Each stack gets
-    # its own subdirectory so the two stacks' build outputs never collide.
+    # its own subdirectory so different stacks' build outputs never collide.
     WORK_DIR.mkdir(parents=True, exist_ok=True)
+
+    if stack_def.prebuilt_binary_path is not None:
+        return _build_prebuilt(condition_name, stack, stack_def)
+
+    store = EvidenceStore()
+    source = stack_def.source_dir / stack_def.source_filename
+    build_a = WORK_DIR / stack / "run_a" / stack_def.binary_name
+    build_b = WORK_DIR / stack / "run_b" / stack_def.binary_name
 
     _compile(source, build_a, stack_def.compiler)
     _compile(source, build_b, stack_def.compiler)
@@ -119,6 +210,7 @@ def build(condition_name: str = "S0", stack: str = "cfs") -> dict:
         result="pass" if reproducible else "fail",
         detail={
             "stack": stack,
+            "build_mode": "compile_from_source",
             "source": str(source.relative_to(REPO_ROOT)),
             "hash_run_a": hash_a,
             "hash_run_b": hash_b,
@@ -145,7 +237,11 @@ def build(condition_name: str = "S0", stack: str = "cfs") -> dict:
 
 if __name__ == "__main__":
     for stack_name in target_stack.STACKS:
-        result = build(stack=stack_name)
+        try:
+            result = build(stack=stack_name)
+        except RuntimeError as e:
+            print(f"[{stack_name}] SKIPPED: {e}")
+            continue
         print(f"[{stack_name}] Build OK — reproducible={result['reproducible']}")
         print(f"[{stack_name}] Artifact hash: {result['artifact_hash']}")
         print(f"[{stack_name}] Binary at: {result['binary_path']}")

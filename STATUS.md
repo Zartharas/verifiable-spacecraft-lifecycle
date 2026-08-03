@@ -8,22 +8,70 @@ session, however small.
 
 ## Current phase
 
-**Phase 6 — Generalizability: COMPLETE.**
-(see `docs/Implementation-Plan.md`) Added a second target stack — NASA
-JPL's F Prime (F´), architecturally distinct from stack #1 (cFS-informed
-message-bus C vs. F´-informed component-driven C++) — and re-ran the full
-pipeline, 15-case attack matrix, and Phase 5 evaluation harness against
-it. Required changing exactly two adapter modules plus one correctness
-fix (version ledger wasn't stack-scoped); every other mechanism
-generalized unmodified. Results structurally identical to stack #1: 100%
-detection/success/reproducibility, 0 false positives/negatives. Next up:
-Phase 7 (paper drafting), or run `cfs-app/Dockerfile`/`fprime-app/Dockerfile`
-to bring either real framework online — both remain deferred to a
-Docker-capable machine.
+**Phase 7 — Real framework builds: PARTIALLY COMPLETE.**
+(see `docs/Implementation-Plan.md`) Both `cfs-app/Dockerfile` and
+`fprime-app/Dockerfile` now run successfully on the user's Docker-capable
+Mac (after fixing real bugs in both — see below). Real `core-cpu1` (cFS)
+and `Ref` (F´) binaries are built, confirmed working, and wired into the
+pipeline as `"cfs-real"`/`"fprime-real"` stacks, smoke-tested through the
+full S0-S2 lifecycle. **Not yet done:** S3+ conditions against the real
+binaries (blocked on a persistent-process health-check design — both
+real binaries are long-running, not short-lived CLI programs) and
+independent reproducibility verification (today's builds are one sample
+each, not a two-build comparison). Next up: decide how to health-check a
+persistent process, or move to Phase 8 (paper drafting) treating the
+current real-build integration as sufficient for now.
 
 ## Last session summary
 
-**Date:** 2026-08-03 (session 6)
+**Date:** 2026-08-03 (session 7)
+
+Ran both Docker builds for the first time ever (previously untested,
+since the authoring sandbox has no Docker). Both failed on the first
+attempt — real bugs in the Dockerfiles I'd written blind: cFS's assumed
+a bare `cmake`/`make mission-install` flow that doesn't match the bundle
+repo's actual Make-based build system, and F´'s assumed `pip install
+-e .` on a repo with no setup.py/pyproject.toml. Fixed both by consulting
+each framework's own authoritative build docs (verified via web fetch)
+instead of guessing a third time — also caught and corrected a wrong cFS
+tag pin (`v7.0.0` → `v7.0.1`, the actual current release) along the way.
+Both builds succeeded on retry: `core-cpu1` boots and logs a genuine CFE
+startup sequence through `OPERATIONAL` state; `Ref` built clean.
+
+Given the choice of how to wire these into the pipeline (build.py's
+compile-from-source-twice-per-run model doesn't fit a multi-minute NASA
+build), the user chose treating them as fixed confirmed snapshots.
+Implemented: `src/target_stack.py`'s `Stack` dataclass now supports
+either stub-compile mode (`source_dir`+`compiler`) or prebuilt-binary
+mode (`prebuilt_binary_path`), validated mutually exclusive at
+registration time. Added `"cfs-real"`/`"fprime-real"` entries.
+`build.py` copies the confirmed binary for real stacks instead of
+recompiling, with evidence records explicitly flagging that the
+resulting `reproducible=True` is a trivial copy-integrity check, not a
+real two-independent-builds comparison — this distinction is documented
+in the module docstring, the evidence record fields themselves, and new
+`cfs-app/confirmed-build.json`/`fprime-app/confirmed-build.json`
+provenance manifests (git-tracked; the binaries themselves stay
+gitignored, consistent with every other build artifact in this repo).
+
+Smoke-tested both real stacks through S0-S2 (build → provenance → SBOM →
+signing → ground authorization → uplink → onboard verification →
+installation) — clean pass, since none of those stages execute the
+binary. Found a genuine architectural mismatch testing S3+: both real
+binaries are long-running processes (`core-cpu1` loops forever once
+`OPERATIONAL`; `Ref` waits for a network GDS connection), incompatible
+with `health_check.py`'s run-to-completion-and-diff-stdout model.
+Deliberately rejected the tempting shortcut of catching the resulting
+subprocess timeout and treating it as a pass — that would fabricate a
+health signal, not measure one. `run_health_check` now raises
+`NotImplementedError` for any stack with no working health-check
+strategy, which is honest but means S3+ against real binaries is
+explicitly blocked pending a real design decision (not implemented this
+session). New `tests/test_phase7_real_builds.py` (4 tests, auto-skip if
+the local Docker-built binaries aren't present) locks in both the S0-S2
+happy path and the explicit-failure behavior. Full suite: 39/39 passing.
+
+**Previous session (2026-08-03, session 6):**
 
 Added Phase 6 (generalizability): a second target stack, NASA JPL's F
 Prime (F´), pinned to tag `v4.2.2` (Apache 2.0, verified directly from
@@ -202,18 +250,32 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       stack #1 (100% detection/success/reproducibility, 0 false
       positives/negatives); one real bug found and fixed (version ledger
       wasn't stack-scoped) — see Implementation-Plan.md Phase 6
+- [x] **Phase 7 (real framework builds) partially complete** — real cFS
+      (`core-cpu1`, tag v7.0.1) and real F´ (`Ref`, tag v4.2.2) both built
+      successfully via Docker on the user's Mac, after fixing two real
+      Dockerfile bugs (see ISSUES-AND-FIXES-LOG.md ISSUE-001/002). Wired
+      in as `"cfs-real"`/`"fprime-real"` stacks; smoke-tested through the
+      full S0-S2 lifecycle; 39/39 tests passing (35 + 4 new, auto-skip if
+      binaries absent). **Not complete:** S3+ against real binaries
+      (blocked on a persistent-process health-check design — see
+      ISSUE-003) and independent reproducibility verification
 
 ## What's next (immediate)
 
-- [ ] **You:** run `cfs-app/Dockerfile` and, when ready,
-      `fprime-app/Dockerfile` on your Mac (has Docker) to build the real
-      cFS and F´ artifacts; report back so the target stacks can be
-      swapped from stubs to the real frameworks — both were explicitly
-      deferred until the evaluation phases completed, and Phases 5 and 6
-      are now both done
 - [ ] **You:** commit + push this session's changes
-- [ ] Begin Phase 7 (paper drafting and repo polish) — or pursue either
-      real Docker build first
+- [ ] Decide how to health-check a persistent process (cFS/F´ real
+      binaries don't exit on their own) so S3+ conditions can be
+      exercised against them — see ISSUES-AND-FIXES-LOG.md ISSUE-003 and
+      Implementation-Plan.md Phase 7 for candidate designs, none chosen yet
+- [ ] Optionally: independently verify reproducibility of either real
+      build (rebuild from scratch a second time, e.g.
+      `docker build --no-cache`, compare hashes) — not done yet, current
+      "reproducible=True" for real stacks is a trivial copy-check, not a
+      real test
+- [ ] Retroactively backfill ISSUES-AND-FIXES-LOG.md entries for the
+      Phase 4/5/6 bugs that were found but only documented narratively in
+      Threat-Model.md/STATUS.md before the log was actually put into use
+- [ ] Otherwise, move to Phase 8 (paper drafting and repo polish)
 - [ ] Consider reviewing prior related projects already present in the
       Development Projects folder (`mission-aware-satellite-cyber-recovery`,
       `satcom-ttc-post-compromise-recovery`) for reusable components or
@@ -259,41 +321,66 @@ not based on intent or partial progress.
   `PRELIMINARY_INTERNAL_ONLY` rather than fully citable: this is one
   non-cFS artifact in one sandbox environment, not yet the real cFS build
   and not yet cross-validated on a second machine/stack.
-- Detection-accuracy claims against real cFS or real F´: `NOT_PERMITTED`
-  — neither has been run yet, both gated on a Docker-capable machine
+- Detection-accuracy claims against real cFS or real F´ (S0-S2
+  mechanisms — signature, SBOM, provenance, ground authorization):
+  `PRELIMINARY_INTERNAL_ONLY` — **upgraded from `NOT_PERMITTED`, Phase 7
+  (2026-08-03).** Both real binaries (`core-cpu1` v7.0.1, `Ref` v4.2.2)
+  are now built and smoke-tested through the S0-S2 lifecycle
+  successfully. Still `PRELIMINARY_INTERNAL_ONLY`, not fully citable:
+  this is a single smoke-test run each, not a repeated-trial evaluation
+  (no Phase-5/6-style statistical run has been done against the real
+  binaries yet).
+- Detection-accuracy claims against real cFS or real F´ for S3-S5
+  mechanisms (attestation, health check, rollback, machine-readable
+  authorization evidence): `NOT_PERMITTED` — cannot currently be tested
+  at all against either real binary; both are long-running processes
+  incompatible with `health_check.py`'s current design (see
+  ISSUES-AND-FIXES-LOG.md ISSUE-003). This is a hard blocker, not just
+  "not yet run."
 - Recovery-success claims **against the stub artifacts**:
   `PRELIMINARY_INTERNAL_ONLY` — test cases #10/#11/#12/#14 demonstrate
   rollback working correctly across 5 repeated trials each (100% detection)
   against **both** stand-in stacks (Phase 5 `cfs`, Phase 6 `fprime`), with
   "time to trusted restoration" now a measured metric against the resolved
-  S0 baseline (PRD.md § 10), not just pass/fail. Still not against either
-  real framework.
+  S0 baseline (PRD.md § 10), not just pass/fail. Against either real
+  framework: `NOT_PERMITTED` (see ISSUE-003 above — rollback is an
+  S3+ mechanism).
 - Reproducible-build claims **against the stub artifacts**:
   `PRELIMINARY_INTERNAL_ONLY` — 100% reproducible across all Phase 5/6
-  trials (5 per condition, 6 conditions, both stacks) in this sandbox; not
-  yet demonstrated for either real framework's build (needs Docker)
+  trials (5 per condition, 6 conditions, both stacks) in this sandbox.
+  Reproducible-build claims **against either real framework**:
+  `NOT_PERMITTED` — a real binary now exists for each, but `build.py`
+  deliberately does not recompile a real framework from scratch per
+  pipeline call (see `build.py` module docstring), so the pipeline's own
+  `reproducible=True` for `"cfs-real"`/`"fprime-real"` is a trivial
+  copy-integrity check, not a genuine two-independent-builds comparison.
+  That comparison has not been performed. Do not cite either real
+  framework as "reproducibly built" until it has.
 - Generalizability claims (beyond a single stack): `PRELIMINARY_INTERNAL_ONLY`
-  — **resolved from `NOT_PERMITTED`, Phase 6 (2026-08-03).** The S0-S5
-  ladder's mechanisms and evidence schema were re-run, unmodified except
-  for two adapter modules, against a second, architecturally distinct
-  stand-in stack (F Prime-informed) with structurally identical results.
-  Still `PRELIMINARY_INTERNAL_ONLY`, not fully citable: this demonstrates
-  architectural/tooling generalizability between two *stand-in artifacts*,
-  not validation against two real flight-software frameworks — do not
-  state or imply "validated on cFS and F´" until both Dockerfiles have
-  actually been run.
+  — **resolved from `NOT_PERMITTED`, Phase 6 (2026-08-03), stub-artifact
+  scope only.** The S0-S5 ladder's mechanisms and evidence schema were
+  re-run, unmodified except for two adapter modules, against a second,
+  architecturally distinct stand-in stack (F Prime-informed) with
+  structurally identical results. Still `PRELIMINARY_INTERNAL_ONLY`, not
+  fully citable: this demonstrates architectural/tooling generalizability
+  between two *stand-in artifacts*. Phase 7 (real builds) extends S0-S2
+  of this claim to real artifacts, but S3-S5 generalizability against
+  real frameworks is `NOT_PERMITTED` per the health-check blocker above —
+  do not state or imply "the full S0-S5 ladder validated on real cFS and
+  F´" yet.
 - CCSDS/protocol-conformance claims: `NOT_PERMITTED` — uplink simulator is
   CCSDS-*informed*, not a conformance-tested implementation (see PRD.md
   non-goals)
 - Flight-software or operational-spacecraft applicability claims:
   `NOT_PERMITTED` — this is a simulated research prototype only, and this
   restriction is permanent, not phase-gated (see PRD.md non-goals)
-- Publication-evidence status: `PRELIMINARY_INTERNAL_ONLY` — Phases 5 and
-  6 now provide a full evaluation with a credible, documented baseline
-  (PRD.md § 10) across two architecturally distinct stand-in stacks,
-  resolving both the "metric legitimacy" and "generalizability" risks
-  from PRD.md § 8. Still not `PERMITTED` for external citation until run
-  against at least one real framework (real cFS and/or real F´).
+- Publication-evidence status: `PRELIMINARY_INTERNAL_ONLY` — Phases 5-7
+  now provide a full stub-artifact evaluation with a credible, documented
+  baseline (PRD.md § 10) across two architecturally distinct stacks, plus
+  a working S0-S2 smoke test against both real frameworks. Still not
+  `PERMITTED` for external citation: no repeated-trial evaluation exists
+  against either real binary, S3-S5 cannot be tested against them at all
+  yet, and reproducibility of either real build is unverified.
 
 Mandatory stop point: do not submit any manuscript, external write-up, or
 public claim of a result until the specific phase above has completed and
@@ -347,3 +434,4 @@ are available. Install Python packages with `pip3 install
 | 2026-08-03 | Phase 4 (S5: machine-readable authorization evidence) built and verified: prohibited-configuration policy (custom deny-list, not OPA/Rego), inventory reconciliation, false-telemetry detection, OSCAL-informed authorization evidence aggregator, automated S0-S5 comparison table. 6 new tests covering attack cases #8,#13,#15; 26/26 total passing (all 15 attack matrix cases now implemented). Comparison table generator caught a real Phase 1 evidence-tagging bug (test case #6 tagged at wrong stage) — fixed. | src/policy/ (new), src/operational_monitoring/ (new), src/evidence_store/authorization_evidence.py (new), src/ground_authorization/ground_auth.py, src/pipeline.py, evaluation/metrics.py, tests/test_phase4_pipeline.py (new), docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, STATUS.md |
 | 2026-08-03 | Phase 5 (evaluation and metrics collection) built and run: 5 repeated trials for the happy path at every condition and every one of the 15 attack matrix test cases at its expected condition. Found and fixed a real correctness bug in `authorization_evidence.py` (constant-hash lookup aggregating cross-run evidence, inflating S5 overhead to ~855,655 bytes); corrected figure is 5,748 bytes. Final results: 100% happy-path success/reproducibility across all 6 conditions, 100% detection across all 15 attack cases, 0 false positives/negatives in every condition's confusion matrix. 26/26 tests still passing, no regressions. | src/evidence_store/authorization_evidence.py, src/pipeline.py, evaluation/experiment.py (new), evaluation/report.py (new), evaluation/results/ (new), docs/PRD.md, docs/Implementation-Plan.md, STATUS.md |
 | 2026-08-03 | Phase 6 (generalizability) built and run: added a second target stack (NASA JPL's F Prime, pinned to tag v4.2.2, Apache 2.0) via a new `src/target_stack.py` registry, parameterizing `build.py`/`health_check.py` by `stack`. Every other pipeline module generalized unmodified. Found and fixed a real bug: the version ledger was a single global file, not scoped per stack, wrongly flagging fprime's first release as a downgrade. 9 new tests (35/35 total passing, no regressions). Re-ran the Phase 5 evaluation harness against `fprime`: results structurally identical to stack #1 (100% detection/success/reproducibility, 0 false positives/negatives, matching storage overhead). | src/target_stack.py (new), src/build/build.py, src/health/health_check.py, src/pipeline.py, src/ground_authorization/version_ledger.py, src/ground_authorization/ground_auth.py, fprime-app/ (new), evaluation/experiment.py, evaluation/report.py, evaluation/results/ (phase6 files), tests/test_phase6_generalizability.py (new), docs/PRD.md, docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, docs/Legal-Data-Sourcing-Notes.md, STATUS.md |
+| 2026-08-03 | Phase 7 (real framework builds, partial): ran both Dockerfiles for the first time on the user's Docker-capable Mac; both failed on the first attempt (ISSUE-001 cFS wrong build invocation, ISSUE-002 F´ wrong install method), fixed by consulting each framework's own authoritative build docs. Both builds succeeded on retry — real `core-cpu1` (v7.0.1) and `Ref` (v4.2.2) confirmed working. Wired in as `"cfs-real"`/`"fprime-real"` stacks (prebuilt-binary mode in `target_stack.py`, since a real framework build is too slow to redo per pipeline call); smoke-tested through S0-S2. Found a genuine architectural mismatch testing S3+ (ISSUE-003): both real binaries are long-running processes, incompatible with `health_check.py`'s run-to-completion model — fixed to fail loudly (`NotImplementedError`) rather than silently mislabel a healthy process as broken. 4 new tests, auto-skip if binaries absent (39/39 total passing). Renumbered Implementation-Plan.md's old Phase 7 (paper drafting) to Phase 8 to make room. | src/target_stack.py, src/build/build.py, src/health/health_check.py, cfs-app/Dockerfile, cfs-app/README.md, cfs-app/confirmed-build.json (new), fprime-app/Dockerfile, fprime-app/README.md, fprime-app/confirmed-build.json (new), .gitignore, tests/test_phase7_real_builds.py (new), docs/PRD.md, docs/Threat-Model.md, docs/Technical-Design-Document.md, docs/Implementation-Plan.md, docs/Legal-Data-Sourcing-Notes.md, ISSUES-AND-FIXES-LOG.md, STATUS.md |

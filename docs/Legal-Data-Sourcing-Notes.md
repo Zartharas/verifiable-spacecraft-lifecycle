@@ -110,3 +110,17 @@ traceable.
   same Docker constraint as cFS. Phase 6 pipeline work proceeds against a
   second stand-in stub artifact (`fprime-app/stub-component-app`, C++)
   in the interim; see `fprime-app/README.md`.
+- 2026-08-03: First real attempt to run both Dockerfiles on a Docker-
+  capable machine failed for both — the cFS build assumed a bare `cmake
+  .. && make mission-install` invocation that doesn't match the bundle
+  repo's actual Make-based build system, and the F´ build assumed `pip
+  install -e .` on the framework repo, which has no setup.py/
+  pyproject.toml at its root. Both fixed by consulting the frameworks'
+  own authoritative build docs (github.com/nasa/cFS's README "Build and
+  Run Quick Start"; nasa/fprime's `docs/getting-started/
+  installing-fprime.md` "Working With An Existing Project") rather than
+  reconstructing the build flow from memory. Also corrected the cFS pin
+  from `v7.0.0` to `v7.0.1` — the actual current official release per
+  that README, caught while re-verifying the build instructions. Neither
+  build has been re-attempted yet after this fix; see STATUS.md for
+  current status.

@@ -1,0 +1,17 @@
+{
+  "stack": "fprime-real",
+  "framework": "NASA JPL F Prime (F´)",
+  "repository": "https://github.com/nasa/fprime",
+  "pinned_tag": "v4.2.2",
+  "license": "Apache License 2.0, copyright California Institute of Technology, US Government Sponsorship acknowledged",
+  "docker_image": "verifiable-spacecraft-lifecycle-fprime",
+  "target_binary_relative_path": "build-artifacts/Linux/Ref/bin/Ref",
+  "sha256": "e271e22c37d11d3b27f03b0d033291af727e4d11f8bdffa1c6a8aa83b47f4b9b",
+  "built_date_utc": "2026-08-03",
+  "built_on": "user's Docker Desktop (macOS), not the Claude authoring sandbox (no Docker there)",
+  "build_command": "fprime-util generate && fprime-util build (Ref reference deployment, framework's own tool suite from requirements.txt)",
+  "smoke_test_result": "Ref binary launched, rejected an unrecognized --help flag with a real usage message ('-a hostname/IP address', '-p port_number') confirming a genuine, working F´ deployment executable, not a stub",
+  "reproducibility_verified": false,
+  "reproducibility_note": "This single build has NOT been independently compared against a second from-scratch Docker rebuild. The sha256 above is this one build's hash, recorded for provenance/audit purposes, not as evidence of reproducibility. See src/build/build.py module docstring and STATUS.md 'Claims status' for why per-run 'reproducible=True' from the pipeline for this stack is a trivial copy-integrity check, not a real reproducibility test.",
+  "known_limitation": "The Ref binary is a network server (waits for a GDS connection via -a/-p), not a short-lived deterministic CLI program. src/health/health_check.py has no working strategy for this yet (raises NotImplementedError) — S3+ conditions (attestation, health check, rollback) cannot currently be exercised against this real binary. See Threat-Model.md 'Phase 7 findings.'"
+}

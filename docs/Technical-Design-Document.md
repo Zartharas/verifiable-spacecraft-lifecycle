@@ -323,3 +323,42 @@ network/hardware dependency.
   (`phase5_*` for `"cfs"`, `phase6_*_<stack>` otherwise). This keeps the
   Phase 5 canonical results file byte-for-byte unaffected while reusing
   100% of the aggregation logic for Phase 6.
+
+## 7g. Phase 7 decisions actually made
+
+- **`Stack` dataclass split into two mutually-exclusive modes via
+  `__post_init__` validation:** stub stacks set `source_dir` +
+  `source_filename` + `compiler`; real stacks set `prebuilt_binary_path`
+  instead. A stack must set exactly one — enforced at registration time,
+  not discovered later as a confusing `None` attribute error deep in
+  `build.py`.
+- **`build.py` branches on `prebuilt_binary_path is not None` rather than
+  trying to unify compile-from-source and copy-prebuilt into one code
+  path.** These are genuinely different operations with different
+  reproducibility semantics (see module docstring) — forcing them into
+  one function would have hidden that difference rather than
+  documenting it. `_build_prebuilt()` is a small, separate function.
+- **Real-stack evidence records use explicit, distinguishing fields**
+  (`"build_mode": "prebuilt_real_framework"`,
+  `"reproducibility_claim_status": "NOT_INDEPENDENTLY_VERIFIED_THIS_RUN"`)
+  rather than silently reusing the stub stacks' evidence shape. Anyone
+  reading the evidence store directly (not just the docs) can tell the
+  two build modes apart without cross-referencing this document.
+- **`health_check.py` fails loudly (`NotImplementedError`) rather than
+  attempting a best-effort health check against a long-running
+  process.** A tempting alternative was to make the existing
+  `subprocess.run(..., timeout=5)` "work" by just catching the resulting
+  `TimeoutExpired` and treating it as a pass — this was rejected
+  explicitly: a timeout is not evidence of health, and quietly reusing it
+  as a pass signal would fabricate a result rather than measure one. Loud
+  failure was chosen deliberately over a plausible-looking but meaningless
+  green checkmark.
+- **Confirmed-build provenance lives in git-tracked JSON manifests
+  (`cfs-app/confirmed-build.json`, `fprime-app/confirmed-build.json`),
+  not in the binaries themselves.** The actual compiled binaries stay
+  gitignored (consistent with every other build artifact in this repo —
+  see `.gitignore` and STATUS.md "Environment notes") and must be
+  regenerated locally by re-running the Docker build; the manifest is
+  the durable, committed record of what was built, when, at what hash,
+  and with what known limitations, so a future session (or a reviewer)
+  doesn't have to re-derive that from git history or STATUS.md prose.

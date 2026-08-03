@@ -323,6 +323,81 @@ informed): component-driven C++ vs. message-bus C. See
   flight-software frameworks; it is a claim that the ladder's design
   doesn't depend on which one is underneath.
 
+## Phase 7 findings (real framework builds, 2026-08-03)
+
+Both `cfs-app/Dockerfile` and `fprime-app/Dockerfile` were run for the
+first time on a Docker-capable machine (the authoring sandbox has never
+had Docker). Both failed on the first attempt, for reasons worth
+recording precisely because they're the kind of thing that's easy to get
+subtly wrong when writing infrastructure code without being able to test
+it:
+
+- **cFS:** the Dockerfile assumed a bare `cmake .. && make
+  mission-install` invocation would work from a `build/` subdirectory.
+  It does not — the cFS bundle repo's actual build system is Make-based
+  at the top level (`make native_std.prep` / `make native_std.install`,
+  which invoke cmake internally with the correct paths). Confirmed
+  against the repo's own README rather than guessed a second time.
+- **F´:** the Dockerfile assumed `pip install -e .` on a bare framework
+  clone would install the tool suite. It does not — the framework repo
+  has no `setup.py`/`pyproject.toml` at its root; the tools
+  (`fprime-tools`, `fprime-gds`, `fprime-fpp`) are separate PyPI packages
+  pinned in the repo's own `requirements.txt`. Fixed by installing from
+  that file, then building the framework's own bundled `Ref` reference
+  deployment via `fprime-util`.
+
+Both fixes were made by consulting each framework's own authoritative
+build documentation (verified via web fetch, not from memory) rather
+than iterating blindly a third time. The cFS tag was also corrected from
+`v7.0.0` to `v7.0.1` (the actual current official release) while
+re-verifying the build instructions — see
+`docs/Legal-Data-Sourcing-Notes.md` § 5.
+
+**Both builds succeeded on retry.** `core-cpu1` (cFS) logs a genuine CFE
+startup sequence and reaches `CFE_ES_Main entering OPERATIONAL state`;
+`Ref` (F´) built clean and correctly rejects an unrecognized CLI flag
+with a real usage message. Both are wired into `src/target_stack.py` as
+`"cfs-real"` / `"fprime-real"`, smoke-tested successfully through the
+full S0-S2 lifecycle (build → provenance → SBOM → signing → ground
+authorization → uplink → onboard verification → installation).
+
+**A genuine architectural finding surfaced testing S3+:** both real
+binaries are long-running processes. `core-cpu1` reaches `OPERATIONAL`
+and then loops forever managing the flight software bus — it has no
+built-in "run once and exit" mode. `Ref` is a network server that blocks
+waiting for a GDS connection. `health_check.py`'s entire model (run the
+binary, expect it to exit quickly, diff its stdout against a fixed
+pattern) assumes a short-lived deterministic CLI program — which is true
+of the Phase 1-6 stubs by design, but is not true of either real
+framework, and arguably *shouldn't* be true of real flight software
+(a spacecraft's flight computer is not supposed to run once and exit).
+This is not a bug to patch quietly: it's evidence that the stub
+artifacts' "run to completion, check stdout" health-check design, while
+adequate for testing the assurance-ladder mechanisms in isolation, does
+not directly generalize to real flight software's actual execution
+model. `run_health_check` now raises `NotImplementedError` rather than
+letting a 5-second timeout silently mislabel a healthy, genuinely-running
+process as a failed build (which would have been a real correctness bug,
+not just an inconvenience) — S3+ conditions (attestation, health check,
+rollback) against the real binaries are explicitly blocked pending a
+deliberate design decision on how to health-check a persistent process
+(e.g., launch + wait + check for an expected boot-log substring +
+terminate, vs. a heartbeat/status file, vs. something else).
+
+**Reproducibility claims are explicitly NOT extended to the real
+frameworks by this work.** `build.py` no longer compiles `"cfs-real"`/
+`"fprime-real"` from source on every pipeline call — a real framework
+build takes minutes (confirmed: ~230s for cFS's install step, ~24s for
+F´'s final compile alone), incompatible with a pipeline built around
+sub-second calls (the Phase 5/6 evaluation harness makes ~135 calls per
+stack). Instead, the one confirmed Docker-built binary is copied for both
+"independent" hash comparisons the stub stacks perform for real — meaning
+`reproducible=True` for these two stacks is a trivial file-copy-integrity
+check, not evidence that rebuilding cFS/F´ from scratch twice produces a
+bit-identical binary. That real question has not been tested. See
+`cfs-app/confirmed-build.json` / `fprime-app/confirmed-build.json` and
+STATUS.md "Claims status."
+
 ## 4. Metrics (see PRD.md § success criteria for how these roll up)
 
 - Tampered-artifact detection (rate, per condition, per test case)

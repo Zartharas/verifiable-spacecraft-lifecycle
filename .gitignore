@@ -18,6 +18,15 @@ node_modules/
 /work/
 /evaluation/evidence_log.jsonl
 /cfs-app/build-output/
+/fprime-app/build-output/
+
+# Runtime artifacts from actually executing the real cFS binary
+# (core-cpu1 writes these to its current working directory — critical
+# data store key files and a simulated EEPROM image, not project files)
+.cdskeyfile
+.reservedkeyfile
+.resetkeyfile
+EEPROM.DAT
 *.bin
 *.o
 *.sig

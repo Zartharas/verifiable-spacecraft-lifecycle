@@ -292,7 +292,73 @@ python3 evaluation/report.py fprime            # writes phase6_summary_fprime.js
 cat evaluation/results/phase6_report_fprime.md
 ```
 
-## Phase 7 — Paper drafting and repo polish
+## Phase 7 — Real framework builds (cFS, F´) — PARTIALLY COMPLETE (2026-08-03)
+
+- [x] Ran `cfs-app/Dockerfile` and `fprime-app/Dockerfile` on the user's
+      Docker-capable Mac. Both failed on the first attempt — the cFS
+      Dockerfile assumed a bare `cmake`/`make mission-install` invocation
+      that doesn't match the bundle repo's actual Make-based build
+      system, and the F´ Dockerfile assumed `pip install -e .` on a repo
+      with no setup.py/pyproject.toml. Both fixed by consulting each
+      framework's own authoritative build docs instead of guessing again;
+      see `docs/Legal-Data-Sourcing-Notes.md` § 5 for the full story,
+      including re-pinning cFS from the wrong tag (`v7.0.0`) to the
+      actually-current one (`v7.0.1`)
+- [x] Both builds succeeded on retry: real `core-cpu1` (cFS) boots and
+      logs a genuine CFE startup sequence through `OPERATIONAL` state;
+      real `Ref` (F´) built clean and rejects bad CLI args with a real
+      usage message. Provenance recorded in `cfs-app/confirmed-build.json`
+      / `fprime-app/confirmed-build.json`
+- [x] Wired both as new stacks (`"cfs-real"`, `"fprime-real"`) in
+      `src/target_stack.py`. Deliberately did NOT make `build.py`
+      recompile these from source on every `pipeline.run()` call the way
+      the stub stacks do — a real framework build takes minutes, and this
+      pipeline is designed around sub-second calls (the Phase 5/6
+      evaluation harness alone makes ~135 calls per stack). Instead,
+      `build.py` copies the one already-Docker-built binary and documents
+      explicitly that the resulting `reproducible=True` is a trivial
+      copy-integrity check, not a real two-independent-builds comparison
+      — see `src/build/build.py`'s module docstring
+- [x] Smoke-tested both real stacks through the full S0-S2 lifecycle
+      (build → provenance → SBOM → signing → ground authorization →
+      uplink → onboard verification → installation) — works cleanly,
+      since none of those stages execute the binary
+- [x] Found a real architectural mismatch testing S3+: both real
+      binaries are long-running processes (`core-cpu1` loops forever once
+      `OPERATIONAL`; `Ref` waits for a network GDS connection), not
+      short-lived deterministic CLI programs. `health_check.py`'s
+      run-to-completion-and-diff-stdout model doesn't fit either one.
+      Rather than let it silently time out and mislabel a healthy process
+      as broken, `run_health_check` now raises `NotImplementedError` for
+      any stack with `expected_health_output=None` (both real stacks set
+      this). New `tests/test_phase7_real_builds.py` (4 tests, auto-skip
+      if the local Docker-built binaries aren't present) locks in both
+      the S0-S2 happy path and this explicit failure behavior
+- [ ] **Not yet done:** design and implement a persistent-process health-
+      check strategy so S3+ (attestation, health check, rollback) can be
+      exercised against the real binaries. Several viable designs exist
+      (launch + wait N seconds + check for an expected boot-log substring
+      + terminate; a heartbeat/status file; etc.) — this is a real design
+      decision, not a quick patch, and is intentionally left open pending
+      a decision on how to proceed
+- [ ] **Not yet done:** independently verify reproducibility of either
+      real framework build (rebuild from scratch a second time, e.g. via
+      `docker build --no-cache`, and compare hashes) — today's builds are
+      each a single sample, not yet a reproducibility test
+
+**Exit criteria: PARTIALLY MET.** The real artifacts exist, are
+integrated into the stack registry, and flow cleanly through S0-S2. S3+
+against real binaries and reproducibility verification remain open — see
+Threat-Model.md "Phase 7 findings" for the full writeup and STATUS.md
+"Claims status" for exactly what is and isn't citable from this work.
+
+**Run it yourself** (requires having run the Docker builds first — see
+`cfs-app/README.md` / `fprime-app/README.md`):
+```
+python3 -m pytest tests/test_phase7_real_builds.py -v
+```
+
+## Phase 8 — Paper drafting and repo polish
 
 - [ ] Draft paper per Research-Paper-Outline.md
 - [ ] Clean up repo: finalize README, ensure reproducibility instructions

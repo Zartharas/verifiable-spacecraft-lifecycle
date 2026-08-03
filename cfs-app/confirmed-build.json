@@ -1,0 +1,17 @@
+{
+  "stack": "cfs-real",
+  "framework": "NASA Core Flight System (cFS)",
+  "repository": "https://github.com/nasa/cFS",
+  "pinned_tag": "v7.0.1",
+  "license": "Apache License 2.0",
+  "docker_image": "verifiable-spacecraft-lifecycle-cfs",
+  "target_binary_relative_path": "exe/cpu1/core-cpu1",
+  "sha256": "41cffe6299535d95272213dd8e7e9f89eb016247067888772228d451faaa5aa0",
+  "built_date_utc": "2026-08-03",
+  "built_on": "user's Docker Desktop (macOS), not the Claude authoring sandbox (no Docker there)",
+  "build_command": "make native_std.prep && make native_std.install",
+  "smoke_test_result": "core-cpu1 launched, logged real CFE startup sequence, reached CFE_ES_Main entering OPERATIONAL state, then ran indefinitely until killed (SIGTERM) — confirmed working, real flight-software boot behavior",
+  "reproducibility_verified": false,
+  "reproducibility_note": "This single build has NOT been independently compared against a second from-scratch Docker rebuild. The sha256 above is this one build's hash, recorded for provenance/audit purposes, not as evidence of reproducibility. See src/build/build.py module docstring and STATUS.md 'Claims status' for why per-run 'reproducible=True' from the pipeline for this stack is a trivial copy-integrity check, not a real reproducibility test.",
+  "known_limitation": "core-cpu1 is a long-running process (reaches OPERATIONAL state and loops forever managing the flight software bus), not a short-lived deterministic CLI program. src/health/health_check.py has no working strategy for this yet (raises NotImplementedError) — S3+ conditions (attestation, health check, rollback) cannot currently be exercised against this real binary. See Threat-Model.md 'Phase 7 findings.'"
+}
