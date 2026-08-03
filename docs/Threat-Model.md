@@ -375,14 +375,38 @@ This is not a bug to patch quietly: it's evidence that the stub
 artifacts' "run to completion, check stdout" health-check design, while
 adequate for testing the assurance-ladder mechanisms in isolation, does
 not directly generalize to real flight software's actual execution
-model. `run_health_check` now raises `NotImplementedError` rather than
-letting a 5-second timeout silently mislabel a healthy, genuinely-running
-process as a failed build (which would have been a real correctness bug,
-not just an inconvenience) — S3+ conditions (attestation, health check,
-rollback) against the real binaries are explicitly blocked pending a
-deliberate design decision on how to health-check a persistent process
-(e.g., launch + wait + check for an expected boot-log substring +
-terminate, vs. a heartbeat/status file, vs. something else).
+model. Rather than let a 5-second timeout silently mislabel a healthy,
+genuinely-running process as a failed build (which would have been a
+real correctness bug, not just an inconvenience), `run_health_check`
+initially raised `NotImplementedError` for both real stacks — a
+deliberate fail-loud gate, not a fix — pending a real design decision
+(see ISSUES-AND-FIXES-LOG.md ISSUE-003).
+
+**Resolved, same day.** A second, distinct health-check strategy —
+`_health_check_persistent_process`, selected per-stack via
+`Stack.health_check_mode` in `target_stack.py` — was designed and
+implemented: launch the binary, watch its stdout (via a background
+reader thread, so a stalled process can't hang the check past the
+timeout) for a real, per-stack boot-success marker within
+`boot_timeout_seconds`, then terminate it regardless of outcome. The
+markers were derived empirically, not guessed: direct testing on the
+Docker-capable machine confirmed `core-cpu1` reliably prints
+`CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state` within ~50ms of
+launch and shuts down cleanly on SIGTERM; `Ref` prints `Hit Ctrl-C to
+quit` as its very first line of output — before any network activity —
+and, when no GDS is present, retries the connection forever rather than
+exiting on its own (confirmed via a clean re-test after an earlier,
+ambiguous result turned out to be a shell-piping artifact masking
+`timeout`'s real exit status). "Still running" after the check window is
+therefore expected, not a failure signal — only whether the marker
+genuinely appeared decides pass/fail, preserving the project's
+non-fabrication principle for health signals. S3+ conditions
+(attestation, health check, rollback) can now be exercised against both
+real binaries; `tests/test_phase7_real_builds.py` confirms both the S4
+happy path and test case #11 (forced health-check failure → rollback)
+against each. This is still individual test runs, not a repeated-trial
+statistical evaluation — see STATUS.md "Claims status" for exactly what
+that upgrades and what it doesn't.
 
 **Reproducibility claims are explicitly NOT extended to the real
 frameworks by this work.** `build.py` no longer compiles `"cfs-real"`/

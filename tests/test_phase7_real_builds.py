@@ -12,13 +12,14 @@ run produces them, and they are gitignored (never committed — see
 `.gitignore` and `cfs-app/confirmed-build.json` /
 `fprime-app/confirmed-build.json` for the provenance record instead).
 
-Scope, deliberately narrow: these tests confirm the S0-S2 lifecycle
-(build → provenance → SBOM → signing → ground authorization → uplink →
-onboard verification → installation) works against real artifacts, and
-that `health_check.py` fails loudly (not silently) for S3+ conditions
-against these stacks rather than misreporting a genuinely-running
-flight-software process as broken. See Threat-Model.md "Phase 7
-findings" for the full writeup of why S3+ isn't attempted here yet.
+Scope: confirms the S0-S2 lifecycle (build → provenance → SBOM → signing
+→ ground authorization → uplink → onboard verification → installation)
+works against real artifacts, AND (since ISSUE-003's fix) that S3+
+conditions (attestation, persistent-process health check, rollback) work
+against both real, long-running binaries via the
+`_health_check_persistent_process` strategy in `health_check.py` — see
+ISSUES-AND-FIXES-LOG.md ISSUE-003 and Threat-Model.md "Phase 7 findings"
+for the full writeup of the persistent-process design.
 
 Run with: pytest tests/test_phase7_real_builds.py -v
 """
@@ -65,20 +66,56 @@ def test_fprime_real_s2_happy_path():
 
 
 @pytest.mark.skipif(not CFS_REAL_AVAILABLE, reason="real cfs binary not built — run cfs-app/Dockerfile first")
-def test_cfs_real_health_check_not_yet_implemented():
+def test_cfs_real_s4_happy_path():
     """
-    core-cpu1 is a long-running flight-software process, not a
-    short-lived deterministic CLI program — health_check.py must fail
-    loudly (NotImplementedError) rather than silently timing out and
-    mislabeling a genuinely-running process as unhealthy.
+    core-cpu1 is a long-running flight-software process — health_check.py
+    must use the persistent-process strategy (launch, watch for the real
+    `CFE_ES_Main entering OPERATIONAL state` boot-success line, terminate)
+    rather than the exact-match model. See ISSUES-AND-FIXES-LOG.md
+    ISSUE-003.
     """
-    with pytest.raises(NotImplementedError):
-        run(condition_name="S4", version=2, stack="cfs-real")
+    result = run(condition_name="S4", version=2, stack="cfs-real")
+    assert result.health_ok is True
+    assert result.rollback_outcome == "confirmed"
+    assert result.rejected_at is None
 
 
 @pytest.mark.skipif(not FPRIME_REAL_AVAILABLE, reason="real fprime binary not built — run fprime-app/Dockerfile first")
-def test_fprime_real_health_check_not_yet_implemented():
-    """Ref is a network server waiting for a GDS connection — same
-    reasoning as test_cfs_real_health_check_not_yet_implemented."""
-    with pytest.raises(NotImplementedError):
-        run(condition_name="S4", version=2, stack="fprime-real")
+def test_fprime_real_s4_happy_path():
+    """
+    Ref is a network server that never exits on its own while waiting for
+    a GDS connection — same persistent-process strategy as
+    test_cfs_real_s4_happy_path, keyed off Ref's real `Hit Ctrl-C to quit`
+    boot-success line instead.
+    """
+    result = run(condition_name="S4", version=2, stack="fprime-real")
+    assert result.health_ok is True
+    assert result.rollback_outcome == "confirmed"
+    assert result.rejected_at is None
+
+
+@pytest.mark.skipif(not CFS_REAL_AVAILABLE, reason="real cfs binary not built — run cfs-app/Dockerfile first")
+def test_cfs_real_s4_forced_health_failure_triggers_rollback():
+    """Test case #11 (failed health check) against the real cFS binary:
+    force_health_fail must still short-circuit before the
+    persistent-process check even runs, and rollback must recover."""
+    baseline = run(condition_name="S4", version=1, stack="cfs-real")
+    assert baseline.rollback_outcome == "confirmed"
+
+    result = run(condition_name="S4", version=2, stack="cfs-real", force_health_fail=True)
+    assert result.health_ok is False
+    assert result.rollback_outcome == "rolled_back"
+    assert result.rejected_at is not None
+
+
+@pytest.mark.skipif(not FPRIME_REAL_AVAILABLE, reason="real fprime binary not built — run fprime-app/Dockerfile first")
+def test_fprime_real_s4_forced_health_failure_triggers_rollback():
+    """Test case #11 against the real F´ binary — same reasoning as
+    test_cfs_real_s4_forced_health_failure_triggers_rollback."""
+    baseline = run(condition_name="S4", version=1, stack="fprime-real")
+    assert baseline.rollback_outcome == "confirmed"
+
+    result = run(condition_name="S4", version=2, stack="fprime-real", force_health_fail=True)
+    assert result.health_ok is False
+    assert result.rollback_outcome == "rolled_back"
+    assert result.rejected_at is not None

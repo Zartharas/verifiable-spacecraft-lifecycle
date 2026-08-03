@@ -334,21 +334,31 @@ cat evaluation/results/phase6_report_fprime.md
       this). New `tests/test_phase7_real_builds.py` (4 tests, auto-skip
       if the local Docker-built binaries aren't present) locks in both
       the S0-S2 happy path and this explicit failure behavior
-- [ ] **Not yet done:** design and implement a persistent-process health-
-      check strategy so S3+ (attestation, health check, rollback) can be
-      exercised against the real binaries. Several viable designs exist
-      (launch + wait N seconds + check for an expected boot-log substring
-      + terminate; a heartbeat/status file; etc.) — this is a real design
-      decision, not a quick patch, and is intentionally left open pending
-      a decision on how to proceed
+- [x] Designed and implemented a persistent-process health-check strategy
+      (ISSUE-003) so S3+ (attestation, health check, rollback) can be
+      exercised against the real binaries. `Stack.health_check_mode` in
+      `src/target_stack.py` selects between the existing exact-match
+      strategy (stub stacks) and a new `_health_check_persistent_process`
+      strategy (real stacks): launch via `Popen`, watch stdout for a real,
+      empirically-confirmed boot-success marker (`core-cpu1`'s
+      `CFE_ES_Main entering OPERATIONAL state`; `Ref`'s `Hit Ctrl-C to
+      quit`) within a bounded window via a background reader thread, then
+      terminate regardless of outcome. `tests/test_phase7_real_builds.py`
+      now asserts real S4 pass/fail behavior (happy path + test case #11)
+      against both real binaries instead of just the prior fail-loud
+      `NotImplementedError` gate. See ISSUES-AND-FIXES-LOG.md ISSUE-003
+      for the full writeup and Threat-Model.md "Phase 7 findings" for the
+      design rationale.
 - [ ] **Not yet done:** independently verify reproducibility of either
       real framework build (rebuild from scratch a second time, e.g. via
       `docker build --no-cache`, and compare hashes) — today's builds are
       each a single sample, not yet a reproducibility test
 
-**Exit criteria: PARTIALLY MET.** The real artifacts exist, are
-integrated into the stack registry, and flow cleanly through S0-S2. S3+
-against real binaries and reproducibility verification remain open — see
+**Exit criteria: MET**, aside from the separately-tracked reproducibility
+item above (not part of ISSUE-003 — a distinct, still-open verification
+task). The real artifacts exist, are integrated into the stack registry,
+and now flow cleanly through S0-S5 including attestation, the
+persistent-process health check, and rollback. See
 Threat-Model.md "Phase 7 findings" for the full writeup and STATUS.md
 "Claims status" for exactly what is and isn't citable from this work.
 

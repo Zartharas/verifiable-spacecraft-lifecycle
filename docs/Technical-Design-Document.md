@@ -344,15 +344,41 @@ network/hardware dependency.
   rather than silently reusing the stub stacks' evidence shape. Anyone
   reading the evidence store directly (not just the docs) can tell the
   two build modes apart without cross-referencing this document.
-- **`health_check.py` fails loudly (`NotImplementedError`) rather than
-  attempting a best-effort health check against a long-running
-  process.** A tempting alternative was to make the existing
-  `subprocess.run(..., timeout=5)` "work" by just catching the resulting
-  `TimeoutExpired` and treating it as a pass — this was rejected
-  explicitly: a timeout is not evidence of health, and quietly reusing it
-  as a pass signal would fabricate a result rather than measure one. Loud
-  failure was chosen deliberately over a plausible-looking but meaningless
-  green checkmark.
+- **`health_check.py` initially failed loudly (`NotImplementedError`)
+  rather than attempting a best-effort health check against a
+  long-running process, and was later given a real persistent-process
+  strategy instead of a workaround (ISSUE-003).** A tempting alternative
+  throughout was to make the existing `subprocess.run(..., timeout=5)`
+  "work" by just catching the resulting `TimeoutExpired` and treating it
+  as a pass — this was rejected explicitly, both initially and again when
+  designing the real fix: a timeout, or the mere absence of a crash, is
+  not evidence of health, and quietly reusing either as a pass signal
+  would fabricate a result rather than measure one. The chosen fix
+  (`_health_check_persistent_process`, see `health_check.py`'s module
+  docstring) still requires a genuine, observed boot-success log line —
+  a real signal the binary itself emits — before reporting "healthy";
+  "the process is still running" after the check window is treated as
+  expected, not as evidence either way.
+- **Boot-success markers were derived empirically, not assumed.** Before
+  picking `core-cpu1`'s `CFE_ES_Main: CFE_ES_Main entering OPERATIONAL
+  state` and `Ref`'s `Hit Ctrl-C to quit` as the two per-stack markers,
+  both binaries were run directly on the Docker-capable machine and their
+  actual stdout inspected — including catching and correcting one
+  shell-piping artifact (`| head -N` swallowing `timeout`'s real exit
+  code) that had initially made `Ref`'s termination behavior look
+  ambiguous. Neither marker was chosen from documentation or assumption
+  alone.
+- **A background reader thread, not a blocking `readline()` loop, drives
+  the persistent-process check's timeout.** `Popen.stdout.readline()`
+  blocks until a line is available; if a real binary ever stalled without
+  producing output, a plain blocking loop would hang past the intended
+  timeout (and by extension hang the whole pipeline call). The reader
+  thread does the blocking I/O in the background; the main loop polls a
+  shared list against a wall-clock deadline, so a genuinely stalled or
+  hung process is still correctly reported unhealthy within the timeout
+  window instead of hanging indefinitely. Spot-checked against
+  `/bin/true` (exits instantly, no output) to confirm the fast-fail path
+  works (~25ms, not the full 5s window).
 - **Confirmed-build provenance lives in git-tracked JSON manifests
   (`cfs-app/confirmed-build.json`, `fprime-app/confirmed-build.json`),
   not in the binaries themselves.** The actual compiled binaries stay

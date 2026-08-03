@@ -62,16 +62,26 @@ calls per stack). See `build.py`'s docstring and
 the full reproducibility-claim caveat this implies, and
 Technical-Design-Document.md § 7g for the decision writeup.
 
-**Neither real binary has a working `expected_health_output` entry yet**
-(set to `None`) — both are long-running processes (cFS's `core-cpu1`
-loops forever once it reaches `OPERATIONAL` state; F´'s `Ref` binary
-waits for a network GDS connection), not short-lived deterministic CLI
-programs that print a fixed pattern and exit. `health_check.py` raises
-`NotImplementedError` if asked to health-check a stack with no
-`expected_health_output` — see Threat-Model.md "Phase 7 findings" for the
-full writeup of why this needed a real design decision rather than a
-quick patch, and STATUS.md for what's blocked on it (S3+ conditions
-against the real binaries).
+**Neither real binary fits the exact-match `expected_health_output` model**
+— both are long-running processes (cFS's `core-cpu1` loops forever once
+it reaches `OPERATIONAL` state; F´'s `Ref` binary waits for a network GDS
+connection and retries indefinitely), not short-lived deterministic CLI
+programs that print a fixed pattern and exit. Confirmed empirically on a
+Docker-capable machine (see ISSUES-AND-FIXES-LOG.md ISSUE-003):
+`core-cpu1` reaches `OPERATIONAL` state within ~50ms and shuts down
+cleanly on SIGTERM; `Ref` prints `Hit Ctrl-C to quit` as its very first
+line of output (before any network activity), then keeps retrying a GDS
+connection forever, and does not exit on its own — it must be terminated.
+
+`"cfs-real"`/`"fprime-real"` therefore use a second, distinct health-check
+mode: `boot_success_markers` (a persistent-process model — launch, watch
+stdout for a specific real boot-success log line within
+`boot_timeout_seconds`, then terminate) instead of
+`expected_health_output` (an exact-match model — run to completion, diff
+full stdout). `Stack.health_check_mode` picks the right mode; `"cfs"`/
+`"fprime"` keep `expected_health_output` and are unaffected. See
+`health_check.py` for the persistent-process implementation and
+`docs/Technical-Design-Document.md` § 7g for the decision writeup.
 """
 
 from __future__ import annotations
@@ -94,8 +104,16 @@ class Stack:
     compiler: Optional[str] = None  # "gcc" or "g++" — see build.py::_compile
     # Real prebuilt-binary stacks (see module docstring):
     prebuilt_binary_path: Optional[Path] = None
-    # None means "no working health-check strategy yet" — see docstring.
+    # Health-check mode 1: exact-match ("did stdout equal exactly this?").
+    # Fits short-lived deterministic CLI programs (the "cfs"/"fprime" stubs).
     expected_health_output: Optional[tuple[str, ...]] = None
+    # Health-check mode 2: persistent-process ("did a real boot-success log
+    # line appear within the timeout window before we killed it?"). Fits
+    # long-running flight-software processes ("cfs-real"/"fprime-real") —
+    # see ISSUES-AND-FIXES-LOG.md ISSUE-003 and health_check.py.
+    launch_args: tuple[str, ...] = ()
+    boot_success_markers: Optional[tuple[str, ...]] = None
+    boot_timeout_seconds: float = 5.0
 
     def __post_init__(self):
         is_stub = self.source_dir is not None
@@ -105,6 +123,21 @@ class Stack:
                 f"Stack '{self.name}' must set exactly one of "
                 f"(source_dir+source_filename+compiler) or prebuilt_binary_path."
             )
+        if self.expected_health_output is not None and self.boot_success_markers is not None:
+            raise ValueError(
+                f"Stack '{self.name}' must not set both expected_health_output "
+                f"(exact-match mode) and boot_success_markers (persistent-process "
+                f"mode) — pick exactly one health-check strategy."
+            )
+
+    @property
+    def health_check_mode(self) -> str:
+        """Which strategy health_check.py should use for this stack."""
+        if self.boot_success_markers is not None:
+            return "persistent_process"
+        if self.expected_health_output is not None:
+            return "deterministic_output"
+        return "unimplemented"
 
 
 STACKS: dict[str, Stack] = {
@@ -130,14 +163,28 @@ STACKS: dict[str, Stack] = {
         name="cfs-real",
         prebuilt_binary_path=REPO_ROOT / "cfs-app" / "build-output" / "exe" / "cpu1" / "core-cpu1",
         binary_name="core-cpu1",
-        expected_health_output=None,  # see module docstring — long-running process
+        # No CLI args needed — core-cpu1 reaches OPERATIONAL state even
+        # without its configured working directory / startup script (it
+        # logs an error about the missing app-load file but the state
+        # machine advances anyway; confirmed empirically, see ISSUE-003).
+        boot_success_markers=("CFE_ES_Main: CFE_ES_Main entering OPERATIONAL state",),
+        boot_timeout_seconds=5.0,
         description="Real NASA cFS build (tag v7.0.1), Docker-built on a Docker-capable machine — see cfs-app/confirmed-build.json",
     ),
     "fprime-real": Stack(
         name="fprime-real",
         prebuilt_binary_path=REPO_ROOT / "fprime-app" / "build-output" / "build-artifacts" / "Linux" / "Ref" / "bin" / "Ref",
         binary_name="Ref",
-        expected_health_output=None,  # see module docstring — waits for a network GDS connection
+        # A GDS host/port pair is required by Ref's CLI. No real GDS is
+        # running during a health check (this only verifies the process
+        # boots correctly, not that a ground station is attached), so
+        # Ref will retry the connection forever until terminated — that's
+        # fine, the boot-success marker prints long before any network
+        # activity. Deliberately a non-standard port to avoid colliding
+        # with a real GDS the operator might have running locally.
+        launch_args=("-a", "127.0.0.1", "-p", "50999"),
+        boot_success_markers=("Hit Ctrl-C to quit",),
+        boot_timeout_seconds=5.0,
         description="Real NASA JPL F Prime Ref deployment (tag v4.2.2), Docker-built on a Docker-capable machine — see fprime-app/confirmed-build.json",
     ),
 }
