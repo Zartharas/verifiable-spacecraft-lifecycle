@@ -50,6 +50,8 @@ from policy.policy import PROHIBITED_CONFIGURATIONS  # noqa: E402,F401 (re-expor
 from operational_monitoring import monitoring  # noqa: E402
 from evidence_store.authorization_evidence import generate_authorization_evidence  # noqa: E402
 from condition import preset, custom as condition_custom  # noqa: E402
+from ground_authorization import version_ledger  # noqa: E402
+from state_integrity import StateIntegrityError  # noqa: E402
 
 
 class PipelineResult:
@@ -180,7 +182,9 @@ def run(
         rng_seed=rng_seed,
     )
 
-    verified = verify_received_bundle(received_binary, received_sig, condition_name=condition_name)
+    verified = verify_received_bundle(
+        received_binary, received_sig, condition_name=condition_name, configuration=configuration
+    )
     result.onboard_verified = verified
     if not verified:
         result.rejected_at = "onboard_verification"
@@ -205,83 +209,123 @@ def run(
         return result
 
     if cond.active("trusted_rollback"):
-        slot, dest = partitions.write_to_inactive(received_binary, version)
+        try:
+            slot, dest = partitions.write_to_inactive(received_binary, version)
 
-        if simulate_interrupted_install:
-            with open(dest, "rb") as f:
-                data = f.read()
-            with open(dest, "wb") as f:
-                f.write(data[: len(data) // 2])
+            if simulate_interrupted_install:
+                with open(dest, "rb") as f:
+                    data = f.read()
+                with open(dest, "wb") as f:
+                    f.write(data[: len(data) // 2])
 
-        written_ok = partitions.verify_written(slot, condition_name=condition_name)
-        if not written_ok:
-            result.rejected_at = "installation"
+            written_ok = partitions.verify_written(slot, condition_name=condition_name)
+            if not written_ok:
+                result.rejected_at = "installation"
+                return result
+
+            partitions.tentative_activate(slot, condition_name=condition_name)
+            tentative_path = partitions.get_active_path()
+
+            attestation_ok = True
+            if cond.active("onboard_attestation"):
+                attestation_path = generate_attestation(
+                    tentative_path,
+                    slot,
+                    condition_name=condition_name,
+                    backdate_seconds=attestation_backdate_seconds,
+                )
+                result.attestation_path = attestation_path
+                attestation_ok, _ = verify_attestation(
+                    attestation_path, tentative_path, condition_name=condition_name
+                )
+
+            health_ok, _ = run_health_check(
+                tentative_path, condition_name=condition_name, force_fail=force_health_fail, stack=stack
+            )
+            result.health_ok = health_ok
+
+            outcome, reason = rollback.resolve(
+                health_ok=health_ok, attestation_ok=attestation_ok, condition_name=condition_name
+            )
+            result.rollback_outcome = outcome
+            result.installed_path = partitions.get_active_path()
+            if outcome != "confirmed":
+                result.rejected_at = f"post_install_{outcome}"
+
+            if cond.active("machine_readable_authorization"):
+                state = partitions._load_state()
+                active_slot = state["active"]
+                spacecraft_confirmed_version = (
+                    state[active_slot]["version"] if state[active_slot]["confirmed"] else None
+                )
+
+                _, _ = monitoring.reconcile_inventory(
+                    ground_expected_version=version,
+                    spacecraft_confirmed_version=spacecraft_confirmed_version,
+                    artifact_hash=artifact_hash,
+                    condition_name=condition_name,
+                )
+                result.inventory_reconciled = spacecraft_confirmed_version == version
+
+                actual_confirmed = outcome == "confirmed"
+                claimed = (
+                    claimed_telemetry_success
+                    if claimed_telemetry_success is not None
+                    else actual_confirmed
+                )
+                telemetry_ok, _ = monitoring.check_telemetry(
+                    claimed_success=claimed,
+                    actual_confirmed=actual_confirmed,
+                    artifact_hash=artifact_hash,
+                    condition_name=condition_name,
+                )
+                result.telemetry_consistent = telemetry_ok
+
+                # Phase 8 red-team fix (2026-08-04), finding #7: mismatches
+                # were previously detected and logged but never enforced
+                # — pipeline.run() never branched on the result. Now a
+                # detected mismatch (a) marks this run's own result as
+                # rejected, and (b) freezes the stack's ledger so every
+                # subsequent ground authorization for it is denied until
+                # an operator explicitly clears it (version_ledger.
+                # unfreeze()) — real behavioral enforcement, not just a
+                # stronger log message.
+                mismatch_reasons = []
+                if result.inventory_reconciled is False:
+                    mismatch_reasons.append("inventory disagreement (test case #13)")
+                if result.telemetry_consistent is False:
+                    mismatch_reasons.append("telemetry mismatch (test case #15)")
+                if mismatch_reasons:
+                    if result.rejected_at is None:
+                        result.rejected_at = "operational_monitoring_mismatch"
+                    version_ledger.freeze(
+                        stack, reason="; ".join(mismatch_reasons)
+                    )
+
+                this_run_records = _EvidenceStore().read_all()[_run_evidence_start:]
+                result.authorization_evidence_path = generate_authorization_evidence(
+                    artifact_hash,
+                    this_run_records,
+                    condition_name=condition_name,
+                    run_id=_run_evidence_start,
+                )
+
             return result
-
-        partitions.tentative_activate(slot, condition_name=condition_name)
-        tentative_path = partitions.get_active_path()
-
-        attestation_ok = True
-        if cond.active("onboard_attestation"):
-            attestation_path = generate_attestation(
-                tentative_path,
-                slot,
-                condition_name=condition_name,
-                backdate_seconds=attestation_backdate_seconds,
+        except StateIntegrityError as e:
+            # Phase 8 red-team fix, finding #1: partition state that
+            # fails its own integrity check can never be trusted enough
+            # to proceed — fail closed rather than silently treating
+            # tampered/deleted-after-protection state as "fresh."
+            result.rejected_at = "partition_state_integrity_failure"
+            _EvidenceStore().record(
+                pipeline_stage="installation",
+                condition=condition_name,
+                artifact_ref=artifact_hash,
+                actor="installer",
+                result="fail",
+                detail={"reason": "partition state integrity check failed", "error": str(e)},
             )
-            result.attestation_path = attestation_path
-            attestation_ok, _ = verify_attestation(
-                attestation_path, tentative_path, condition_name=condition_name
-            )
-
-        health_ok, _ = run_health_check(
-            tentative_path, condition_name=condition_name, force_fail=force_health_fail, stack=stack
-        )
-        result.health_ok = health_ok
-
-        outcome, reason = rollback.resolve(
-            health_ok=health_ok, attestation_ok=attestation_ok, condition_name=condition_name
-        )
-        result.rollback_outcome = outcome
-        result.installed_path = partitions.get_active_path()
-        if outcome != "confirmed":
-            result.rejected_at = f"post_install_{outcome}"
-
-        if cond.active("machine_readable_authorization"):
-            state = partitions._load_state()
-            active_slot = state["active"]
-            spacecraft_confirmed_version = (
-                state[active_slot]["version"] if state[active_slot]["confirmed"] else None
-            )
-
-            _, _ = monitoring.reconcile_inventory(
-                ground_expected_version=version,
-                spacecraft_confirmed_version=spacecraft_confirmed_version,
-                artifact_hash=artifact_hash,
-                condition_name=condition_name,
-            )
-            result.inventory_reconciled = spacecraft_confirmed_version == version
-
-            actual_confirmed = outcome == "confirmed"
-            claimed = (
-                claimed_telemetry_success
-                if claimed_telemetry_success is not None
-                else actual_confirmed
-            )
-            telemetry_ok, _ = monitoring.check_telemetry(
-                claimed_success=claimed,
-                actual_confirmed=actual_confirmed,
-                artifact_hash=artifact_hash,
-                condition_name=condition_name,
-            )
-            result.telemetry_consistent = telemetry_ok
-
-            this_run_records = _EvidenceStore().read_all()[_run_evidence_start:]
-            result.authorization_evidence_path = generate_authorization_evidence(
-                artifact_hash, this_run_records, condition_name=condition_name
-            )
-
-        return result
+            return result
 
     elif cond.active("onboard_attestation"):
         # S3 only: attestation + health checked, but no recovery

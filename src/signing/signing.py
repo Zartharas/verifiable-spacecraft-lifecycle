@@ -12,6 +12,22 @@ authenticity guarantee.
 
 Test-only keys: never treat anything under keys/ as real signing material.
 See SECURITY.md and .gitignore (*.pem, *.key are excluded from git).
+
+Phase 8 red-team fix (2026-08-04), finding #2 (see Threat-Model.md "Phase
+8 independent (blind, AI) red-team review"): `is_revoked()` previously
+returned `False` (not revoked) whenever `revoked_keys.txt` didn't exist —
+a classic fail-open default. Deleting the file with a single unprivileged
+filesystem write un-revoked every key with no cryptographic trace.
+
+Fixed via `state_integrity.py`: the revocation list is now co-initialized
+(empty, but integrity-protected) the moment a keypair is generated, so
+content and its HMAC sidecar always exist together from that point on.
+`is_revoked()` now fails **closed** — if the list's integrity check
+fails (tampered, or deleted while its sidecar remains, which is exactly
+the "delete the file to un-revoke" pattern the red-team found), every
+key is treated as revoked rather than risk trusting a forged "nothing is
+revoked" file. The only way to legitimately reach "not revoked" is a
+verified-empty or verified-containing-other-fingerprints list.
 """
 
 from __future__ import annotations
@@ -34,11 +50,33 @@ REVOKED_KEYS_PATH = KEYS_DIR / "revoked_keys.txt"
 
 sys.path.insert(0, str(REPO_ROOT / "src"))
 from evidence_store import EvidenceStore  # noqa: E402
+from state_integrity import StateIntegrityError, protect, read_verified, discard  # noqa: E402
+
+
+def _ensure_revocation_list_initialized() -> None:
+    """Co-initializes an empty, integrity-protected revocation list if
+    one doesn't exist yet, so content and its HMAC sidecar are always
+    created together from this point forward — removes the ambiguity
+    between "never protected" and "protected, then tampered" for every
+    `is_revoked()` check that follows. A no-op if the list is already
+    initialized (verified-empty or verified-non-empty) or already
+    tampered (in which case there's nothing safe to initialize —
+    `is_revoked()` will surface that on its own)."""
+    try:
+        data = read_verified(REVOKED_KEYS_PATH)
+    except StateIntegrityError:
+        return
+    if data is None:
+        KEYS_DIR.mkdir(parents=True, exist_ok=True)
+        REVOKED_KEYS_PATH.write_text("")
+        protect(REVOKED_KEYS_PATH)
 
 
 def generate_keypair(force: bool = False) -> None:
     """Generate a test Ed25519 keypair if one doesn't already exist."""
     KEYS_DIR.mkdir(parents=True, exist_ok=True)
+    _ensure_revocation_list_initialized()
+
     if PRIVATE_KEY_PATH.exists() and not force:
         return
 
@@ -73,19 +111,46 @@ def _fingerprint(public_key_path: Path) -> str:
 
 
 def is_revoked(public_key_path: Path = PUBLIC_KEY_PATH) -> bool:
-    if not REVOKED_KEYS_PATH.exists():
-        return False
+    try:
+        data = read_verified(REVOKED_KEYS_PATH)
+    except StateIntegrityError as e:
+        # Fail closed (Phase 8 red-team finding #2): cannot verify the
+        # revocation list's integrity, so treat every key as revoked
+        # rather than risk trusting a forged/deleted "nothing is
+        # revoked" file.
+        EvidenceStore().record(
+            pipeline_stage="onboard_signature_verification",
+            condition="n/a",
+            artifact_ref=_fingerprint(public_key_path),
+            actor="signing_authority",
+            result="fail",
+            detail={
+                "reason": "revocation list integrity check failed — treating key as revoked",
+                "error": str(e),
+            },
+        )
+        return True
+    if data is None:
+        return False  # legitimate "nothing has ever been revoked" state
     fingerprint = _fingerprint(public_key_path)
-    revoked = REVOKED_KEYS_PATH.read_text().split()
+    revoked = data.decode().split()
     return fingerprint in revoked
 
 
 def revoke_current_key() -> None:
     """Test helper for attack matrix case #7 (revoked signing key)."""
-    KEYS_DIR.mkdir(parents=True, exist_ok=True)
+    _ensure_revocation_list_initialized()
     fingerprint = _fingerprint(PUBLIC_KEY_PATH)
     with open(REVOKED_KEYS_PATH, "a") as f:
         f.write(fingerprint + "\n")
+    protect(REVOKED_KEYS_PATH)
+
+
+def reset_revocation_list() -> None:
+    """Test helper — restore the legitimate 'nothing revoked' state
+    between test runs."""
+    discard(REVOKED_KEYS_PATH)
+    _ensure_revocation_list_initialized()
 
 
 def sign(binary_path: Path, condition_name: str = "S0") -> Path:

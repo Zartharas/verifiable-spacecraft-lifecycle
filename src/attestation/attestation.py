@@ -15,6 +15,19 @@ STATUS.md "Claims status" — attestation claims stay non-hardware-backed
 until/unless a real TPM (or swtpm on a capable machine) is substituted in.
 
 Covers attack matrix test case #12 (stale attestation).
+
+Phase 8 red-team fix (2026-08-04), finding #6 (see Threat-Model.md "Phase
+8 independent (blind, AI) red-team review"): no revocation mechanism
+existed for the attestation key at all, unlike the signing key
+(`signing.py`'s `is_revoked()`). If the attestation private key were ever
+known or suspected compromised, there was no way to invalidate it short
+of manually swapping key files. Added `is_attestation_key_revoked()` /
+`revoke_current_attestation_key()`, mirroring `signing.py`'s (Phase 8
+finding #2 fix) fail-closed pattern exactly: an integrity-protected
+revocation list (via `state_integrity.py`) that fails closed (treats the
+key as revoked) if it's ever tampered with or deleted after being
+protected. `verify_attestation()` now checks this before trusting a
+quote.
 """
 
 from __future__ import annotations
@@ -33,17 +46,78 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from evidence_store import EvidenceStore  # noqa: E402
+from state_integrity import StateIntegrityError, protect, read_verified, discard  # noqa: E402
 
 KEYS_DIR = REPO_ROOT / "keys"
 ATTESTATION_PRIVATE_KEY_PATH = KEYS_DIR / "attestation_key.pem"
 ATTESTATION_PUBLIC_KEY_PATH = KEYS_DIR / "attestation_key.pub.pem"
+ATTESTATION_REVOKED_KEYS_PATH = KEYS_DIR / "attestation_revoked_keys.txt"
 ATTESTATION_DIR = REPO_ROOT / "work" / "attestation"
 
 DEFAULT_FRESHNESS_SECONDS = 300  # attestation older than this is "stale" (test case #12)
 
 
+def _fingerprint(public_key_path: Path) -> str:
+    with open(public_key_path, "rb") as f:
+        raw = f.read()
+    return hashlib.sha256(raw).hexdigest()[:16]
+
+
+def _ensure_revocation_list_initialized() -> None:
+    """See signing.py's identical helper — co-initializes an empty,
+    integrity-protected revocation list so content and sidecar are
+    always created together."""
+    try:
+        data = read_verified(ATTESTATION_REVOKED_KEYS_PATH)
+    except StateIntegrityError:
+        return
+    if data is None:
+        KEYS_DIR.mkdir(parents=True, exist_ok=True)
+        ATTESTATION_REVOKED_KEYS_PATH.write_text("")
+        protect(ATTESTATION_REVOKED_KEYS_PATH)
+
+
+def is_attestation_key_revoked(public_key_path: Path = ATTESTATION_PUBLIC_KEY_PATH) -> bool:
+    try:
+        data = read_verified(ATTESTATION_REVOKED_KEYS_PATH)
+    except StateIntegrityError as e:
+        EvidenceStore().record(
+            pipeline_stage="attestation_verification",
+            condition="n/a",
+            artifact_ref=_fingerprint(public_key_path),
+            actor="health_monitor",
+            result="fail",
+            detail={
+                "reason": "attestation revocation list integrity check failed — treating key as revoked",
+                "error": str(e),
+            },
+        )
+        return True
+    if data is None:
+        return False
+    fingerprint = _fingerprint(public_key_path)
+    return fingerprint in data.decode().split()
+
+
+def revoke_current_attestation_key() -> None:
+    """Operator/test action for revoking a known-or-suspected-compromised
+    attestation key (Phase 8 finding #6)."""
+    _ensure_revocation_list_initialized()
+    fingerprint = _fingerprint(ATTESTATION_PUBLIC_KEY_PATH)
+    with open(ATTESTATION_REVOKED_KEYS_PATH, "a") as f:
+        f.write(fingerprint + "\n")
+    protect(ATTESTATION_REVOKED_KEYS_PATH)
+
+
+def reset_attestation_revocation_list() -> None:
+    """Test helper — restore the legitimate 'nothing revoked' state."""
+    discard(ATTESTATION_REVOKED_KEYS_PATH)
+    _ensure_revocation_list_initialized()
+
+
 def _generate_attestation_keypair(force: bool = False) -> None:
     KEYS_DIR.mkdir(parents=True, exist_ok=True)
+    _ensure_revocation_list_initialized()
     if ATTESTATION_PRIVATE_KEY_PATH.exists() and not force:
         return
     private_key = Ed25519PrivateKey.generate()
@@ -142,6 +216,17 @@ def verify_attestation(
             detail={"reason": "attestation missing"},
         )
         return False, "attestation missing"
+
+    if is_attestation_key_revoked():
+        store.record(
+            pipeline_stage="attestation_verification",
+            condition=condition_name,
+            artifact_ref=expected_hash,
+            actor="health_monitor",
+            result="fail",
+            detail={"reason": "attestation key revoked"},
+        )
+        return False, "attestation key revoked"
 
     with open(attestation_path) as f:
         record = json.load(f)

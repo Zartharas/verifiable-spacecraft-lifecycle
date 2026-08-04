@@ -51,7 +51,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 from pipeline import run  # noqa: E402
 from ground_authorization import version_ledger  # noqa: E402
 from installation import partitions  # noqa: E402
-from signing.signing import generate_keypair, revoke_current_key, REVOKED_KEYS_PATH  # noqa: E402
+from signing.signing import generate_keypair, revoke_current_key, reset_revocation_list  # noqa: E402
 from operational_monitoring import monitoring  # noqa: E402
 from evidence_store import EvidenceStore  # noqa: E402
 from attestation.attestation import DEFAULT_FRESHNESS_SECONDS  # noqa: E402
@@ -211,8 +211,16 @@ def scenario_07(version: int, stack: str = "cfs") -> dict:
         elapsed, result, _ = _timed_run(condition_name="S0", version=version, stack=stack)
         caught = result.rejected_at == "ground_authorization"
     finally:
-        if REVOKED_KEYS_PATH.exists():
-            REVOKED_KEYS_PATH.write_text("")
+        # Phase 8 red-team fix #2 (2026-08-04): must go through
+        # reset_revocation_list(), not a raw write_text() — the
+        # revocation list is now integrity-protected
+        # (src/state_integrity.py), and writing its content directly
+        # without updating the HMAC sidecar would make every subsequent
+        # is_revoked() call fail closed (treat every key as revoked) for
+        # the rest of the evaluation run, exactly the fail-closed
+        # behavior the fix is supposed to have, but not what this
+        # cleanup step intends.
+        reset_revocation_list()
     return {"caught": caught, "elapsed_seconds": elapsed}
 
 
@@ -361,6 +369,21 @@ def run_attack_trials(test_case: str, n_trials: int = N_TRIALS, stack: str = "cf
     _reset_all_state(stack)
     trials = []
     for i in range(n_trials):
+        # Phase 8 red-team fix #7 (2026-08-04) added real enforcement:
+        # a detected operational-monitoring mismatch (test cases #13/#15)
+        # now freezes the stack's ledger until an operator clears it —
+        # see version_ledger.freeze()/unfreeze(). Deliberately triggering
+        # that mismatch every trial (which is exactly what #13/#15's
+        # scenarios do, on purpose) would otherwise freeze the stack on
+        # trial 1 and silently corrupt every subsequent trial in this
+        # loop (they'd get rejected at ground_authorization instead of
+        # ever reaching the mechanism actually under test). Each trial
+        # here models an independent release attempt, so clear any prior
+        # trial's freeze before running the next one — this is a
+        # test-harness modeling choice, not something a real deployment
+        # would do automatically (a real freeze stays until a human
+        # operator reviews it).
+        version_ledger.unfreeze(stack)
         if test_case in SINGLE_VERSION_SCENARIOS:
             trials.append(SINGLE_VERSION_SCENARIOS[test_case](i + 1, stack=stack))
         elif test_case == "9":

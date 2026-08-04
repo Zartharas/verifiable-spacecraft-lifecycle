@@ -51,6 +51,7 @@ sys.path.insert(0, str(REPO_ROOT / "evaluation"))
 from pipeline import run  # noqa: E402
 from attestation.attestation import DEFAULT_FRESHNESS_SECONDS  # noqa: E402
 from experiment import _reset_all_state, _timed_run, N_TRIALS  # noqa: E402
+from ground_authorization import version_ledger  # noqa: E402
 
 N_ABLATION_TRIALS = N_TRIALS
 
@@ -169,10 +170,23 @@ ABLATIONS = [
 def run_ablation_study(n_trials: int = N_ABLATION_TRIALS, stack: str = "cfs") -> dict:
     results = {}
     for test_case, mechanism, condition_name, runner, metric in ABLATIONS:
+        # Phase 8 red-team fix #7 (2026-08-04): _ablation_case_15
+        # deliberately triggers a telemetry mismatch every trial (the
+        # attack it's testing), which now freezes the stack's ledger
+        # (real enforcement, see version_ledger.freeze()). Clear it
+        # before each trial — same reasoning as experiment.py's
+        # run_attack_trials — so trial N+1's baseline call doesn't get
+        # wrongly rejected by trial N's deliberate mismatch.
         _reset_all_state(stack)
-        baseline_trials = [runner(stack, (), (i * 2 + 1, i * 2 + 2)) for i in range(n_trials)]
+        baseline_trials = []
+        for i in range(n_trials):
+            version_ledger.unfreeze(stack)
+            baseline_trials.append(runner(stack, (), (i * 2 + 1, i * 2 + 2)))
         _reset_all_state(stack)
-        ablated_trials = [runner(stack, (mechanism,), (i * 2 + 1, i * 2 + 2)) for i in range(n_trials)]
+        ablated_trials = []
+        for i in range(n_trials):
+            version_ledger.unfreeze(stack)
+            ablated_trials.append(runner(stack, (mechanism,), (i * 2 + 1, i * 2 + 2)))
 
         baseline_rate = sum(1 for t in baseline_trials if t[metric]) / n_trials
         ablated_rate = sum(1 for t in ablated_trials if t[metric]) / n_trials

@@ -353,6 +353,86 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       binaries, not just the stand-in artifacts. See
       `docs/Threat-Model.md`'s "Phase 8 ablation study"/"Phase 8
       adaptive-attacker scenarios" update notes.
+- [x] **Blind(-ish) red-team review complete, 2026-08-04.** In response to
+      reviewer objection 7 ("same team designed the threat model, the
+      mitigations, and the fixes for the mitigations' own credibility
+      gap"), spawned a fresh agent with no prior context on this project,
+      gave it only 20 source files under `src/`, and tasked it with
+      finding attack vectors the existing 15 test cases + ablation +
+      adaptive scenarios don't cover. It reported 7 findings; all 7 were
+      independently re-verified against the actual source in this session
+      (not just trusted from its report) and all 7 hold up: (1) ground-
+      truth state files (version ledger, partition state) have no
+      integrity protection and are directly editable, bypassing every
+      mechanism built on top; (2) signing-key revocation fails open if
+      `revoked_keys.txt` is missing/deleted; (3) the `version` argument
+      used for downgrade protection is never bound to the provenance
+      record it travels with, enabling a version-inflation DoS distinct
+      from anything in the current matrix; (4) the onboard-side
+      prohibited-configuration check is a permanent dead stub (`return
+      True`), additionally gated by a literal `condition_name == "S5"`
+      string match rather than the mechanism flag; (5) the S5
+      authorization-evidence document is unsigned and silently
+      overwritten on every re-run against the same artifact hash; (6) no
+      revocation mechanism exists for the attestation key; (7)
+      operational-monitoring mismatches (test cases #13/#15) are logged
+      but never enforced — `pipeline.run()` never branches on the
+      result. See `docs/Threat-Model.md` "Phase 8 independent (blind,
+      AI) red-team review" for the full write-up, including the honest
+      caveat that source-code comments name test-case numbers throughout,
+      so this wasn't blind to *which* attacks were already known — only
+      independent in design origin. **Decision needed:** whether to fix
+      some/all of these 7 gaps before the paper is finalized, or disclose
+      them as known limitations/future work instead — not decided in this
+      session. If fixing, items 1, 2, and 4 look like the highest-value,
+      lowest-effort fixes (HMAC/sign the state files; fail closed on a
+      missing revocation list; wire the existing `policy.check_configuration`
+      into the onboard stub and fix the string-match gate).
+- [x] **Real-baseline comparison (python-tuf) complete, 2026-08-04.** Built
+      a real, unmodified upstream `python-tuf` (v7.0.0) repository +
+      `ngclient.Updater` client (`evaluation/baselines/tuf_baseline.py`,
+      no live HTTP server — a `file://` `FetcherInterface` keeps it
+      in-process and deterministic) and ran it against the same 15-case
+      attack matrix. Of the 15, only 3 have any TUF-native detection
+      mechanism at all: #6 (modified update in transit), #7 (revoked
+      signing key), #9 (downgrade attempt) — all three caught 30/30
+      (100%). The other 12, including 9 that are load-bearing parts of
+      this project's own S1-S5 ladder (SBOM, provenance, builder
+      authorization, policy, attestation, rollback, inventory
+      reconciliation, telemetry, installation itself), have no
+      corresponding concept anywhere in TUF's specification — recorded
+      as N/A with a stated architectural reason each rather than run as
+      fake scenarios. This directly, empirically substantiates the
+      paper's central claim (terrestrial frameworks address a narrower
+      problem than spacecraft lifecycle assurance requires) instead of
+      merely asserting it. See `docs/Threat-Model.md` "Phase 8
+      real-baseline comparison: python-tuf" and
+      `evaluation/results/phase8_tuf_baseline.json`. Closes out reviewer
+      objection 6. Requirements.txt updated (`tuf>=7.0.0`, comparison-only
+      dependency).
+- [x] **All 7 red-team-found gaps fixed, 2026-08-04.** New
+      `src/state_integrity.py` (HMAC-protected side-state, fail-closed
+      on tamper/deletion) closes findings #1, #2, and #6 (version
+      ledger, partition state, signing-key revocation list,
+      attestation-key revocation list). `ground_auth.py` now binds the
+      `version` argument to the provenance record (#3). `onboard.py`'s
+      dead policy stub now delegates to real policy evaluation, gated
+      by the mechanism flag instead of a string match (#4).
+      `authorization_evidence.py` documents are now signed and
+      per-run-unique, never overwritten (#5). Detected
+      operational-monitoring mismatches now freeze the stack's ledger
+      until an operator clears it — real enforcement (#7). Full
+      writeup per finding: `ISSUES-AND-FIXES-LOG.md` ISSUE-011 through
+      ISSUE-017. Verified via 19 new tests
+      (`tests/test_phase8_redteam_fixes.py`) plus a full re-run of the
+      existing 47-test suite, all 15 attack-matrix cases, the Phase 8
+      ablation study, and the Phase 8 adaptive-attacker scenarios
+      against both `cfs` and `fprime` (zero drift in any prior result)
+      and against real `cfs-real`/`fprime-real` via
+      `tests/test_phase7_real_builds.py` (6/6). Also fixed two real,
+      latent instances of finding #2's exact anti-pattern found while
+      verifying (`tests/test_phase1_pipeline.py`,
+      `evaluation/experiment.py::scenario_07`).
 - [ ] **You:** commit + push this session's changes
 - [ ] Move to Phase 8 (paper drafting and repo polish)
 - [ ] Consider reviewing prior related projects already present in the
@@ -549,3 +629,5 @@ are available. Install Python packages with `pip3 install
 | 2026-08-03 | ISSUE-007 found and fixed: attempting the real repeated-trial evaluation (`evaluation/experiment.py cfs-real`) on the user's actual Mac — for the first time, since every prior individual verification had run in Claude's own Linux sandbox — crashed with `OSError: [Errno 8] Exec format error`. Root cause: `core-cpu1`/`Ref` are Linux ELF binaries (Docker-built) that can't execute directly on macOS outside Docker's virtualization layer; S0-S2 never surfaced this since those stages never execute the binary. A second, more serious bug was found alongside it: `_health_check_persistent_process`'s `except OSError` caught this and silently recorded it as an unhealthy build, fabricating a signal about the artifact that wasn't true. Fixed: `target_stack.py` now records each real stack's `docker_image`/`container_binary_path`; new `_launch_process()` in `health_check.py` tries direct execution first and transparently falls back to `docker run --rm <image> <container_binary_path>` only on `ENOEXEC` specifically — environments that can execute directly (Linux) never invoke Docker. No Docker fallback configured, or Docker itself failing, now raises a loud `RuntimeError` instead of a misleading fail record. New `tests/test_issue007_docker_fallback.py` (4 tests, no real Docker or binaries needed — uses a synthetic file that reliably reproduces ENOEXEC) confirms all three branches plus the Stack validation. 45/45 total passing, no regressions. **Still pending:** the user re-running the evaluation harness to confirm the Docker fallback actually works end-to-end and to gather the real S3-S5 statistical data this was all in service of. | src/target_stack.py, src/health/health_check.py, tests/test_issue007_docker_fallback.py (new), evaluation/experiment.py (diagnostic assert messages), ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, STATUS.md |
 | 2026-08-03 | User re-ran the evaluation harness with ISSUE-007's fix: `fprime-real` completed successfully end-to-end via the Docker fallback (confirming that fix genuinely works), but `cfs-real` failed again at the identical point. Since `docker run --rm` gives every invocation a fresh container filesystem, the pre-ISSUE-007 "accumulated CDS/EEPROM state" theory couldn't apply anymore, so the actual evidence-store record and a live re-run with a longer window were inspected directly instead of guessed at — found ISSUE-008: `core-cpu1` was genuinely failing to initialize inside the container (`CFE_SB_CreatePipe Failed` → commanded `PROCESSOR RESET` → exit), caused by Docker Desktop's default Linux VM shipping a `fs.mqueue.msg_max` too low for cFE's Software Bus queue depth. Confirmed the fix manually (`docker run --sysctl fs.mqueue.msg_max=1024 ...` reached `OPERATIONAL` and ran indefinitely) before writing any code. Added `Stack.docker_sysctls` (set for `cfs-real` only) and wired it into `health_check.py`'s Docker-fallback command as `--sysctl key=value` flags. 2 new tests (monkeypatched `subprocess.Popen`, no real Docker needed) confirm the flags are constructed and positioned correctly, and that a stack with no `docker_sysctls` never gets a stray flag. 47/47 total passing. **Still pending:** the user re-running `evaluation/experiment.py cfs-real` to confirm this fix works end-to-end and to actually gather the real S3-S5 statistical data. | src/target_stack.py, src/health/health_check.py, tests/test_issue007_docker_fallback.py, ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, cfs-app/confirmed-build.json, STATUS.md |
 | 2026-08-03 | Phase 7 real-stack statistical evaluation complete: user re-ran `evaluation/experiment.py cfs-real` with ISSUE-008's fix in place and it completed successfully — full repeated-trial harness (5 trials × 6 conditions × 15 attack cases) against both real binaries now done. Results for both `cfs-real` and `fprime-real`: 100% happy-path success/reproducibility, 100% detection across all 15 attack cases, 0 false positives/negatives — structurally identical to the Phase 5/6 stub-artifact results. Upgraded STATUS.md "Claims status": detection/recovery claims against real cFS/F´ across all S0-S5 conditions now `PRELIMINARY_INTERNAL_ONLY` (from "individual test runs only"), generalizability claim strengthened to cover four stacks (two stand-ins, two real frameworks) with matching results. Updated Implementation-Plan.md Phase 7 checklist and Threat-Model.md with the final results table summary. This closes out Phase 7 entirely, including the real-stack data gathering that motivated ISSUE-007/ISSUE-008. Next: Phase 8 (paper drafting and repo polish). | evaluation/results/phase6_raw_results_cfs-real.json (new), evaluation/results/phase6_summary_cfs-real.json (new), evaluation/results/phase6_report_cfs-real.md (new), evaluation/results/phase6_raw_results_fprime-real.json (new), evaluation/results/phase6_summary_fprime-real.json (new), evaluation/results/phase6_report_fprime-real.md (new), ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, docs/Implementation-Plan.md, STATUS.md |
+| 2026-08-04 | Rejection-risk reassessment against everything built since the original 2026-08-03 review, plus new topics surfaced by this session's own work (Docker-timing confound, the bug list itself, ISSUE-009/010's implications, AI-disclosure depth, the "same author" problem for Phase 8's own mitigations). Fixed two real, environment-dependent bugs found running Phase 8's work on the user's Mac for the first time: ISSUE-009 (`-Wl,-no_uuid`, the original macOS build-reproducibility fix, now breaks binary loadability under current dyld — fixed via post-link Mach-O UUID-byte masking instead of a link flag) and ISSUE-010 (a Docker-fallback regression test silently depended on Docker being absent from the test environment — fixed via deterministic `Popen` monkeypatching). Both confirmed via the user's full clean-`work/`-directory re-run of the 30-trial evaluation + ablation + adaptive scenarios against all four stacks (`cfs`, `fprime`, `cfs-real`, `fprime-real`) — identical 100%/0% results throughout. Updated Research-Paper-Outline.md § 4 to an 11-item reviewer-objections list with a working plan for the three items still fully open (real baseline comparison, independent evaluator, repo visibility). Ran both remaining mitigations this session: (1) independent-evaluator — a fresh, context-free agent given only 20 `src/` files found 7 attack-vector/design gaps beyond the existing test matrix; all 7 independently re-verified against the actual source (not just trusted from the report) and all 7 hold up (unprotected ground-truth state files, fail-open key revocation, unbound version/provenance pairing, dead onboard policy-check stub with a brittle string-match gate, unsigned/overwritable authorization-evidence document, no attestation-key revocation, unenforced monitoring mismatches) — see Threat-Model.md "Phase 8 independent (blind, AI) red-team review"; (2) real baseline comparison — built and ran a real, unmodified `python-tuf` repository + client (`evaluation/baselines/tuf_baseline.py`) against the same 15-case matrix: only 3 cases have any TUF-native mechanism (#6, #7, #9, all 30/30 caught), the other 12 (9 of them load-bearing parts of this project's own ladder) have no TUF equivalent at all — see Threat-Model.md "Phase 8 real-baseline comparison: python-tuf". This closes out reviewer objections 6 and 7 with real, measured evidence rather than argument. Decision on whether to fix the 7 red-team-found gaps before the paper, or disclose as limitations, still deferred. | ISSUES-AND-FIXES-LOG.md, src/build/build.py, tests/test_issue007_docker_fallback.py, evaluation/baselines/tuf_baseline.py (new), evaluation/baselines/__init__.py (new), evaluation/results/phase8_tuf_baseline.json (new), requirements.txt, docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |
+| 2026-08-04 | Fixed all 7 red-team-found gaps (user chose to fix rather than disclose-as-limitation). New `src/state_integrity.py` (HMAC-protected side-state files, fails closed on tamper/deletion) closes findings #1/#2/#6. `ground_auth.py` now binds the `version` argument to the provenance record (#3). `onboard.py`'s dead policy stub now delegates to real policy evaluation, gated by the mechanism flag instead of a literal string match (#4). `authorization_evidence.py` documents are now signed (dedicated Ed25519 keypair) and filenamed per-run, never overwritten (#5). Detected operational-monitoring mismatches now freeze the affected stack's ledger until an operator clears it — real enforcement, not just a log entry (#7). While verifying, found and fixed two real, latent instances of finding #2's exact anti-pattern (a raw file write bypassing the new integrity sidecar) in `tests/test_phase1_pipeline.py` and `evaluation/experiment.py::scenario_07`; also had to teach `evaluation/experiment.py::run_attack_trials()` and `evaluation/ablation.py::run_ablation_study()` to clear the new freeze between trials, since test cases #13/#15 deliberately trigger the exact mismatch the freeze reacts to on every trial by design. Verified via 19 new tests (`tests/test_phase8_redteam_fixes.py`, one or more per finding, each confirming the fix fails *closed* rather than only patching the reported scenario) plus a full re-run of the existing 47-test suite, all 15 attack-matrix cases, the Phase 8 ablation study, and the Phase 8 adaptive-attacker scenarios against both `cfs` and `fprime` — zero drift in any prior result (100%/0% throughout, 100%/100% for the adaptive scenarios) — and against real `cfs-real`/`fprime-real` via `tests/test_phase7_real_builds.py` (6/6 passing). Full per-finding writeup: `ISSUES-AND-FIXES-LOG.md` ISSUE-011 through ISSUE-017. | src/state_integrity.py (new), src/ground_authorization/version_ledger.py, src/ground_authorization/ground_auth.py, src/installation/partitions.py, src/signing/signing.py, src/attestation/attestation.py, src/onboard_verification/onboard.py, src/evidence_store/authorization_evidence.py, src/pipeline.py, evaluation/experiment.py, evaluation/ablation.py, tests/test_phase1_pipeline.py, tests/test_phase8_redteam_fixes.py (new), ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |

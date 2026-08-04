@@ -71,16 +71,51 @@ def authorize(
             denial_reasons.append("SBOM verification failed")
 
     if checks_passed and cond.active("provenance"):
+        provenance_doc = None
         if prov_path is None:
             checks_passed = False
             denial_reasons.append("provenance required by condition but not provided")
         else:
-            valid_prov, reason, _ = verify_provenance(
+            valid_prov, reason, provenance_doc = verify_provenance(
                 binary_path, prov_path, condition_name=condition_name
             )
             if not valid_prov:
                 checks_passed = False
                 denial_reasons.append(f"provenance verification failed: {reason}")
+
+        # Phase 8 red-team fix (2026-08-04), finding #3: the `version`
+        # argument used for downgrade protection was never bound to the
+        # provenance record it travels alongside — a caller could supply
+        # an inflated version number, independent of what the artifact's
+        # actual provenance declares, and poison the shared ledger,
+        # permanently locking out future *legitimate* lower/correct
+        # version numbers. This is the mirror image of test case #9 (a
+        # low version sneaking past the ledger): here the attack inflates
+        # it. Require the two to match before ever consulting the ledger.
+        if checks_passed and provenance_doc is not None:
+            try:
+                provenance_version = provenance_doc["predicate"]["runDetails"]["metadata"]["version"]
+            except (KeyError, TypeError):
+                provenance_version = None
+            if provenance_version != version:
+                checks_passed = False
+                denial_reasons.append(
+                    f"version/provenance mismatch: authorization requested version "
+                    f"{version}, but provenance record declares version "
+                    f"{provenance_version}"
+                )
+                store.record(
+                    pipeline_stage="ground_authorization",
+                    condition=condition_name,
+                    artifact_ref=artifact_hash,
+                    actor="ground_authorization_service",
+                    result="fail",
+                    detail={
+                        "reason": "version/provenance binding check failed",
+                        "requested_version": version,
+                        "provenance_version": provenance_version,
+                    },
+                )
 
         if checks_passed and not version_ledger.check_and_advance(
             version, artifact_hash, condition_name=condition_name, stack=stack

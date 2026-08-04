@@ -41,3 +41,13 @@ EEPROM.DAT
 *.pem
 *.key
 secrets/
+
+# Phase 8 (2026-08-04): state_integrity.py's HMAC sidecars, and the
+# revocation-list text files they protect — local, constantly-changing
+# test/dev state (revoked-key fingerprints, integrity tags), not project
+# source. keys/revoked_keys.txt was already tracked from an earlier
+# commit before this convention existed; see STATUS.md for the one-time
+# `git rm --cached` cleanup note.
+*.hmac
+keys/revoked_keys.txt
+keys/attestation_revoked_keys.txt

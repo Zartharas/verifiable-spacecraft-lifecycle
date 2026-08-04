@@ -1,6 +1,6 @@
 # Research Paper Outline & Venue Strategy
 
-**Last updated:** 2026-08-03
+**Last updated:** 2026-08-04
 **Status:** Draft v1
 
 ## 1. Central claim
@@ -115,23 +115,140 @@ lower-stakes first outings):**
 - CCSDS security and software-related working groups (standards-oriented
   feedback)
 
-## 4. Reviewer objections to pre-empt (from prior devil's-advocate pass —
-keep these in mind while writing every section, not just Discussion/Limitations)
+## 4. Reviewer objections to pre-empt (last revised 2026-08-04 — see the
+2026-08-03 rejection-risk review and 2026-08-04 reassessment below for how
+this list evolved; keep these in mind while writing every section, not
+just Discussion/Limitations)
 
 1. **"This is just SLSA/in-toto/Sigstore/TUF applied to a new domain."**
    Answer must rest on spacecraft-specific constraints changing the
    engineering problem, not just the deployment target. Make this
    argument explicitly and early, not just in the discussion section.
+   **Sharpened, 2026-08-04:** this objection gets much stronger without a
+   real baseline — see item 6 below, still open.
 2. **"Your simulated uplink isn't realistic."** Either model it faithfully
    against CCSDS/DTN assumptions, or scope the paper honestly as
    "terrestrial-analog pipeline with spacecraft-motivated constraints" and
    say so plainly in Limitations. Do not claim spacecraft realism that
    hasn't been earned.
-3. **"Single stack, doesn't generalize."** Caps venue ceiling absent
-   Phase 6. Be upfront about this rather than overclaiming.
+3. ~~"Single stack, doesn't generalize."~~ **Resolved, Phase 6/7/8
+   (2026-08-03/04).** Now four stacks (two stand-in artifacts, two real
+   NASA frameworks), with matching results not just on the original 15
+   attack cases but on a 3-mechanism ablation study and 2 combined-vector
+   adaptive-attacker scenarios, all at n=30. Superseded by item 7 below —
+   generalization is now demonstrated across *stacks*, but not across
+   *evaluators* or *independent tooling*.
 4. **"Where do these baseline numbers come from?"** Every effort/overhead
    metric needs a defined, defensible baseline (what does S0 represent
    operationally?) before it's presented as a finding.
+5. **"Your 100% detection rate just means the test suite always
+   trips."** (Identified 2026-08-03, the single biggest exposure at the
+   time.) **Partially addressed, 2026-08-04:** the ablation study shows 3
+   of 6 mechanisms are individually necessary (removing one breaks
+   exactly the case it's responsible for, nothing else), and the
+   adaptive-attacker scenarios show the pipeline fails closed under
+   combined attacks rather than merely logging one of several
+   independent detections. Real, citable evidence — but the other 3
+   mechanisms (signature/SBOM/provenance, and the S5 policy check) are
+   architecturally *not* ablatable via the current
+   `disable_mechanisms` mechanism (they live in
+   `ground_authorization.py`'s independently-derived `Condition`, not
+   `pipeline.py`'s), and the adaptive scenarios test "does detection halt
+   the pipeline," not a genuinely evasive or time-adaptive attacker. State
+   this scope boundary explicitly rather than imply full coverage.
+6. **"Where's the comparison against an actual SLSA/in-toto/TUF
+   pipeline?"** (New, 2026-08-04.) The paper's central claim — that
+   terrestrial frameworks don't address spacecraft-specific constraints —
+   is currently asserted, not measured. No real off-the-shelf tool has
+   been run against the same 15 test cases as a control group. **Addressed,
+   2026-08-04:** a real, unmodified upstream `python-tuf` deployment (see
+   Threat-Model.md "Phase 8 real-baseline comparison: python-tuf") was
+   run against the same 15-case matrix. Of the 15, only 3 have any
+   TUF-native detection mechanism at all (#6 integrity, #7 key
+   revocation, #9 downgrade protection) — all three caught 30/30 (100%),
+   confirming TUF works correctly, not that it's weak. The other 12,
+   including 9 that are load-bearing parts of this project's own S1-S5
+   ladder, have no corresponding concept anywhere in TUF's specification
+   — recorded as N/A with a stated architectural reason each, not run as
+   fake scenarios. This is real, citable, measured evidence for the
+   central claim rather than an assertion. Scope caveat: this speaks to
+   TUF specifically, not SLSA or in-toto, which would need their own
+   separate baseline runs to make the equivalent claim.
+7. **"Same team designed the threat model, the mitigations, and the
+   fixes for the mitigations' own credibility gap."** (New, 2026-08-04.)
+   The ablation/adaptive-attacker work exists specifically to answer "you
+   built both the lock and the lockpick" — but it was itself designed by
+   the same process (this author + Claude) that built the original
+   ladder. Not invalidating, but not resolved: name this explicitly in
+   Methodology/Limitations rather than let a reviewer discover it
+   unstated. **Partially addressed, 2026-08-04:** a blind(-ish) red-team
+   pass by a fresh, context-free agent (see Threat-Model.md "Phase 8
+   independent red-team review") found seven concrete gaps, all
+   independently re-verified against the source afterward (unprotected
+   ground-truth state files, fail-open key revocation, an unbound
+   version/provenance pairing, a dead onboard policy-check stub with a
+   brittle string-match gate, an unsigned/overwritable authorization-
+   evidence document, no attestation-key revocation path, and unenforced
+   operational-monitoring mismatches). Real, disclosable independence —
+   but honestly caveated: the review wasn't blind to *which* attacks
+   were already known (source comments name test-case numbers
+   throughout), and it's an AI reviewer, not a human domain expert. State
+   the findings and the caveat in the paper; do not oversell this as a
+   fully independent human audit. **All seven fixed, 2026-08-04** (see
+   Threat-Model.md's update note and ISSUES-AND-FIXES-LOG.md
+   ISSUE-011-017) — verified via 19 new dedicated tests plus a full
+   re-run of the existing regression suite, attack matrix, ablation
+   study, and adaptive scenarios showing zero drift in any prior result.
+   The paper's framing is now "an independent review found N real gaps
+   in the original design, and all were fixed and re-verified the same
+   day" — a materially stronger answer to this objection than "gaps were
+   found," and itself a citable methodology point (independent review →
+   fix → re-verify, not independent review as a one-time checkbox).
+8. **"Is this code actually available, or just described?"** (New,
+   2026-08-04.) The GitHub repo is currently private. Computers &
+   Security and JSSE (per § 5 below) both expect data/code availability
+   statements; "available on request" reads weaker than a public link at
+   Q1 security venues especially. **Still open** — your decision, not a
+   technical fix; see the working plan below.
+9. **"How do we know the evaluation code itself is correct, not just
+   the pipeline it measures?"** (New, 2026-08-04, prompted by ISSUE-010 —
+   a latent, environment-dependent bug in the project's own test suite
+   that only surfaced when run outside the original authoring sandbox for
+   the first time.) No claim here of a further hidden bug — just naming
+   that this class of risk exists and hasn't been independently audited.
+   Worth a short, honest mention rather than silence.
+10. **Docker-container timing as a confound.** (Sharpened, 2026-08-04.)
+    Real-stack timing numbers (Phase 7 and now Phase 8's ablation/adaptive
+    work) include Docker container-launch overhead (~2.4-2.6s observed),
+    not native flight-computer timing. More of the paper's evidence base
+    now rests on this same infrastructure than when this was first noted.
+    "Generalizes to real cFS/F´ binaries" is earned; "generalizes to
+    flight-representative hardware" is not — keep these distinct in
+    Discussion/Limitations.
+11. **AI-use disclosure depth.** (Sharpened, 2026-08-04.) Originally
+    scoped as "AI helped with drafting/research." By this point, AI
+    (Claude) independently diagnosed several root causes (ISSUE-007
+    through ISSUE-010) and designed the ablation/adaptive-attacker
+    methodology itself, under human direction — a materially bigger claim
+    than editing assistance. IEEE's disclosure policy specifically asks
+    which sections used AI and how; the eventual statement needs to say
+    this plainly, not undersell it.
+
+### Working plan for the three still-open items (6, 7, 8) — added 2026-08-04
+
+- **Item 6 (real baseline comparison): done, 2026-08-04.** Built a real,
+  unmodified `python-tuf` repository + `ngclient.Updater` client
+  (`evaluation/baselines/tuf_baseline.py`) and ran it against the same 15
+  test cases. Results and scope caveats in Threat-Model.md "Phase 8
+  real-baseline comparison: python-tuf" and item 6 above.
+- **Item 7 (independent evaluator):** a second human reviewer or a
+  genuinely blind red-team pass (an agent given only the source code, not
+  the existing threat model or attack matrix, tasked with finding
+  uncovered attack vectors) would add real, disclosable independence.
+  Weaker than a human domain expert, but honestly stronger than nothing,
+  and it's something that can actually be run this session if wanted.
+- **Item 8 (repo visibility):** a decision, not a build — see STATUS.md
+  for the tradeoffs and the exact command to flip it once decided.
 
 ## 5. Venue submission requirements (researched 2026-08-03, via live web search — verify again close to actual submission, these details change)
 

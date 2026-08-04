@@ -773,3 +773,266 @@ results:
 Still `PRELIMINARY_INTERNAL_ONLY` — same caveat as above — and the
 stated "sleeper attacker" scope limitation still applies regardless of
 which stack is used.
+
+## Phase 8 independent (blind, AI) red-team review (2026-08-04)
+
+**Motivation.** Reviewer objection 7 in Research-Paper-Outline.md § 4
+("same team designed the threat model, the mitigations, and the fixes for
+the mitigations' own credibility gap") cannot be resolved by more
+self-designed work. As a partial, honestly-caveated mitigation, a fresh
+agent instance with no prior context on this project was given only 20
+source files under `src/` (the mechanism implementations) and tasked with
+independently finding attack vectors the existing 15 test cases + ablation
++ adaptive scenarios do not cover.
+
+**Real limitation of the "blind" framing, stated plainly rather than
+glossed over:** this project's source files themselves contain inline
+comments referencing specific `test case #N` numbers throughout (a
+consequence of this project's own in-code documentation habit), so a
+reviewer reading `src/` is not blind to which attacks are already known —
+only to the specifics of how they're tested and what's been checked
+beyond them. The agent was instructed to exclude anything already flagged
+as covered by a comment and focus on gaps beyond that. This makes the
+review genuinely independent in *design origin* (a fresh context, not the
+same reasoning chain that built the ladder) but not blind in the strict
+"never saw the answer key" sense. State this precisely if citing this
+review in the paper — don't oversell it as a naive/uninformed attacker
+simulation.
+
+**Findings, ranked by the reviewer as most severe/concrete first. All
+seven were independently spot-verified against the actual source in this
+session (not just trusted from the sub-agent's report) — every one holds
+up:**
+
+1. **Ground-truth state files (version ledger, partition state) have no
+   integrity protection and can be edited directly, bypassing every
+   mechanism built on top of them.** *Verified.* `version_ledger.py`
+   reads/writes a bare, unsigned JSON file
+   (`work/version_ledger.<stack>.json`) with plain `json.load`/`json.dump`
+   — no HMAC, no signature, no append-only chain. Directly editing
+   `last_approved_version` back to 0 defeats downgrade protection (test
+   case #9's mechanism) with no signature or provenance forgery required.
+   `partitions.py`'s state file has the same property for rollback
+   integrity (test case #14's mechanism). This is a real, previously
+   unstated scope gap: every mechanism assumes its own persisted
+   side-state is trustworthy, and nothing in the codebase makes that
+   state tamper-evident. Worth a sentence in Limitations regardless of
+   whether it's fixed — the threat model in § 2 above implicitly assumes
+   ground-segment infrastructure integrity that isn't itself defended.
+2. **Signing-key revocation fails open on a missing/deleted
+   `revoked_keys.txt`.** *Verified.* `signing.py`'s `is_revoked()` returns
+   `False` (not revoked) whenever the file doesn't exist —
+   `if not REVOKED_KEYS_PATH.exists(): return False`. The file itself is
+   unsigned plain text. Test case #7 exercises "fingerprint is in the
+   list"; it does not exercise "the list itself was deleted or emptied,"
+   which un-revokes every key with a single unprivileged filesystem
+   write and leaves no cryptographic trace. Classic fail-open default on
+   a security-critical control file.
+3. **The `version` argument used for downgrade protection is never bound
+   to the provenance record it travels alongside.** *Verified.*
+   `ground_auth.py::authorize()` calls `verify_provenance(...)` and
+   discards its third return value (`_`), then separately calls
+   `version_ledger.check_and_advance(version, ...)` using the bare
+   `version` function argument — never cross-checked against whatever
+   version `generate_provenance()` embedded in the provenance document
+   itself. This is the mirror image of test case #9 (a low version
+   sneaking past the ledger): an inflated version number supplied to
+   `authorize()`/`pipeline.run()` independently of the artifact's actual
+   provenance could poison the shared ledger and permanently lock out
+   future *legitimate* lower/correct version numbers — a DoS vector
+   distinct from anything in the current matrix, and requiring no
+   signature or provenance forgery at all.
+4. **The onboard-side prohibited-configuration check is a permanent dead
+   stub, gated by a literal string comparison rather than the mechanism
+   flag.** *Verified.* `onboard.py::check_prohibited_configuration()`
+   unconditionally `return True`s, with a comment saying it's a Phase 1
+   placeholder "until Phase 4 implements real policy evaluation" — Phase
+   4 built real policy evaluation (`policy.check_configuration`) but only
+   wired it into ground-side `authorize()`, never back into this stub.
+   The onboard side has no independent ability to reject a prohibited
+   configuration if ground authorization is bypassed or fed different
+   data. Additionally, the gate that even calls this useless stub is
+   `if condition_name == "S5"` — a literal string match against the
+   condition's *name*, not `cond.active("machine_readable_authorization")`
+   — so a custom condition built via `condition.custom()` with that
+   mechanism active under a different name silently skips the check
+   entirely, independent of the stub itself being a no-op. This is a
+   real, double-layered gap: even fixing the stub wouldn't matter for any
+   condition object whose `.name` isn't literally the string `"S5"`.
+5. **The S5 authorization-evidence document is unsigned and keyed only by
+   artifact hash, so re-runs against the same (constant, stand-in)
+   artifact silently overwrite prior evidence at that path.** *Verified.*
+   `authorization_evidence.py::generate_authorization_evidence()` writes
+   plain `json.dump` output to
+   `work/authorization_evidence/{artifact_hash}.authorization-evidence.json`
+   with no signature over the document and no run ID or timestamp in the
+   filename. Since the stand-in artifact's hash is identical across every
+   run (documented in the module's own docstring, for an unrelated
+   reason — the Phase 5 cross-run-aggregation bug), every re-run silently
+   clobbers whatever authorization-evidence document existed at that
+   path, including one that recorded a detected failure. The evidence
+   log itself (`evidence_log.jsonl`) is genuinely append-only and
+   preserves history, but the actual deliverable meant to be handed to
+   an external verifier is neither immutable nor signed.
+6. **No revocation mechanism exists for the attestation key, unlike the
+   signing key.** *Verified.* `attestation.py` has no
+   `is_revoked()`/`REVOKED_KEYS_PATH` equivalent for
+   `ATTESTATION_PRIVATE_KEY_PATH` — `signing.py`'s revocation check has
+   no counterpart here. If the attestation key were ever known or
+   suspected compromised, there is no operational mechanism in this
+   codebase to invalidate it short of manually swapping key files.
+7. **Operational-monitoring mismatches (test cases #13/#15) are logged
+   but never enforced.** *Verified.* In `pipeline.py`'s S5 branch (lines
+   ~257-277), `monitoring.reconcile_inventory()` and
+   `monitoring.check_telemetry()` compute pass/fail and store it on
+   `PipelineResult.inventory_reconciled`/`telemetry_consistent`, but
+   `run()` never branches on either result — no rejection, no
+   re-authorization freeze, no alert. A detected inventory disagreement
+   or forged-telemetry mismatch produces an evidence-log entry and
+   nothing else; detection here is purely retrospective/auditable, not
+   preventive, and nothing stops the same mismatch recurring indefinitely
+   on every subsequent run.
+
+**What this licenses claiming, precisely:** an independently-instantiated
+review (not the same reasoning chain that designed the ladder, though not
+blind to which attacks were already known, per the caveat above) found
+seven concrete gaps, all independently confirmed against the source in
+this session — unprotected ground-truth state files, fail-open key
+revocation, an unbound version/provenance pairing, a dead onboard
+policy-check stub with a brittle string-match gate, an unsigned/
+overwritable authorization-evidence document, no attestation-key
+revocation path, and unenforced operational-monitoring mismatches — none
+of which the original 15 test cases, ablation study, or adaptive
+scenarios cover. This is genuine evidence the "same team" objection isn't
+fully answered by more self-designed rigor alone: every one of these
+gaps sits in the pipeline's own out-of-band state or in an
+already-known-but-never-closed placeholder, exactly the kind of thing a
+differently-motivated reader finds and an author's own mental model
+routinely skips past. It is still not equivalent to a human security
+domain expert's review — no claim is made here about completeness, only
+that these seven are real and confirmed.
+
+**Update (2026-08-04): all seven findings fixed the same day.** See
+ISSUES-AND-FIXES-LOG.md ISSUE-011 through ISSUE-017 for the full
+per-finding writeup. Summary:
+
+1. Ground-truth state files (version ledger, partition state) are now
+   HMAC-protected via new `src/state_integrity.py`; tampered or
+   deleted-after-protection state now fails closed (denies the
+   authorization/installation) rather than being silently trusted.
+2. Signing-key revocation now fails **closed**: the revocation list is
+   integrity-protected from the moment a keypair exists, and a
+   tampered/deleted list is treated as "every key revoked," not "nothing
+   revoked."
+3. Ground authorization now cross-checks the `version` argument against
+   the version embedded in the provenance record, rejecting a mismatch
+   before ever consulting the ledger.
+4. The onboard prohibited-configuration check now delegates to the same
+   real policy evaluation ground authorization uses, gated by
+   `cond.active("machine_readable_authorization")` instead of a literal
+   string comparison.
+5. The S5 authorization-evidence document is now signed (dedicated
+   Ed25519 keypair) and filenamed per-run, so it can never be silently
+   overwritten again; a new `verify_authorization_evidence()` lets an
+   external verifier confirm it.
+6. The attestation key now has the same revocation mechanism the signing
+   key has, via the same integrity-protected, fail-closed pattern.
+7. A detected operational-monitoring mismatch now freezes the affected
+   stack's ledger (denying every subsequent authorization) until an
+   operator explicitly clears it — real enforcement, not just a log
+   entry.
+
+All seven fixes were verified via a new dedicated test file
+(`tests/test_phase8_redteam_fixes.py`, 19 tests, one or more per finding,
+each demonstrating the original gap is closed and that the fix fails
+*closed* rather than merely patching the one reported scenario) plus a
+full re-run of the existing 47-test regression suite, the 15-case attack
+matrix, the Phase 8 ablation study, and the Phase 8 adaptive-attacker
+scenarios against both `cfs` and `fprime` — every existing result is
+unchanged (100%/0% throughout, 100%/100% for the adaptive scenarios),
+confirming the fixes close real gaps without altering any of the
+project's existing, already-cited behavior. Also confirmed against real
+`cfs-real`/`fprime-real` via the existing `tests/test_phase7_real_builds.py`
+(6/6 passing). Two real, latent instances of finding #2's exact
+anti-pattern (a raw file write bypassing the new integrity sidecar) were
+also found and fixed while verifying, in `tests/test_phase1_pipeline.py`
+and `evaluation/experiment.py`'s `scenario_07` — see ISSUE-012.
+
+This closes Research-Paper-Outline.md § 4 item 7's remaining open
+question of *whether* to fix these before the paper: they are fixed, and
+the honest framing for the paper is now "an independent review found N
+real gaps, and they were fixed and re-verified the same day," not merely
+"an independent review found gaps."
+
+## Phase 8 real-baseline comparison: python-tuf (2026-08-04)
+
+**Motivation.** Reviewer objection 6 in Research-Paper-Outline.md § 4
+("where's the comparison against an actual SLSA/in-toto/TUF pipeline?")
+cannot be answered by argument alone — the paper's central claim (that
+terrestrial supply-chain frameworks don't address spacecraft-specific
+constraints) needed to be measured, not asserted.
+
+**Method.** Installed the real, unmodified upstream `python-tuf` library
+(`pip install tuf`, v7.0.0 — not a reimplementation) and built a minimal,
+correct TUF repository (one key per top-level role, no delegation, via
+TUF's own low-level Metadata API, following the same pattern as
+python-tuf's own `examples/manual_repo/basic_repo.py`) plus a real
+`tuf.ngclient.Updater` client, in `evaluation/baselines/tuf_baseline.py`.
+No live HTTP server is used — a `FetcherInterface` implementation reads
+`file://` URLs directly from disk, keeping this baseline in-process and
+deterministic like every other stage in this project's own pipeline; this
+tests TUF's own cryptographic/protocol guarantees, not this harness's
+networking code.
+
+**Scope, decided honestly before running anything:** of the 15 attack
+matrix test cases, only 3 have a plausible TUF-native detection
+mechanism at all — #6 (modified update in transit → TUF's core
+target-hash/length integrity check), #7 (revoked signing key → TUF's
+root-key-rotation/revocation mechanism), and #9 (downgrade attempt → TUF's
+version-monotonicity/rollback protection, enforced via the client's
+persisted local trust store). These three are not incidental — they are
+TUF's actual, textbook security guarantees. The other 12 test cases were
+**not run** as scenarios, and are recorded as N/A with a stated
+architectural reason each (see `NOT_APPLICABLE` in the module) rather
+than silently omitted: build provenance (#2), SBOM (#3),
+known-vulnerability scanning (#4), authorized-builder identity (#5),
+policy/configuration evaluation (#8), installation/A-B partition
+management (#10), runtime health checks (#11), onboard attestation (#12
+— TUF's *metadata* expiration is a related-but-distinct freshness
+guarantee, explicitly not scored as equivalent), ground/spacecraft
+inventory reconciliation (#13), rollback/recovery-image integrity (#14),
+and operational-telemetry consistency (#15) all have no corresponding
+concept anywhere in TUF's specification. Test case #1 shares its
+detection mechanism with #6 and was not double-counted as a separate win.
+
+**Results (n=30, deterministic — repetition here confirms no flakiness in
+the test harness itself, not a probabilistic detection rate):**
+
+| Case | Mechanism | TUF detection rate |
+|---|---|---|
+| #6 (modified update in transit) | target hash/length verification | 30/30 (100%) — `DownloadLengthMismatchError` |
+| #7 (revoked signing key) | root key rotation/revocation | 30/30 (100%) — `UnsignedMetadataError` ("targets was signed by 0/1 keys") |
+| #9 (downgrade attempt) | version-monotonicity check | 30/30 (100%) — `BadVersionNumberError` |
+| #1, #2, #3, #4, #5, #8, #10, #11, #12, #13, #14, #15 | — | N/A, no TUF mechanism exists |
+
+Raw results: `evaluation/results/phase8_tuf_baseline.json`.
+
+**What this licenses claiming, precisely:** a real, working, unmodified
+TUF deployment correctly and reliably catches exactly the 3 attack types
+its specification is designed around, and has no mechanism at all for
+the other 12 — 9 of which are load-bearing parts of this project's own
+S1-S5 ladder (SBOM, provenance, builder authorization, policy,
+attestation, rollback, inventory reconciliation, telemetry consistency,
+plus installation itself). This directly substantiates, with a real
+control-group measurement rather than an assertion, the paper's central
+claim that terrestrial software supply-chain frameworks address a
+narrower problem than spacecraft lifecycle assurance requires — TUF is
+not a weak or poorly-implemented tool here; it does exactly what it's
+supposed to do, and what it's supposed to do is a proper subset of what
+this project's S0-S5 ladder covers. Still worth stating precisely: this
+is one baseline tool (chosen as the closest conceptual match to
+`ground_authorization`/`onboard_verification`), one minimal (if correct)
+repository configuration, and does not speak to SLSA or in-toto
+specifically, which target adjacent but distinct parts of the problem
+(build provenance, primarily) and would need their own, separate
+baseline runs to make the equivalent claim about them.

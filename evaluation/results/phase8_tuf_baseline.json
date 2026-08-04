@@ -1,0 +1,71 @@
+{
+  "6": {
+    "applicable": true,
+    "n_trials": 30,
+    "caught_count": 30,
+    "detection_rate": 1.0,
+    "sample_reason": "DownloadLengthMismatchError: Downloaded 20 bytes exceeding the maximum allowed length of 16"
+  },
+  "7": {
+    "applicable": true,
+    "n_trials": 30,
+    "caught_count": 30,
+    "detection_rate": 1.0,
+    "sample_reason": "UnsignedMetadataError: targets was signed by 0/1 keys"
+  },
+  "9": {
+    "applicable": true,
+    "n_trials": 30,
+    "caught_count": 30,
+    "detection_rate": 1.0,
+    "sample_reason": "BadVersionNumberError: New timestamp version 1 must be >= 2"
+  },
+  "1": {
+    "applicable": false,
+    "reason": "Same underlying mechanism as case #6 (target hash/length verification) \u2014 not run as a separate scenario to avoid double- counting one TUF guarantee as two 'wins.'"
+  },
+  "2": {
+    "applicable": false,
+    "reason": "Build provenance (binary->source->build-environment->builder chain, SLSA/in-toto-style) is entirely outside TUF's specification. TUF verifies that a target's hash/length matches what a trusted signer declared, never how or where it was built."
+  },
+  "3": {
+    "applicable": false,
+    "reason": "SBOM / component-inventory tracking is out of scope for TUF's specification."
+  },
+  "4": {
+    "applicable": false,
+    "reason": "Known-vulnerability scanning of dependencies is out of scope for TUF's specification."
+  },
+  "5": {
+    "applicable": false,
+    "reason": "TUF's delegation model authorizes which key may sign which role's metadata, not which build system produced a given artifact \u2014 there is no 'authorized builder identity' concept in the core spec."
+  },
+  "8": {
+    "applicable": false,
+    "reason": "No policy/configuration-evaluation language exists in TUF's core specification (custom target metadata fields exist, but there is no built-in policy engine to evaluate them against)."
+  },
+  "10": {
+    "applicable": false,
+    "reason": "Installation itself (writing to a partition, A/B slots, etc.) is entirely outside TUF's scope \u2014 TUF's responsibility ends at 'deliver a verified target file to the client.'"
+  },
+  "11": {
+    "applicable": false,
+    "reason": "No runtime health-check concept exists in TUF's specification."
+  },
+  "12": {
+    "applicable": false,
+    "reason": "TUF has metadata *expiration* (a related but distinct freshness guarantee protecting the repository's own metadata, not a runtime attestation quote about currently-running software) \u2014 a partial conceptual overlap, not an equivalent mechanism, so not scored as covering this case."
+  },
+  "13": {
+    "applicable": false,
+    "reason": "No ground/spacecraft state-reconciliation concept exists in TUF's specification."
+  },
+  "14": {
+    "applicable": false,
+    "reason": "No rollback/recovery-image concept exists \u2014 TUF does not manage installed system state at all, only metadata/target delivery."
+  },
+  "15": {
+    "applicable": false,
+    "reason": "No operational-telemetry-consistency concept exists in TUF's specification."
+  }
+}

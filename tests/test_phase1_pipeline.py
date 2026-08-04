@@ -19,7 +19,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 from build.build import build  # noqa: E402
 from evidence_store import EvidenceStore  # noqa: E402
 from pipeline import run  # noqa: E402
-from signing.signing import revoke_current_key, generate_keypair  # noqa: E402
+from signing.signing import revoke_current_key, generate_keypair, reset_revocation_list  # noqa: E402
 
 
 def test_build_is_reproducible():
@@ -74,6 +74,12 @@ def test_case_07_revoked_key_is_rejected():
         assert result.rejected_at == "ground_authorization"
     finally:
         # Clean up so this test doesn't poison later runs / other tests.
-        revoked_file = REPO_ROOT / "keys" / "revoked_keys.txt"
-        if revoked_file.exists():
-            revoked_file.write_text("")
+        # Phase 8 red-team fix #2 (2026-08-04): must go through
+        # reset_revocation_list(), not a raw write_text() — the
+        # revocation list is now integrity-protected (state_integrity.py),
+        # and writing its content directly without updating the HMAC
+        # sidecar would make every subsequent is_revoked() call fail
+        # closed (treat every key as revoked) for the rest of the test
+        # session, exactly the fail-closed behavior the fix is supposed
+        # to have, but not what this cleanup step intends.
+        reset_revocation_list()

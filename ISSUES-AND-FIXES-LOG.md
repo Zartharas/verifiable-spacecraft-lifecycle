@@ -547,6 +547,272 @@ debugging session.
 
 ---
 
+## [ISSUE-011] Ground-truth state files (version ledger, partition state) had no integrity protection — Phase 8 red-team finding #1
+
+- **Date found:** 2026-08-04
+- **Found during:** the Phase 8 blind (AI) red-team review (see
+  Threat-Model.md "Phase 8 independent (blind, AI) red-team review",
+  finding #1), independently re-verified against the actual source before
+  being logged here.
+- **Category:** design flaw / security finding
+- **Severity:** high — a single unprivileged filesystem write (resetting
+  `last_approved_version` to 0, or hand-editing partition state) could
+  bypass downgrade protection or the rollback recovery-image integrity
+  check entirely, with no signature or provenance forgery required.
+- **Description:** `version_ledger.py` and `partitions.py` both persisted
+  their state as bare, unsigned JSON files with plain `json.load`/
+  `json.dump` — no HMAC, no signature, no append-only chain. Every
+  mechanism built on top (downgrade protection, rollback recovery-image
+  integrity) implicitly assumed this side-state was trustworthy, but
+  nothing made it tamper-evident.
+- **Root cause:** state persisted to a plain file with no integrity
+  layer at all — a gap in the original Phase 2/3 design, not a
+  regression.
+- **Fix:** new `src/state_integrity.py` (HMAC-SHA256 sidecar files,
+  symmetric key stored under `keys/`, gitignored) wired into both
+  modules' read/write paths. Reads that fail verification, or find a
+  deleted-after-protection file, raise `StateIntegrityError`; callers
+  (`version_ledger.check_and_advance()`, `pipeline.py`'s
+  `trusted_rollback` branch) treat this as a fail-closed denial, never
+  as "fresh/empty state." Stated residual limitation: this defends
+  against an attacker who can write the state file but not also read the
+  HMAC key — it does not defend against an attacker with full filesystem
+  access to both. See `state_integrity.py`'s module docstring for the
+  full threat-model statement.
+- **Disclosure status:** n/a — this project's own design gap.
+- **Verified fixed:** yes — `tests/test_phase8_redteam_fixes.py`
+  (`test_finding1_*`, 3 tests: tampered ledger, deleted-with-sidecar,
+  tampered partition state, all confirmed fail-closed). Full regression
+  suite (47 existing tests across all phases) re-run clean; evaluation
+  harness, ablation study, and adaptive-attacker scenarios re-run at
+  reduced trial counts against `cfs`/`fprime` with identical results to
+  before the fix (100%/0% throughout, no drift).
+
+---
+
+## [ISSUE-012] Signing-key revocation failed open on a missing/deleted revocation list — Phase 8 red-team finding #2
+
+- **Date found:** 2026-08-04
+- **Found during:** Phase 8 blind red-team review, finding #2.
+- **Category:** security finding
+- **Severity:** high — deleting `keys/revoked_keys.txt` with a single
+  unprivileged filesystem write un-revoked every previously revoked key,
+  with no cryptographic trace.
+- **Description:** `signing.py`'s `is_revoked()` returned `False` (not
+  revoked) whenever the revocation list file didn't exist — a classic
+  fail-open default on a security-critical control file.
+- **Root cause:** "file missing" was conflated with "nothing has ever
+  been revoked," with no way to distinguish a legitimately fresh list
+  from one that had been deleted after use.
+- **Fix:** the revocation list is now co-initialized (empty, but
+  integrity-protected via `state_integrity.py`) the moment a keypair is
+  generated, so content and its HMAC sidecar always exist together from
+  that point on. `is_revoked()` now fails **closed**: if the list's
+  integrity check fails (tampered, or deleted while its sidecar remains
+  — exactly the red-team's "delete to un-revoke" pattern), every key is
+  treated as revoked. The only way to reach "not revoked" is a
+  verified-empty or verified-non-matching list.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_phase8_redteam_fixes.py`
+  (`test_finding2_*`, 3 tests). Also surfaced two real, latent instances
+  of the same underlying anti-pattern (a raw `write_text("")` cleanup
+  that bypasses the new integrity sidecar) in
+  `tests/test_phase1_pipeline.py` and `evaluation/experiment.py`'s
+  `scenario_07` — both fixed to go through the new
+  `reset_revocation_list()` helper instead. Full regression suite and
+  evaluation harness re-run clean (see ISSUE-011's verification note for
+  the shared re-run).
+
+---
+
+## [ISSUE-013] `version` argument for downgrade protection was never bound to the provenance record it traveled with — Phase 8 red-team finding #3
+
+- **Date found:** 2026-08-04
+- **Found during:** Phase 8 blind red-team review, finding #3.
+- **Category:** security finding
+- **Severity:** medium — enables a denial-of-service distinct from
+  anything in the existing 15-case attack matrix: an inflated version
+  number, supplied independently of the artifact's actual provenance,
+  could poison the shared ledger and permanently lock out future
+  *legitimate* lower/correct version numbers, requiring no signature or
+  provenance forgery.
+- **Description:** `ground_auth.py::authorize()` called
+  `verify_provenance()` and discarded its parsed-provenance return value,
+  then separately called `version_ledger.check_and_advance(version, ...)`
+  using the bare `version` function argument — never cross-checked
+  against whatever version `generate_provenance()` had actually embedded
+  in the provenance document.
+- **Root cause:** the two "version" values (the caller-supplied argument
+  and the provenance document's own field) were structurally independent
+  from the start; nothing enforced they had to agree.
+- **Fix:** `authorize()` now extracts
+  `provenance_doc["predicate"]["runDetails"]["metadata"]["version"]` and
+  denies the authorization if it doesn't match the `version` argument,
+  before ever consulting the ledger.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_phase8_redteam_fixes.py`
+  (`test_finding3_*`, 2 tests: mismatched version rejected, matching
+  version still approved). Full regression suite and evaluation harness
+  re-run clean (all existing calls already pass matching version
+  arguments throughout the codebase, confirmed via the full suite).
+
+---
+
+## [ISSUE-014] Onboard prohibited-configuration check was a permanent dead stub with a brittle string-match gate — Phase 8 red-team finding #4
+
+- **Date found:** 2026-08-04
+- **Found during:** Phase 8 blind red-team review, finding #4.
+- **Category:** bug (incomplete implementation left over from Phase 1) /
+  security finding
+- **Severity:** medium — the spacecraft had no independent ability to
+  reject a prohibited configuration if ground authorization was bypassed,
+  compromised, or fed different data than what was actually deployed.
+- **Description:** `onboard.py::check_prohibited_configuration()`
+  unconditionally `return True`d, with a comment calling it a Phase 1
+  placeholder "until Phase 4" — but Phase 4 *did* build real policy
+  evaluation (`policy.check_configuration`), it was only ever wired into
+  ground-side `authorize()`, never back into this stub. Compounding bug:
+  the gate that even called the stub was `if condition_name == "S5"` — a
+  literal string match against the condition's *name*, not
+  `cond.active("machine_readable_authorization")` — so any condition
+  object whose `.name` wasn't literally `"S5"` would silently skip the
+  check regardless of whether the mechanism was actually active.
+- **Root cause:** the Phase 1 placeholder was never revisited once Phase
+  4 built the real mechanism elsewhere; the string-match gate was a
+  Phase 1-era shortcut that predated `condition.py`'s `Condition.active()`
+  API.
+- **Fix:** `check_prohibited_configuration()` now delegates to the same
+  `policy.check_configuration()` ground authorization uses. The gate now
+  builds a real `Condition` via `condition.preset(condition_name)`
+  (mirroring `ground_auth.py`'s own pattern) and checks
+  `cond.active("machine_readable_authorization")` directly. Stated scope
+  boundary, consistent with the one already documented for
+  `ground_auth.py`'s own policy check: this builds its own `Condition`
+  independent of any `disable_mechanisms` ablation override passed to
+  `pipeline.py`'s `run()` — not a new gap, the same deliberate boundary
+  the Phase 8 ablation study already documents.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_phase8_redteam_fixes.py`
+  (`test_finding4_*`, 2 tests: onboard independently rejects a prohibited
+  configuration at S5; the mechanism-flag gate correctly does NOT run at
+  S4, confirming it's keyed off the mechanism, not a literal string).
+  Full regression suite and evaluation harness re-run clean.
+
+---
+
+## [ISSUE-015] S5 authorization-evidence document was unsigned and silently overwritten on every re-run — Phase 8 red-team finding #5
+
+- **Date found:** 2026-08-04
+- **Found during:** Phase 8 blind red-team review, finding #5.
+- **Category:** security finding
+- **Severity:** medium — the one deliverable meant to be handed to an
+  external auditor/ground reviewer at the top of the assurance ladder was
+  neither immutable nor signed, undermining the trust claim it's supposed
+  to carry.
+- **Description:** `authorization_evidence.py` wrote plain JSON to
+  `work/authorization_evidence/{artifact_hash}.authorization-evidence.json`
+  — keyed only by artifact hash, with no signature, run ID, or timestamp
+  in the filename. Since the stand-in stub artifact's hash is identical
+  across every run (a documented property, for an unrelated Phase 5
+  reason), every re-run silently clobbered whatever document existed at
+  that path, including one that had recorded a detected failure.
+- **Root cause:** the filename's uniqueness key (artifact hash alone) was
+  never actually unique per run for this project's stub artifacts; no
+  signing was ever added because the module's original scope was "can
+  the evidence be assembled automatically," not "is the assembled
+  document itself protected."
+- **Fix:** the document is now signed with a dedicated Ed25519 keypair
+  (mirroring `attestation.py`'s per-mechanism-key convention; detached
+  `.sig` sidecar), and the filename now includes `run_id` (the caller's
+  evidence-log start index for this run, already computed by
+  `pipeline.py` — no new ID scheme needed), so two runs never collide.
+  New `verify_authorization_evidence()` lets an external verifier confirm
+  the document hasn't been altered since generation.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_phase8_redteam_fixes.py`
+  (`test_finding5_*`, 3 tests: valid signature verifies, tampered content
+  fails verification, two runs produce two distinct never-overwritten
+  files). Full regression suite and evaluation harness re-run clean.
+
+---
+
+## [ISSUE-016] No revocation mechanism existed for the attestation key — Phase 8 red-team finding #6
+
+- **Date found:** 2026-08-04
+- **Found during:** Phase 8 blind red-team review, finding #6.
+- **Category:** security finding
+- **Severity:** medium — if the attestation private key were ever known
+  or suspected compromised, there was no operational way to invalidate it
+  short of manually swapping key files.
+- **Description:** `attestation.py` had no `is_revoked()`/
+  `REVOKED_KEYS_PATH` equivalent for `ATTESTATION_PRIVATE_KEY_PATH` —
+  `signing.py`'s revocation check had no counterpart for the attestation
+  mechanism.
+- **Root cause:** the attestation module was built (Phase 3) before
+  `signing.py`'s revocation mechanism existed conceptually as a pattern
+  to replicate, and was never revisited once it did.
+- **Fix:** added `is_attestation_key_revoked()`/
+  `revoke_current_attestation_key()`, mirroring `signing.py`'s
+  (ISSUE-012-fixed) fail-closed pattern exactly, via the same
+  `state_integrity.py` mechanism. `verify_attestation()` now checks this
+  before trusting a quote.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_phase8_redteam_fixes.py`
+  (`test_finding6_*`, 3 tests: not revoked by default, revoked key
+  rejected at S4, deleted-after-protection revocation list fails closed).
+  Full regression suite and evaluation harness re-run clean.
+
+---
+
+## [ISSUE-017] Operational-monitoring mismatches were detected but never enforced — Phase 8 red-team finding #7
+
+- **Date found:** 2026-08-04
+- **Found during:** Phase 8 blind red-team review, finding #7.
+- **Category:** design flaw / security finding
+- **Severity:** medium — detection here was purely retrospective/
+  auditable, not preventive; nothing stopped the same mismatch from
+  recurring indefinitely on every subsequent run.
+- **Description:** `pipeline.py`'s S5 branch computed
+  `inventory_reconciled`/`telemetry_consistent` via
+  `monitoring.reconcile_inventory()`/`monitoring.check_telemetry()`
+  (test cases #13/#15) but never branched on the result — no rejection,
+  no re-authorization freeze, no alert; just an evidence-log entry.
+- **Root cause:** the monitoring checks were built (Phase 4) to satisfy
+  the detection requirement for test cases #13/#15, and the exit
+  criterion at the time was "is the mismatch detected and logged," not
+  "does detecting it change anything" — a real, if narrow, scope gap.
+- **Fix:** a detected mismatch now (a) marks that run's own
+  `PipelineResult.rejected_at`, and (b) calls
+  `version_ledger.freeze(stack, reason)`, which denies every subsequent
+  `check_and_advance()` call for that stack until an operator explicitly
+  calls `unfreeze()` — real behavioral enforcement, not a stronger log
+  message. The freeze marker is itself integrity-protected via
+  `state_integrity.py` (fails closed if tampered/deleted).
+  **Side effect requiring a coordinated fix:** `evaluation/experiment.py`'s
+  `run_attack_trials()` and `evaluation/ablation.py`'s
+  `run_ablation_study()` deliberately trigger this exact mismatch every
+  trial for test cases #13/#15 (that's the attack being tested) — without
+  clearing the freeze between trials, trial 1's freeze would silently
+  corrupt every subsequent trial in the same loop (rejected at
+  `ground_authorization` instead of ever reaching the mechanism under
+  test). Both now call `version_ledger.unfreeze(stack)` before each
+  trial, with a comment explaining this is a test-harness modeling
+  choice (each trial = an independent release attempt), not something a
+  real deployment would do automatically.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_phase8_redteam_fixes.py`
+  (`test_finding7_*`, 3 tests: mismatch freezes the stack and rejects the
+  run, unfreeze restores normal operation, tampered freeze marker fails
+  closed). Full regression suite, evaluation harness (all 15 cases
+  individually re-checked at reduced trial counts), Phase 8 ablation
+  study, and Phase 8 adaptive-attacker scenarios all re-run against
+  `cfs`/`fprime` with results identical to before this whole fix set
+  (100%/0% throughout, 100%/100% for adaptive scenarios, 0 drift). Also
+  confirmed against real `cfs-real`/`fprime-real` via
+  `tests/test_phase7_real_builds.py` (6/6 passing).
+
+---
+
 ## Notes on responsible disclosure
 
 If a real vulnerability is found in an upstream dependency (cFS itself,

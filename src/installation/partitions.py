@@ -14,6 +14,20 @@ than silently activating a possibly-corrupted image.
 State is a single JSON file (`work/partition_state.json`) — a Phase 3
 simplification, same spirit as the Phase 2 version ledger. A real system
 would tie this into signed, evidence-chained state (S5), not a bare file.
+
+Phase 8 red-team fix (2026-08-04), finding #1 (see Threat-Model.md "Phase
+8 independent (blind, AI) red-team review"): this file was previously
+plain, unsigned JSON — directly editable by anything with filesystem
+write access (e.g. marking a malicious slot's `confirmed: true` with a
+hash matching whatever bytes are actually on disk in that slot trivially
+satisfies `revert_to_other()`'s own integrity check, since that check
+only verifies internal consistency between the state file and the slot's
+bytes, never that the state file itself is trustworthy). Now protected
+via `state_integrity.py` (HMAC sidecar); a tampered or deleted-after-
+protection state file raises `StateIntegrityError`, which every public
+function here propagates rather than swallowing — callers (see
+`pipeline.py`) must treat this as "cannot trust partition state,"
+fail-closed, never as "state is empty/fresh."
 """
 
 from __future__ import annotations
@@ -29,6 +43,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from evidence_store import EvidenceStore  # noqa: E402
+from state_integrity import protect, read_verified, discard  # noqa: E402,F401 (re-exported for tests)
 
 PARTITIONS_DIR = REPO_ROOT / "work" / "partitions"
 STATE_PATH = REPO_ROOT / "work" / "partition_state.json"
@@ -45,12 +60,17 @@ def _default_state() -> dict:
 
 
 def _load_state() -> dict:
-    if not STATE_PATH.exists():
+    """Raises `state_integrity.StateIntegrityError` if the state file
+    exists but fails verification — this is NOT caught here. Every
+    caller in this module lets it propagate; `pipeline.py` is
+    responsible for treating it as a fail-closed condition."""
+    data = read_verified(STATE_PATH)
+    if data is None:
+        return _default_state()
+    content = data.decode().strip()
+    if not content:
         return _default_state()
     try:
-        content = STATE_PATH.read_text().strip()
-        if not content:
-            return _default_state()
         return json.loads(content)
     except json.JSONDecodeError:
         return _default_state()
@@ -60,10 +80,13 @@ def _save_state(state: dict) -> None:
     STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(STATE_PATH, "w") as f:
         json.dump(state, f, indent=2)
+    protect(STATE_PATH)
 
 
 def reset() -> None:
-    """Test helper — wipe partition state and files between test runs."""
+    """Test helper — wipe partition state (and its integrity sidecar)
+    and files between test runs."""
+    discard(STATE_PATH)
     _save_state(_default_state())
     PARTITIONS_DIR.mkdir(parents=True, exist_ok=True)
     for slot in SLOTS:
