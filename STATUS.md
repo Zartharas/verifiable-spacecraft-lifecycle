@@ -433,7 +433,147 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       latent instances of finding #2's exact anti-pattern found while
       verifying (`tests/test_phase1_pipeline.py`,
       `evaluation/experiment.py::scenario_07`).
-- [ ] **You:** commit + push this session's changes
+- [x] **Committed and pushed, 2026-08-04: commit `3d7370b`** ("Phase 8:
+      fix all 7 red-team-found gaps + python-tuf baseline comparison"),
+      22 files changed. Also untracked `keys/revoked_keys.txt` from git
+      (now gitignored, per the state-integrity fix's new sidecar-file
+      convention) — hit a stale `.git/index.lock` from an earlier `git
+      status` call in the Claude sandbox along the way, consistent with
+      this repo's known recurring lock-contention issue (see
+      "Repository" section below); cleared manually from the user's own
+      Terminal and the commit/push completed cleanly on retry.
+- [x] **Ablation study extended to 5/6 mechanisms + evaluation-code
+      correctness tests added, 2026-08-05.** Following the post-fix
+      reviewer-objection reassessment, the user chose to act on two of
+      four proposed follow-ups (objections 5 and 9), deferring the
+      AI-disclosure statement and the objection-7 recursion write-up.
+      1. **Objection 5 (ablation scope gap):** `disable_mechanisms` is
+         now threaded through `ground_authorization.ground_auth.
+         authorize()` and `onboard_verification.onboard.
+         verify_received_bundle()`, not just `pipeline.py`'s own gating
+         — closing the exact gap stated in Threat-Model.md's prior
+         ablation write-up. `sbom`, `provenance`, and the S5 policy check
+         (a second scenario for test case #8, distinct from the existing
+         #15) are now ablatable; all show the same clean 100%/0%
+         isolation as the original 3. `signature` remains deliberately
+         excluded (stated design property, not an oversight — see
+         `evaluation/ablation.py`'s module docstring). Fixing this also
+         required threading the same parameter into `onboard.py`'s
+         redundant S5 policy check (Phase 8 finding #4's fix), since that
+         check would otherwise have silently caught the attack anyway
+         when `machine_readable_authorization` was ablated at the
+         ground-auth level, defeating the point of the ablation. Locked
+         in with 4 fast, single-trial regression tests
+         (`tests/test_phase8_ablation_extension.py`). The extended
+         6-mechanism results themselves were run at reduced trial counts
+         (n=10/n=5, not the standard n=30) due to this tool's per-command
+         time limit and the fact that background processes don't persist
+         across separate tool invocations in this sandbox — **the full
+         30-trial re-run for the paper's actual numbers still needs to
+         happen outside this sandbox**, same pattern as the earlier
+         real-stack 30-trial re-runs the user did directly. See
+         `docs/Threat-Model.md`'s "Phase 8 ablation study" update.
+      2. **Objection 9 (evaluation-code correctness):** added 33 tests
+         (`tests/test_evaluation_report_correctness.py`) for `evaluation/
+         report.py`'s `_wilson_ci`/`_mean_ci`/`_mean_stdev` and its three
+         aggregation functions. `_wilson_ci` cross-checked against an
+         independent third-party implementation
+         (`statsmodels.stats.proportion.proportion_confint`, statsmodels
+         0.14.6, installed and used only to *generate* the hardcoded
+         reference values — not a runtime test dependency) at the exact
+         normal quantile, matching to 1e-9; the module's actual rounded
+         `z=1.96` default separately confirmed close (5e-4). `_mean_ci`
+         cross-checked against an independently-written closed-form
+         computation. All pass. See `docs/Threat-Model.md`'s new "Phase 8
+         evaluation-code correctness tests" section.
+      Full regression check after both changes: 66 pre-existing tests
+      (phases 1-4, 6, 7, and the 19 red-team-fix tests) plus the 37 new
+      tests (4 ablation-extension + 33 correctness) all pass — 103/103,
+      zero drift in any prior result.
+- [x] **Full 30-trial ablation study confirmed, 2026-08-05.** User ran
+      `python3 evaluation/ablation.py` against all four stacks (`cfs`,
+      `fprime`, `cfs-real`, `fprime-real`) at the standard `N_TRIALS =
+      30`. All four produced the identical result: all 6 cases
+      (`#4` sbom, `#5` provenance, `#12` onboard_attestation, `#11`
+      trusted_rollback, `#15`/`#8` machine_readable_authorization) at
+      100% baseline / 0% ablated, `effect_specifically_attributable_to_
+      mechanism: true` throughout — including against the real cFS/F´
+      binaries, not just the stub artifacts. This supersedes the
+      sandbox's earlier reduced-trial (n=10/n=5) verification run and
+      is now the citable number for the paper. See Threat-Model.md's
+      "Phase 8 ablation study" update and Research-Paper-Outline.md
+      item 5. Raw results: `evaluation/results/phase8_ablation_
+      {cfs,fprime,cfs-real,fprime-real}.json`.
+- [x] **Remaining-objection decisions made, 2026-08-05 (user).** Item 11
+      (AI-use disclosure statement): deferred, to be drafted alongside
+      the paper/documentation work itself rather than as standalone prep
+      — not forgotten, just sequenced later. Item 8 (repo visibility):
+      decided — stays private through the research/writing phase, made
+      public at the point of publication. No code or doc changes needed
+      for either; recorded here so neither is mistaken for still-undecided
+      in a future session.
+- [x] **Second (wider) blind red-team review complete, all 12 findings
+      triaged, 2026-08-05.** In direct response to the newly-surfaced
+      recursion problem (this session's own objection-5/9 fix work was
+      designed by the same process being scrutinized, and the first
+      red-team pass never saw `build.py`/`health_check.py`/`uplink_sim/`/
+      `evaluation/`), spawned a second fresh, context-free agent with
+      full `src/` + `evaluation/` coverage (27 files) and an explicit
+      mandate to review the fix code itself and audit the evaluation
+      harness for vacuous tests. It reported 12 findings; all 12
+      independently re-verified against the actual source before any fix
+      was written. User chose "fix all 12." 11 fixed:
+      1. SBOM bound to the actual artifact hash (was checked only
+         internally, never against the co-supplied binary).
+      2. Docker health-check fallback now bind-mounts the real installed
+         binary instead of running the image's frozen baked-in copy —
+         the one finding with real stakes for already-published results
+         (checked: didn't corrupt any of the 15 attack-matrix numbers,
+         but the implementation didn't match its own documented
+         behavior on the exact hardware that produced the real-cFS/F´
+         results).
+      3. Onboard-side independent downgrade check added (sibling gap to
+         the S5-policy fix from the first review).
+      4. Attestation freshness floor added (future-dated quotes no
+         longer pass indefinitely).
+      6. Provenance now records + can optionally enforce a dirty-
+         source-tree check (opt-in — not enabled by default, since this
+         project's own repo is routinely dirty during active
+         development).
+      7. `evaluation/experiment.py::scenario_13` rewritten to drive a
+         real pipeline execution instead of calling the mismatch
+         detector directly with hardcoded constants — exactly the
+         vacuous-test pattern objection 9 worries about, found in this
+         project's own evaluation code.
+      8. `report.py`'s trial-0-only aggregation for two field groups
+         fixed to detect (not silently miss) cross-trial divergence.
+      9. Ablation baseline-assertion guards made consistent across all
+         six cases.
+      10. Policy type-coercion bypass closed.
+      11. Signing/attestation now log visibility when producing new
+         material with an already-revoked key (the natural "refuse to
+         sign" fix was tried and reverted — it broke the existing,
+         correct test case #7 design; see ISSUE-026 for the full
+         reasoning).
+      12. Uplink tamper injection diversified across byte offsets.
+      Finding #5 (persistent-process health check has no artifact-
+      identity tie) documented as a known limitation instead of fixed —
+      a real fix needs a bigger design change (correlating a boot marker
+      with a per-invocation nonce or hash) than this pass's scope.
+      Verified via 31 new tests (`tests/test_second_redteam_fixes.py`)
+      plus a full re-run of the existing 66-test regression suite —
+      caught and fixed one genuine regression along the way (the new
+      onboard downgrade check's `StateIntegrityError` handling needed to
+      fail closed internally rather than propagate and crash
+      `pipeline.run()`, which broke an existing red-team-fix test;
+      fixed, and that test's assertion updated to reflect the
+      new-and-earlier, still fail-closed, detection point). Re-confirmed
+      the extended ablation study (5/6 mechanisms) still shows clean
+      100%/0% isolation after all 12 fixes. Full per-finding writeup:
+      `ISSUES-AND-FIXES-LOG.md` ISSUE-018 through ISSUE-029.
+      See `docs/Threat-Model.md` "Phase 8 second independent red-team
+      review" and `docs/Research-Paper-Outline.md` § 4 item 7's updated
+      recursion note.
 - [ ] Move to Phase 8 (paper drafting and repo polish)
 - [ ] Consider reviewing prior related projects already present in the
       Development Projects folder (`mission-aware-satellite-cyber-recovery`,
@@ -631,3 +771,7 @@ are available. Install Python packages with `pip3 install
 | 2026-08-03 | Phase 7 real-stack statistical evaluation complete: user re-ran `evaluation/experiment.py cfs-real` with ISSUE-008's fix in place and it completed successfully — full repeated-trial harness (5 trials × 6 conditions × 15 attack cases) against both real binaries now done. Results for both `cfs-real` and `fprime-real`: 100% happy-path success/reproducibility, 100% detection across all 15 attack cases, 0 false positives/negatives — structurally identical to the Phase 5/6 stub-artifact results. Upgraded STATUS.md "Claims status": detection/recovery claims against real cFS/F´ across all S0-S5 conditions now `PRELIMINARY_INTERNAL_ONLY` (from "individual test runs only"), generalizability claim strengthened to cover four stacks (two stand-ins, two real frameworks) with matching results. Updated Implementation-Plan.md Phase 7 checklist and Threat-Model.md with the final results table summary. This closes out Phase 7 entirely, including the real-stack data gathering that motivated ISSUE-007/ISSUE-008. Next: Phase 8 (paper drafting and repo polish). | evaluation/results/phase6_raw_results_cfs-real.json (new), evaluation/results/phase6_summary_cfs-real.json (new), evaluation/results/phase6_report_cfs-real.md (new), evaluation/results/phase6_raw_results_fprime-real.json (new), evaluation/results/phase6_summary_fprime-real.json (new), evaluation/results/phase6_report_fprime-real.md (new), ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, docs/Implementation-Plan.md, STATUS.md |
 | 2026-08-04 | Rejection-risk reassessment against everything built since the original 2026-08-03 review, plus new topics surfaced by this session's own work (Docker-timing confound, the bug list itself, ISSUE-009/010's implications, AI-disclosure depth, the "same author" problem for Phase 8's own mitigations). Fixed two real, environment-dependent bugs found running Phase 8's work on the user's Mac for the first time: ISSUE-009 (`-Wl,-no_uuid`, the original macOS build-reproducibility fix, now breaks binary loadability under current dyld — fixed via post-link Mach-O UUID-byte masking instead of a link flag) and ISSUE-010 (a Docker-fallback regression test silently depended on Docker being absent from the test environment — fixed via deterministic `Popen` monkeypatching). Both confirmed via the user's full clean-`work/`-directory re-run of the 30-trial evaluation + ablation + adaptive scenarios against all four stacks (`cfs`, `fprime`, `cfs-real`, `fprime-real`) — identical 100%/0% results throughout. Updated Research-Paper-Outline.md § 4 to an 11-item reviewer-objections list with a working plan for the three items still fully open (real baseline comparison, independent evaluator, repo visibility). Ran both remaining mitigations this session: (1) independent-evaluator — a fresh, context-free agent given only 20 `src/` files found 7 attack-vector/design gaps beyond the existing test matrix; all 7 independently re-verified against the actual source (not just trusted from the report) and all 7 hold up (unprotected ground-truth state files, fail-open key revocation, unbound version/provenance pairing, dead onboard policy-check stub with a brittle string-match gate, unsigned/overwritable authorization-evidence document, no attestation-key revocation, unenforced monitoring mismatches) — see Threat-Model.md "Phase 8 independent (blind, AI) red-team review"; (2) real baseline comparison — built and ran a real, unmodified `python-tuf` repository + client (`evaluation/baselines/tuf_baseline.py`) against the same 15-case matrix: only 3 cases have any TUF-native mechanism (#6, #7, #9, all 30/30 caught), the other 12 (9 of them load-bearing parts of this project's own ladder) have no TUF equivalent at all — see Threat-Model.md "Phase 8 real-baseline comparison: python-tuf". This closes out reviewer objections 6 and 7 with real, measured evidence rather than argument. Decision on whether to fix the 7 red-team-found gaps before the paper, or disclose as limitations, still deferred. | ISSUES-AND-FIXES-LOG.md, src/build/build.py, tests/test_issue007_docker_fallback.py, evaluation/baselines/tuf_baseline.py (new), evaluation/baselines/__init__.py (new), evaluation/results/phase8_tuf_baseline.json (new), requirements.txt, docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |
 | 2026-08-04 | Fixed all 7 red-team-found gaps (user chose to fix rather than disclose-as-limitation). New `src/state_integrity.py` (HMAC-protected side-state files, fails closed on tamper/deletion) closes findings #1/#2/#6. `ground_auth.py` now binds the `version` argument to the provenance record (#3). `onboard.py`'s dead policy stub now delegates to real policy evaluation, gated by the mechanism flag instead of a literal string match (#4). `authorization_evidence.py` documents are now signed (dedicated Ed25519 keypair) and filenamed per-run, never overwritten (#5). Detected operational-monitoring mismatches now freeze the affected stack's ledger until an operator clears it — real enforcement, not just a log entry (#7). While verifying, found and fixed two real, latent instances of finding #2's exact anti-pattern (a raw file write bypassing the new integrity sidecar) in `tests/test_phase1_pipeline.py` and `evaluation/experiment.py::scenario_07`; also had to teach `evaluation/experiment.py::run_attack_trials()` and `evaluation/ablation.py::run_ablation_study()` to clear the new freeze between trials, since test cases #13/#15 deliberately trigger the exact mismatch the freeze reacts to on every trial by design. Verified via 19 new tests (`tests/test_phase8_redteam_fixes.py`, one or more per finding, each confirming the fix fails *closed* rather than only patching the reported scenario) plus a full re-run of the existing 47-test suite, all 15 attack-matrix cases, the Phase 8 ablation study, and the Phase 8 adaptive-attacker scenarios against both `cfs` and `fprime` — zero drift in any prior result (100%/0% throughout, 100%/100% for the adaptive scenarios) — and against real `cfs-real`/`fprime-real` via `tests/test_phase7_real_builds.py` (6/6 passing). Full per-finding writeup: `ISSUES-AND-FIXES-LOG.md` ISSUE-011 through ISSUE-017. | src/state_integrity.py (new), src/ground_authorization/version_ledger.py, src/ground_authorization/ground_auth.py, src/installation/partitions.py, src/signing/signing.py, src/attestation/attestation.py, src/onboard_verification/onboard.py, src/evidence_store/authorization_evidence.py, src/pipeline.py, evaluation/experiment.py, evaluation/ablation.py, tests/test_phase1_pipeline.py, tests/test_phase8_redteam_fixes.py (new), ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |
+| 2026-08-04 | Committed and pushed all of the above to `origin/main` (commit `3d7370b`) after troubleshooting two Terminal-side git issues on the user's machine (a stuck shell from a multi-line commit message, then a stale `.git/index.lock` left behind by an earlier sandbox `git status` call) — both resolved from the user's own Terminal per this project's git-operations convention. Then, per the user's request, re-discussed the remaining reviewer-objection exposure with the new red-team/TUF-baseline evidence in hand: surfaced a previously-undocumented meta-objection (the fix/verification work for objection 7 was itself designed by the same process being scrutinized, and the red-team pass never saw several modules including its own resulting fix code), then asked the user which of four follow-ups to prioritize before paper drafting. User chose two: extend the ablation study to all 6 mechanisms (objection 5) and add evaluation-code correctness tests (objection 9); deferred the AI-disclosure statement and documenting the objection-7 recursion. | (discussion only; no code/doc changes this entry — see next row for the resulting work) |
+| 2026-08-05 | Executed the two objection-5/9 follow-ups approved the prior session. **Objection 5:** threaded `disable_mechanisms` through `ground_authorization.ground_auth.authorize()` and `onboard_verification.onboard.verify_received_bundle()` (previously each built its own `Condition` via `preset()` alone, immune to `pipeline.py`'s ablation override) — this also required fixing onboard's redundant S5 policy check so ablating `machine_readable_authorization` couldn't be silently caught by the un-ablated duplicate. Added 3 new ablation scenarios (`_ablation_case_04` SBOM, `_ablation_case_05` provenance, `_ablation_case_08` S5 policy) to `evaluation/ablation.py`, taking coverage from 3/6 to 5/6 mechanisms (`signature` deliberately excluded — it's the one mechanism active at every condition including the S0 floor, never itself gated by `cond.active()`). All 6 mechanisms confirmed showing clean 100%-active/0%-ablated isolation (run at n=10/n=5 due to this tool's per-command time limit — full 30-trial re-run still needed outside the sandbox before citing in the paper). Locked in with 4 fast regression tests (`tests/test_phase8_ablation_extension.py`). **Objection 9:** added 33 tests (`tests/test_evaluation_report_correctness.py`) for `evaluation/report.py`'s `_wilson_ci`/`_mean_ci`/`_mean_stdev` and its aggregation functions — `_wilson_ci` cross-checked against an independent third-party implementation (`statsmodels.stats.proportion.proportion_confint`, matching to 1e-9 at the exact normal quantile), `_mean_ci` cross-checked against an independently-written closed-form computation, plus boundary/structural properties and a hand-computed synthetic-fixture check of the aggregation logic. Full regression check: 66 pre-existing tests + 37 new tests, 103/103 passing, zero drift. | src/ground_authorization/ground_auth.py, src/onboard_verification/onboard.py, src/pipeline.py, evaluation/ablation.py, tests/test_phase8_ablation_extension.py (new), tests/test_evaluation_report_correctness.py (new), docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |
+| 2026-08-05 | User ran the full 30-trial ablation study on their Mac against all four stacks (`cfs`, `fprime`, `cfs-real`, `fprime-real`) — identical 100%/0% isolation on all 6 cases across every stack, confirming the sandbox's reduced-trial (n=10/n=5) verification run at full scale, including against the real cFS/F´ binaries. Recorded the two remaining reviewer-objection decisions: AI-disclosure statement deferred to the paper-drafting phase; repo stays private until publication. Then, per the user's request, discussed remaining challenges again — surfaced that this exact session's own fix work (objection 5/9) deepens objection 7's recursion, and that the first red-team pass never saw `build.py`/`health_check.py`/`uplink_sim/`/`evaluation/`. User chose to run a second, wider blind red-team pass rather than just document the gap or defer again. | docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |
+| 2026-08-05 | Ran a second fresh, context-free red-team agent with full `src/`+`evaluation/` coverage (27 files, closing the first pass's file-coverage gap) and an explicit mandate to review the fix code itself and audit the evaluation harness for vacuous tests. It reported 12 findings, all independently re-verified against source; user chose "fix all 12." Fixed 11 (SBOM-artifact binding, Docker health-check binary-mount mismatch, onboard-side independent downgrade check, attestation future-timestamp floor, provenance dirty-tree opt-in check, `scenario_13` rewritten off a hardcoded/vacuous call onto a real pipeline execution, `report.py`'s trial-0-only aggregation, ablation assertion-guard consistency, policy type-coercion bypass, signing/attestation revoked-key visibility logging, uplink tamper-offset diversification); documented finding #5 (health-check has no artifact-identity tie) as a known limitation instead. One fix (refuse to sign/attest with a revoked key) was tried, found to break the existing correct test case #7 design, and reverted for a visibility-only fix instead. Verified via 31 new tests (`tests/test_second_redteam_fixes.py`) plus a full re-run of the existing 66-test suite — caught and fixed one genuine regression along the way (the new onboard downgrade check needed to fail closed on a `StateIntegrityError` internally rather than let it propagate and crash `pipeline.run()`, which broke an existing red-team-fix test; updated that test to accept the new, earlier, still-fail-closed detection point). Re-confirmed the 5/6-mechanism ablation study still isolates cleanly after all 12 fixes. | src/sbom/sbom.py, src/health/health_check.py, src/onboard_verification/onboard.py, src/attestation/attestation.py, src/provenance/provenance.py, src/policy/policy.py, src/signing/signing.py, src/uplink_sim/uplink.py, src/pipeline.py, evaluation/ablation.py, evaluation/experiment.py, evaluation/report.py, tests/test_second_redteam_fixes.py (new), tests/test_phase8_redteam_fixes.py, ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |

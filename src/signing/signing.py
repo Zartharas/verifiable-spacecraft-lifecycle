@@ -154,9 +154,45 @@ def reset_revocation_list() -> None:
 
 
 def sign(binary_path: Path, condition_name: str = "S0") -> Path:
-    """Sign a binary, write a detached .sig file, log evidence."""
+    """Sign a binary, write a detached .sig file, log evidence.
+
+    Second red-team pass, finding #11 (2026-08-05): previously nothing
+    checked is_revoked() before signing, so once a key was revoked (test
+    case #7) the signing authority kept silently producing new
+    signatures with that same revoked key indefinitely, with no evidence
+    trail pointing at the actual moment of operator error. Deliberately
+    NOT refused/raised here, though: this function models what the
+    signing authority itself does, and test case #7's whole scenario
+    (revoke the key, then attempt a release still signed with it) is a
+    legitimate simulation of exactly that — an operator/system that
+    hasn't rotated yet — with the *defense* correctly living downstream
+    in verify()'s is_revoked() check, not here. Making sign() refuse
+    would make that scenario impossible to construct at all. Instead:
+    log a distinct evidence record so "signed with an already-revoked
+    key" is visible and queryable on its own, separate from and prior to
+    whatever downstream verification does with the resulting signature.
+    """
     store = EvidenceStore()
     generate_keypair()
+
+    if is_revoked(PUBLIC_KEY_PATH):
+        with open(binary_path, "rb") as f:
+            import hashlib
+
+            artifact_hash = hashlib.sha256(f.read()).hexdigest()
+        store.record(
+            pipeline_stage="signing",
+            condition=condition_name,
+            artifact_ref=artifact_hash,
+            actor="signing_authority",
+            result="fail",
+            detail={
+                "reason": "signing with an already-revoked key — no automatic "
+                "rotation occurred; an operator must call "
+                "generate_keypair(force=True)",
+                "key_fingerprint": _fingerprint(PUBLIC_KEY_PATH),
+            },
+        )
 
     with open(PRIVATE_KEY_PATH, "rb") as f:
         private_key = serialization.load_pem_private_key(f.read(), password=None)

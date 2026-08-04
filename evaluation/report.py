@@ -127,6 +127,36 @@ def summarize_happy_path(raw: dict) -> dict:
         success_rate = success_successes / n
         reproducible_rate_ci = _wilson_ci(reproducible_successes, n)
         success_rate_ci = _wilson_ci(success_successes, n)
+        # Second red-team pass, finding #8 (2026-08-05): traceability and
+        # every artifact-size figure used to be taken solely from
+        # trials[0] — timing and success/reproducibility were properly
+        # aggregated across all n_trials, these weren't. If a later
+        # trial ever regressed (e.g. a stage's evidence record went
+        # missing only sometimes), this summary would never have shown
+        # it. These fields SHOULD be deterministic across trials for the
+        # same condition (same code path every time), so trial[0] remains
+        # the reported value, but now every trial is checked against it
+        # and any divergence is surfaced explicitly rather than silently
+        # possible.
+        trace_values = {t["traceability_completeness"] for t in trials}
+        size_field_names = {
+            "sbom_bytes": "sbom_size",
+            "provenance_bytes": "provenance_size",
+            "attestation_bytes": "attestation_size",
+            "authorization_evidence_bytes": "authorization_evidence_size",
+        }
+        size_value_sets = {
+            label: {t[raw_key] for t in trials} for label, raw_key in size_field_names.items()
+        }
+        inconsistencies = []
+        if len(trace_values) > 1:
+            inconsistencies.append(
+                f"traceability_completeness varied across trials: {sorted(trace_values)}"
+            )
+        for label, values in size_value_sets.items():
+            if len(values) > 1:
+                inconsistencies.append(f"{label} varied across trials: {sorted(values)}")
+
         trace = trials[0]["traceability_completeness"]
         sizes = {
             "sbom_bytes": trials[0]["sbom_size"],
@@ -155,6 +185,8 @@ def summarize_happy_path(raw: dict) -> dict:
             "total_overhead_bytes": total_overhead_bytes,
             "overhead_vs_s0_bytes": total_overhead_bytes - (baseline_sizes or 0),
             "mean_attestation_age_seconds": mean_age,
+            "trial_metrics_consistent": len(inconsistencies) == 0,
+            "trial_metrics_inconsistencies": inconsistencies,
         }
     return summary
 

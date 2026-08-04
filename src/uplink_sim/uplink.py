@@ -87,9 +87,17 @@ def transmit(
     rng = random.Random(rng_seed)
     link_noise_corruption = rng.random() < link_profile.loss_probability
 
+    # Second red-team pass, finding #12 (2026-08-05): this used to always
+    # flip the exact midpoint byte, meaning "modified in transit" (test
+    # case #6) was only ever exercised as one specific single-byte-flip
+    # location across the entire test suite. Whole-artifact signature
+    # verification is location-agnostic so this was never a detection
+    # gap, but it's needlessly narrow coverage — pick a pseudo-random
+    # offset (from the same seeded `rng`, so `rng_seed` still makes a
+    # test fully reproducible) instead of a fixed one.
     if tamper or link_noise_corruption:
-        mid = len(data) // 2
-        data[mid] ^= 0xFF
+        offset = rng.randrange(len(data)) if len(data) > 0 else 0
+        data[offset] ^= 0xFF
 
     received_binary = RECEIVED_DIR / binary_path.name
     received_sig = RECEIVED_DIR / sig_path.name

@@ -37,11 +37,41 @@ PROHIBITED_CONFIGURATIONS = [
 ]
 
 
+# Second red-team pass, finding #10 (2026-08-05): representations that
+# should all count as "the pattern's True" for a security-relevant
+# boolean flag, since a caller-supplied config can plausibly arrive as
+# JSON-decoded (real bool), a raw string, or a loosely-typed int, and a
+# deny-rule that only catches one of those representations is trivially
+# bypassed by using a different one for the exact same intent.
+_TRUTHY_STRINGS = {"true", "1", "yes", "on"}
+
+
+def _values_match(config_value, pattern_value) -> bool:
+    """Equality check for one field, deliberately more permissive than
+    `==` when the pattern's value is a bool — `{"debug_mode": True}` must
+    also match `{"debug_mode": "true"}` / `1` / `"1"`, not just the
+    exact Python `True` singleton. Python's `"true" == True` is `False`,
+    so a bare `==` on the pattern above lets a config that means the same
+    thing but is spelled differently sail past the only rule in the
+    deny-list. Non-bool pattern values keep exact-equality semantics —
+    this coercion is specifically about the boolean-flag case, not a
+    general fuzzy-match policy engine."""
+    if isinstance(pattern_value, bool):
+        if isinstance(config_value, bool):
+            return config_value == pattern_value
+        if isinstance(config_value, str):
+            return (config_value.strip().lower() in _TRUTHY_STRINGS) == pattern_value
+        if isinstance(config_value, (int, float)):
+            return bool(config_value) == pattern_value
+        return False
+    return config_value == pattern_value
+
+
 def _matches(config: dict, pattern: dict) -> bool:
     """A config matches a prohibited pattern if every key/value in the
     pattern is present and equal in the config (a simple deny-rule
     semantics — real Rego would express this more richly)."""
-    return all(config.get(k) == v for k, v in pattern.items())
+    return all(_values_match(config.get(k), v) for k, v in pattern.items())
 
 
 def check_configuration(

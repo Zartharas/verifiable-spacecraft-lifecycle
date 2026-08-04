@@ -52,7 +52,6 @@ from pipeline import run  # noqa: E402
 from ground_authorization import version_ledger  # noqa: E402
 from installation import partitions  # noqa: E402
 from signing.signing import generate_keypair, revoke_current_key, reset_revocation_list  # noqa: E402
-from operational_monitoring import monitoring  # noqa: E402
 from evidence_store import EvidenceStore  # noqa: E402
 from attestation.attestation import DEFAULT_FRESHNESS_SECONDS  # noqa: E402
 
@@ -286,16 +285,44 @@ def scenario_12(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
     return {"caught": result.rollback_outcome == "rolled_back", "elapsed_seconds": elapsed}
 
 
-def scenario_13(_: int, stack: str = "cfs") -> dict:
-    t0 = time.perf_counter()
-    ok, _reason = monitoring.reconcile_inventory(
-        ground_expected_version=2,
-        spacecraft_confirmed_version=1,
-        artifact_hash=f"phase5-synthetic-hash-case-13-{stack}",
-        condition_name="S5",
+def scenario_13(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
+    """Test case #13 (inventory disagreement between ground and
+    spacecraft).
+
+    Second red-team pass, finding #7 (2026-08-05): this used to call
+    `monitoring.reconcile_inventory()` directly with hardcoded,
+    deliberately-mismatched constants (`ground_expected_version=2`,
+    `spacecraft_confirmed_version=1`, a synthetic hash string) — never
+    driving the check through a real `pipeline.run()`. That guaranteed
+    "100% detection" for this test case by construction, regardless of
+    whether the ladder's actual inventory-reconciliation code path works;
+    it demonstrated that `reconcile_inventory()` itself can tell two
+    different numbers apart, not that the pipeline produces a genuine
+    disagreement when something really does go wrong.
+
+    Rewritten to produce the mismatch for real: a confirmed baseline
+    install, then a forced health-check failure causes a genuine
+    rollback back to the baseline slot — so ground's own `version`
+    argument for this call (`attack_version`) genuinely disagrees with
+    what the spacecraft actually ends up confirming
+    (`baseline_version`), through `pipeline.py`'s own
+    `reconcile_inventory()` call, not a hand-fed pair of constants. This
+    is the same underlying real attack `scenario_15` uses (a forced
+    rollback at S5) — the two test cases now correctly share one real
+    mechanism trigger while checking two independently-meaningful result
+    fields (`inventory_reconciled` here, `telemetry_consistent` there)."""
+    baseline_version, attack_version = version_pair
+    baseline = run(condition_name="S5", version=baseline_version, stack=stack)
+    assert baseline.rollback_outcome == "confirmed", (
+        f"baseline run did not confirm as expected (stack={stack!r}, "
+        f"condition=S5, version={baseline_version}): "
+        f"rollback_outcome={baseline.rollback_outcome!r}, "
+        f"health_ok={baseline.health_ok!r}, rejected_at={baseline.rejected_at!r}"
     )
-    elapsed = time.perf_counter() - t0
-    return {"caught": not ok, "elapsed_seconds": elapsed}
+    elapsed, result, _ = _timed_run(
+        condition_name="S5", version=attack_version, force_health_fail=True, stack=stack
+    )
+    return {"caught": result.inventory_reconciled is False, "elapsed_seconds": elapsed}
 
 
 def scenario_14(version_pair: tuple[int, int], stack: str = "cfs") -> dict:
@@ -346,7 +373,6 @@ SINGLE_VERSION_SCENARIOS = {
     "6": scenario_06,
     "7": scenario_07,
     "8": scenario_08,
-    "13": scenario_13,
 }
 
 PAIRED_VERSION_SCENARIOS = {
@@ -354,6 +380,7 @@ PAIRED_VERSION_SCENARIOS = {
     "10": scenario_10,
     "11": scenario_11,
     "12": scenario_12,
+    "13": scenario_13,
     "14": scenario_14,
     "15": scenario_15,
 }

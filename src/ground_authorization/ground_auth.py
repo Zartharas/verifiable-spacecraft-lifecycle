@@ -30,7 +30,7 @@ from sbom.sbom import verify_sbom  # noqa: E402
 from provenance.provenance import verify_provenance  # noqa: E402
 from ground_authorization import version_ledger  # noqa: E402
 from policy.policy import check_configuration  # noqa: E402
-from condition import preset  # noqa: E402
+from condition import preset, custom as condition_custom  # noqa: E402
 
 
 def authorize(
@@ -42,9 +42,20 @@ def authorize(
     version: int = 1,
     configuration: Optional[dict] = None,
     stack: str = "cfs",
+    disable_mechanisms: tuple = (),
 ) -> bool:
+    # Phase 8 (2026-08-05), reviewer objection #5 fix: this function used
+    # to build its own Condition via preset(condition_name) alone, ignoring
+    # any disable_mechanisms override passed to pipeline.run(). That made
+    # the SBOM/provenance/S5-policy checks below structurally immune to
+    # the ablation study — disabling one of those mechanisms at the
+    # pipeline level never reached this function's own gating. Mirror
+    # pipeline.py's own pattern so ablation actually reaches every check
+    # performed here.
     store = EvidenceStore()
     cond = preset(condition_name)
+    if disable_mechanisms:
+        cond = condition_custom(cond, disable=disable_mechanisms)
 
     with open(binary_path, "rb") as f:
         artifact_hash = hashlib.sha256(f.read()).hexdigest()
@@ -66,7 +77,7 @@ def authorize(
         if sbom_path is None:
             checks_passed = False
             denial_reasons.append("SBOM required by condition but not provided")
-        elif not verify_sbom(sbom_path, condition_name=condition_name):
+        elif not verify_sbom(sbom_path, binary_path=binary_path, condition_name=condition_name):
             checks_passed = False
             denial_reasons.append("SBOM verification failed")
 

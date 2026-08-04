@@ -142,8 +142,43 @@ def check_known_vulnerabilities(sbom_path: Path) -> tuple[bool, Optional[str]]:
     return True, None
 
 
-def verify_sbom(sbom_path: Path, condition_name: str = "S1") -> bool:
-    """Run all S1 SBOM checks, logging one evidence record for the stage."""
+def check_binding(sbom_path: Path, binary_path: Path) -> tuple[bool, Optional[str]]:
+    """Second red-team pass, finding #1 (2026-08-05): verify_sbom()
+    previously checked only the SBOM's own internal fields (completeness,
+    known vulnerabilities) — never that the SBOM's own declared subject
+    hash matches the binary actually being authorized alongside it.
+    provenance.py's verify_provenance() has always done this binding
+    check (recorded_hash != actual_hash); SBOM had no equivalent.
+    `generate_sbom()` always builds the SBOM from the same binary it will
+    ship with, so this was invisible in the normal pipeline flow — but
+    `ground_auth.authorize()` is a general function that accepts a
+    caller-supplied `sbom_path` independently of `binary_path`, so
+    without this check a valid, complete, vulnerability-free SBOM for
+    one artifact could be paired with a completely different binary and
+    pass S1 unchanged."""
+    with open(sbom_path) as f:
+        sbom = json.load(f)
+    declared_hash = sbom.get("metadata", {}).get("component", {}).get("hashes", [{}])[0].get(
+        "content", None
+    )
+    with open(binary_path, "rb") as f:
+        actual_hash = hashlib.sha256(f.read()).hexdigest()
+    if declared_hash != actual_hash:
+        return False, (
+            f"SBOM's declared artifact hash ({declared_hash}) does not match "
+            f"the binary being authorized ({actual_hash})"
+        )
+    return True, None
+
+
+def verify_sbom(sbom_path: Path, binary_path: Optional[Path] = None, condition_name: str = "S1") -> bool:
+    """Run all S1 SBOM checks, logging one evidence record for the stage.
+
+    `binary_path` is optional only for backward compatibility with
+    existing call sites that verify SBOM structure alone; ground_auth.py
+    always passes it so the SBOM-to-artifact binding check (see
+    `check_binding`, finding #1 above) actually runs during real
+    authorization."""
     store = EvidenceStore()
 
     if not sbom_path.exists():
@@ -162,6 +197,19 @@ def verify_sbom(sbom_path: Path, condition_name: str = "S1") -> bool:
     artifact_hash = sbom.get("metadata", {}).get("component", {}).get("hashes", [{}])[0].get(
         "content", "unknown"
     )
+
+    if binary_path is not None:
+        bound, binding_reason = check_binding(sbom_path, binary_path)
+        if not bound:
+            store.record(
+                pipeline_stage="sbom_verification",
+                condition=condition_name,
+                artifact_ref=artifact_hash,
+                actor="ground_authorization_service",
+                result="fail",
+                detail={"reason": binding_reason},
+            )
+            return False
 
     complete, reason1 = check_completeness(sbom_path)
     if not complete:

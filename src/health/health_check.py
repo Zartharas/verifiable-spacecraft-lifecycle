@@ -174,14 +174,29 @@ def _launch_process(installed_binary_path: Path, stack_def: "target_stack.Stack"
     2. Direct execution fails with ENOEXEC (a foreign binary format for
        this host, e.g. macOS trying to run a Linux ELF binary) and a
        Docker fallback is configured — transparently retried via
-       `docker run --rm [--sysctl k=v ...] <image> <container_binary_path>
-       <launch_args>`, which runs the identical binary inside the
-       environment it was actually built for. `Stack.docker_sysctls`
-       covers container-kernel limits that differ from what the binary
-       needs (ISSUE-008 — cFS's Software Bus needs a higher POSIX
-       message-queue limit than Docker Desktop's Linux VM ships by
-       default; passed as a namespaced `--sysctl`, no host changes
-       needed).
+       `docker run --rm [--sysctl k=v ...] -v <installed_binary_path>:
+       <container_binary_path>:ro <image> <container_binary_path>
+       <launch_args>`, which runs the *actual currently-installed*
+       binary inside the environment it was actually built for.
+       `Stack.docker_sysctls` covers container-kernel limits that differ
+       from what the binary needs (ISSUE-008 — cFS's Software Bus needs
+       a higher POSIX message-queue limit than Docker Desktop's Linux VM
+       ships by default; passed as a namespaced `--sysctl`, no host
+       changes needed).
+
+       Second red-team pass, finding #2 (2026-08-05): this used to omit
+       the `-v` bind mount and simply run `container_binary_path` as
+       baked into the image at build time — never the real
+       `installed_binary_path` argument this function actually receives.
+       That meant health checks on any host needing this fallback (e.g.
+       macOS) verified a fixed, frozen copy of the binary from whenever
+       the Docker image was built, not whatever was actually attested
+       and installed for *this* pipeline run — silently defeating the
+       whole point of a health check on exactly the hosts that need the
+       fallback. Bind-mounting the real file over the same in-container
+       path (read-only) fixes this without changing the executed path or
+       the container's working directory, so it doesn't disturb whatever
+       config files the binary expects to find alongside it.
     3. Anything else (the binary is genuinely missing, not executable,
        ENOEXEC with no Docker fallback configured, or Docker itself is
        unavailable/fails) — raised, not silently recorded as "unhealthy."
@@ -213,8 +228,18 @@ def _launch_process(installed_binary_path: Path, stack_def: "target_stack.Stack"
         sysctl_flags = []
         for key, value in stack_def.docker_sysctls:
             sysctl_flags += ["--sysctl", f"{key}={value}"]
+        # Second red-team pass, finding #2 (2026-08-05): bind-mount the
+        # actual installed binary over the image's baked-in copy at the
+        # exact same in-container path, so this genuinely re-runs the
+        # artifact that was attested/installed for this pipeline run —
+        # not a frozen copy from whenever the image was built. Resolve
+        # to an absolute path since `docker run -v` requires one.
+        mount_flags = [
+            "-v",
+            f"{Path(installed_binary_path).resolve()}:{stack_def.container_binary_path}:ro",
+        ]
         docker_cmd = [
-            "docker", "run", "--rm", *sysctl_flags, stack_def.docker_image,
+            "docker", "run", "--rm", *sysctl_flags, *mount_flags, stack_def.docker_image,
             stack_def.container_binary_path, *stack_def.launch_args,
         ]
         try:

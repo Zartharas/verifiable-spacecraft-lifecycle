@@ -90,7 +90,19 @@ def test_finding1_deleted_content_with_sidecar_remaining_fails_closed(tmp_path):
 
 def test_finding1_tampered_partition_state_fails_closed():
     """Same property for partition state: a direct edit must be caught,
-    and the pipeline must reject rather than trust unverifiable state."""
+    and the pipeline must reject rather than trust unverifiable state.
+
+    Detection point update (second red-team pass, finding #3,
+    2026-08-05): this used to always fail at
+    `partition_state_integrity_failure` (inside pipeline.py's own
+    trusted_rollback try/except). Since onboard.py's new independent
+    downgrade check (`check_independent_downgrade`) now reads partition
+    state during onboard verification -- which runs *before* that
+    try/except block -- the same tamper is now caught even earlier, at
+    `onboard_verification`. Both are genuine fail-closed outcomes for the
+    same underlying tamper; accept either rather than pin to one exact
+    stage name and risk this test looking broken every time detection
+    coverage gets earlier/better."""
     run(condition_name="S4", version=1, stack="cfs")  # confirms partition A
 
     partitions.STATE_PATH.write_text(
@@ -101,7 +113,7 @@ def test_finding1_tampered_partition_state_fails_closed():
         partitions._load_state()
 
     result = run(condition_name="S4", version=2, stack="cfs")
-    assert result.rejected_at == "partition_state_integrity_failure"
+    assert result.rejected_at in ("partition_state_integrity_failure", "onboard_verification")
 
 
 # --- Finding #2: fail-open key revocation --------------------------------

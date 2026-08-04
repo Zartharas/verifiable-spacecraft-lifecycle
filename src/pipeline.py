@@ -167,6 +167,7 @@ def run(
         version=version,
         configuration=configuration,
         stack=stack,
+        disable_mechanisms=disable_mechanisms,
     )
     result.ground_approved = approved
     if not approved:
@@ -183,7 +184,12 @@ def run(
     )
 
     verified = verify_received_bundle(
-        received_binary, received_sig, condition_name=condition_name, configuration=configuration
+        received_binary,
+        received_sig,
+        condition_name=condition_name,
+        configuration=configuration,
+        version=version,
+        disable_mechanisms=disable_mechanisms,
     )
     result.onboard_verified = verified
     if not verified:

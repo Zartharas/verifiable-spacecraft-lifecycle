@@ -56,6 +56,30 @@ def _current_source_commit() -> str:
         return "unknown-no-git-history"
 
 
+def _source_tree_dirty() -> Optional[bool]:
+    """Second red-team pass, finding #6 (2026-08-05): `_current_source_
+    commit()` binds provenance to `git HEAD` alone, with no check for
+    uncommitted working-tree changes — a binary built from a locally
+    modified tree gets provenance claiming the exact same `source_commit`
+    as a clean checkout at that same HEAD, so the binding can silently
+    diverge from what was actually compiled. This records the true
+    ambient fact (`git status --porcelain` non-empty) so it's at least
+    visible in the provenance document. Returns None (not False) if git
+    status can't be determined at all, so "genuinely clean" and "unknown"
+    are never conflated."""
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return bool(result.stdout.strip())
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
 def generate_provenance(
     binary_path: Path,
     condition_name: str = "S2",
@@ -73,7 +97,13 @@ def generate_provenance(
         "predicate": {
             "buildDefinition": {
                 "buildType": "verifiable-spacecraft-lifecycle/phase1-gcc-build",
-                "externalParameters": {"source_commit": _current_source_commit()},
+                "externalParameters": {
+                    "source_commit": _current_source_commit(),
+                    # Finding #6 above — recorded for transparency
+                    # regardless of whether verify_provenance() is asked
+                    # to enforce it (see require_clean_tree there).
+                    "source_tree_dirty": _source_tree_dirty(),
+                },
             },
             "runDetails": {
                 "builder": {"id": builder_id},
@@ -106,12 +136,27 @@ def generate_provenance(
 
 
 def verify_provenance(
-    binary_path: Path, prov_path: Path, condition_name: str = "S2"
+    binary_path: Path, prov_path: Path, condition_name: str = "S2", require_clean_tree: bool = False
 ) -> tuple[bool, Optional[str], Optional[dict]]:
     """
     Returns (valid, failure_reason, provenance_dict_or_None).
     Checks, in order: provenance file present and parseable (#2),
     binary hash matches subject digest (#1), builder_id is authorized (#5).
+
+    `require_clean_tree` (finding #6, 2026-08-05): if True, additionally
+    rejects a provenance record whose `source_tree_dirty` flag is `True`
+    — i.e. treats "built from an uncommitted, locally-modified source
+    tree" as a provenance validity failure, the same category as false
+    provenance (#2). Defaults to False and is NOT enabled by
+    `ground_auth.py`'s default call: this project's own repository is
+    routinely dirty during active development (this exact session
+    included), so enforcing it unconditionally would fail every
+    evaluation run made while iterating on the code, which is an
+    environment/workflow fact about this project, not a security
+    property worth conflating with a real attack. The check is real and
+    tested (see tests/) and is the correct default for an actual CI
+    release pipeline gating what may reach a spacecraft — stated
+    explicitly here rather than silently wired in or silently omitted.
     """
     store = EvidenceStore()
 
@@ -175,6 +220,20 @@ def verify_provenance(
             test_case_injected="1",
         )
         return False, "binary does not match provenance record", provenance
+
+    if require_clean_tree and provenance.get("predicate", {}).get("buildDefinition", {}).get(
+        "externalParameters", {}
+    ).get("source_tree_dirty") is True:
+        store.record(
+            pipeline_stage="provenance_verification",
+            condition=condition_name,
+            artifact_ref=actual_hash,
+            actor="ground_authorization_service",
+            result="fail",
+            detail={"reason": "provenance declares the source tree was dirty (uncommitted changes) at build time"},
+            test_case_injected="2",
+        )
+        return False, "source tree was dirty at build time", provenance
 
     if builder_id not in ALLOWED_BUILDER_IDS:
         store.record(

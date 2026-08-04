@@ -143,19 +143,30 @@ just Discussion/Limitations)
    operationally?) before it's presented as a finding.
 5. **"Your 100% detection rate just means the test suite always
    trips."** (Identified 2026-08-03, the single biggest exposure at the
-   time.) **Partially addressed, 2026-08-04:** the ablation study shows 3
-   of 6 mechanisms are individually necessary (removing one breaks
-   exactly the case it's responsible for, nothing else), and the
-   adaptive-attacker scenarios show the pipeline fails closed under
-   combined attacks rather than merely logging one of several
-   independent detections. Real, citable evidence — but the other 3
-   mechanisms (signature/SBOM/provenance, and the S5 policy check) are
-   architecturally *not* ablatable via the current
-   `disable_mechanisms` mechanism (they live in
-   `ground_authorization.py`'s independently-derived `Condition`, not
-   `pipeline.py`'s), and the adaptive scenarios test "does detection halt
-   the pipeline," not a genuinely evasive or time-adaptive attacker. State
-   this scope boundary explicitly rather than imply full coverage.
+   time.) **Materially strengthened, 2026-08-05:** `disable_mechanisms`
+   is now threaded through `ground_authorization.ground_auth.authorize()`
+   and `onboard_verification.onboard.verify_received_bundle()`, not just
+   `pipeline.py`'s own gating — closing the scope gap this objection
+   originally flagged. The ablation study now covers 5 of 6 mechanisms
+   (`sbom`, `provenance`, `onboard_attestation`, `trusted_rollback`,
+   `machine_readable_authorization` — including a second scenario for
+   the S5 policy check specifically, test case #8), all showing the same
+   clean 100%-active / 0%-ablated isolation as the original 3. `signature`
+   remains excluded, with a stated principled reason (it's the one
+   mechanism active at every condition including the S0 floor, never
+   itself gated by `cond.active()` in the implementation) rather than an
+   unaddressed gap. See Threat-Model.md "Phase 8 ablation study" update,
+   2026-08-05. **Confirmed at full scale, 2026-08-05:** user re-ran the
+   study at the standard `N_TRIALS = 30` against all four stacks (`cfs`,
+   `fprime`, `cfs-real`, `fprime-real`) — identical 100%/0% isolation on
+   all 6 cases across every stack, including the real cFS/F´ binaries.
+   These are the citable numbers for the paper; the sandbox's earlier
+   reduced-trial verification run (n=10/n=5) is superseded. The
+   adaptive-attacker
+   scenarios are unchanged by this work: they still test "does detection
+   halt the pipeline," not a genuinely evasive or time-adaptive attacker
+   — state that scope boundary explicitly rather than imply full
+   coverage.
 6. **"Where's the comparison against an actual SLSA/in-toto/TUF
    pipeline?"** (New, 2026-08-04.) The paper's central claim — that
    terrestrial frameworks don't address spacecraft-specific constraints —
@@ -204,6 +215,38 @@ just Discussion/Limitations)
    day" — a materially stronger answer to this objection than "gaps were
    found," and itself a citable methodology point (independent review →
    fix → re-verify, not independent review as a one-time checkbox).
+   **Recursion identified and addressed, 2026-08-05:** the fix/
+   verification work above, plus the ablation-study extension and
+   evaluation-code correctness tests (item 5/9 below), were themselves
+   designed by the same process being scrutinized — the exact "you built
+   the lock and the lockpick" pattern this objection names, recursing
+   into its own remedy. Separately, the first red-team pass's file
+   coverage was narrower than the codebase even at the time it ran (only
+   20 files under `src/`, excluding `build.py`, `health_check.py`,
+   `uplink_sim/`, and all of `evaluation/`). A second, wider blind
+   red-team pass closed both gaps at once: full `src/` + `evaluation/`
+   coverage (27 files) plus an explicit mandate to review the fix code
+   itself and to audit the evaluation harness's own construction for
+   vacuous tests. It found 12 more real gaps (see Threat-Model.md "Phase
+   8 second independent red-team review" and ISSUES-AND-FIXES-LOG.md
+   ISSUE-018 through ISSUE-029) — including one, a hardcoded/vacuous
+   evaluation scenario, that is precisely the failure mode objection 9
+   worries about, found by design in this project's own evaluation code.
+   11 of 12 were fixed (one documented as a known limitation instead,
+   ISSUE-022); one fix (automatic key-rotation refusal) was tried,
+   found to break an existing correct test design, and reverted in favor
+   of a different fix (visibility via evidence logging) — a genuine
+   instance of a red-team-suggested remedy needing to be re-thought
+   rather than applied literally, worth citing as evidence the
+   fix-verify loop is doing real work, not rubber-stamping. This does
+   not make the recursion disappear — every review pass, however wide,
+   was still run by the same author-plus-AI process — but "two
+   independent passes, the second one scoped specifically at what the
+   first one missed and at the remedies for what it found, together
+   surfacing 19 real gaps" is the strongest version of this answer
+   achievable without a human domain-expert audit, and should be stated
+   as exactly that: a strong mitigation, not a resolution of the
+   underlying methodological point.
 8. **"Is this code actually available, or just described?"** (New,
    2026-08-04.) The GitHub repo is currently private. Computers &
    Security and JSSE (per § 5 below) both expect data/code availability
@@ -214,9 +257,23 @@ just Discussion/Limitations)
    the pipeline it measures?"** (New, 2026-08-04, prompted by ISSUE-010 —
    a latent, environment-dependent bug in the project's own test suite
    that only surfaced when run outside the original authoring sandbox for
-   the first time.) No claim here of a further hidden bug — just naming
-   that this class of risk exists and hasn't been independently audited.
-   Worth a short, honest mention rather than silence.
+   the first time.) **Addressed, 2026-08-05:** added 33 dedicated tests
+   (`tests/test_evaluation_report_correctness.py`) for `evaluation/
+   report.py`'s statistical functions — `_wilson_ci` cross-checked
+   against an independent, third-party implementation
+   (`statsmodels.stats.proportion.proportion_confint`, not a second copy
+   of the same formula), `_mean_ci`/`_mean_stdev` cross-checked against
+   an independently-written closed-form computation, boundary/structural
+   properties (CI contains the point estimate, narrows with n, doesn't
+   collapse at 0%/100%), and the aggregation logic
+   (`summarize_happy_path`/`summarize_attack_cases`/
+   `build_confusion_matrix`) checked against a small hand-computed
+   synthetic fixture. All 33 pass. See Threat-Model.md "Phase 8
+   evaluation-code correctness tests" for the full method. This doesn't
+   prove there is no further hidden bug anywhere in the evaluation
+   harness — no test suite proves that — but it closes the specific,
+   previously-true claim that these functions had never been
+   independently checked at all.
 10. **Docker-container timing as a confound.** (Sharpened, 2026-08-04.)
     Real-stack timing numbers (Phase 7 and now Phase 8's ablation/adaptive
     work) include Docker container-launch overhead (~2.4-2.6s observed),

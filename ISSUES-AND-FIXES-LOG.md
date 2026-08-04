@@ -813,6 +813,439 @@ debugging session.
 
 ---
 
+## [ISSUE-018] SBOM was never bound to the artifact it describes — second red-team finding #1
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review — see
+  Threat-Model.md "Phase 8 second independent red-team review."
+- **Category:** design flaw / security finding
+- **Severity:** medium — masked in the normal pipeline flow (SBOM is
+  always generated from the same binary it ships with), but
+  `ground_auth.authorize()` is a general function accepting a
+  caller-supplied `sbom_path` independently of `binary_path`, with no
+  check that they actually describe the same artifact.
+- **Description:** `sbom.py::verify_sbom()` checked only the SBOM's own
+  internal fields (completeness, known vulnerabilities) — never that its
+  declared `metadata.component.hashes[0].content` matches the binary
+  being authorized alongside it. `provenance.py::verify_provenance()`
+  has always performed the equivalent binding check; SBOM had no
+  equivalent.
+- **Root cause:** SBOM verification was designed and tested only against
+  its own internal shape, never against the co-supplied artifact — an
+  omission parallel to, but independently found from, the existing
+  provenance-binding logic already in the codebase.
+- **Fix:** new `sbom.py::check_binding()` compares the SBOM's declared
+  hash against the actual binary's SHA-256; `verify_sbom()` gained an
+  optional `binary_path` parameter that runs this check when provided.
+  `ground_auth.py`'s real call site now always passes it.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding1_*`, 2 tests: a valid SBOM paired with the wrong binary
+  is rejected; omitting `binary_path` preserves old structure-only
+  behavior for backward compatibility).
+
+---
+
+## [ISSUE-019] Docker health-check fallback ran the image's baked-in binary, never the actual installed one — second red-team finding #2
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review.
+- **Category:** design flaw / measurement-validity bug
+- **Severity:** high — this affects the exact machine/path (macOS via
+  the Docker fallback) that produced this project's own published
+  real-cFS/F´ health-check results. Checked whether it corrupted any of
+  the 15 published attack-matrix results: it did not, because none of
+  them rely on running a tampered binary through this specific check
+  (they're caught earlier via hash comparisons in attestation/partition
+  verification) — but the underlying claim ("re-runs the identical
+  binary") was false as implemented, on real hardware this project
+  already reported results from.
+- **Description:** `health_check.py::_launch_process`'s Docker fallback
+  ran `docker run --rm <image> <container_binary_path>` — the binary
+  baked into the image at build time — and never mounted or otherwise
+  passed in the real `installed_binary_path` argument the function
+  actually received. The module's own docstring claimed this "re-runs
+  the identical binary"; that was not what the code did.
+- **Root cause:** ISSUE-007's original fallback fix (2026-08-03) focused
+  on making Docker execution *work at all* (fixing the `ENOEXEC`
+  crash-to-fabricated-failure bug) and never revisited whether the
+  binary being executed inside the container was the one that mattered
+  for *this specific pipeline run*, as opposed to whatever was baked
+  into the image once.
+- **Fix:** `_launch_process` now bind-mounts the real
+  `installed_binary_path` over `container_binary_path` inside the
+  container (`-v <host_path>:<container_binary_path>:ro`), so the
+  Docker-fallback path genuinely re-executes the artifact that was
+  actually attested/installed for this run, not a frozen image-build-time
+  copy.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding2_*`) monkeypatches `subprocess.Popen` and confirms the
+  `-v` mount flag is present, points at the real installed binary
+  resolved to an absolute path, and precedes the image name; existing
+  `tests/test_issue007_docker_fallback.py` sysctl-ordering tests still
+  pass unchanged (mount flags don't disturb sysctl-flag positioning).
+
+---
+
+## [ISSUE-020] Onboard verification had no independent downgrade defense — second red-team finding #3
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review.
+- **Category:** design flaw / security finding
+- **Severity:** medium — the same class of gap already closed for the
+  S5 policy check (ISSUE-015/finding #4): downgrade protection (test
+  case #9) was enforced only via `version_ledger.check_and_advance()`,
+  called only from `ground_auth.authorize()`. If ground authorization is
+  bypassed, compromised, or fed data inconsistent with what's actually
+  transmitted, the spacecraft had zero independent fallback defense
+  against a downgrade.
+- **Description:** `onboard.py::verify_received_bundle()` had a
+  policy-check fallback (added for finding #4) but nothing analogous for
+  version/downgrade, even though the spacecraft already maintains its
+  own independent record of the currently-confirmed version via
+  partition state.
+- **Root cause:** finding #4's fix addressed the one specific mechanism
+  the red-team review flagged at the time (S5 policy) without
+  generalizing to the sibling mechanism (downgrade protection) that has
+  the identical "ground-side-only enforcement" shape.
+- **Fix:** new `onboard.py::check_independent_downgrade()` compares an
+  incoming release's `version` against the spacecraft's own
+  currently-confirmed partition-state version (data ground never
+  controls directly), gated on `trusted_rollback` being active (S4+,
+  since partition state doesn't exist before then — consistent with the
+  existing S3-vs-S4 capability-growth pattern documented elsewhere in
+  this project). Fails closed on a partition-state integrity failure
+  (`state_integrity.StateIntegrityError`) rather than letting it
+  propagate and crash `pipeline.run()` — this check runs during onboard
+  verification, before `pipeline.py`'s own trusted_rollback try/except
+  block, so an uncaught exception here would have skipped returning a
+  `PipelineResult` entirely.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding3_*`, 4 tests: direct unit check of the downgrade logic;
+  no-baseline case doesn't fabricate a rejection; a tampered partition
+  state fails closed rather than crashing; a full pipeline run
+  demonstrates the onboard check catching a downgrade specifically in
+  the scenario where ground's own ledger has no memory of the
+  spacecraft's true confirmed version and therefore can't catch it
+  itself). Discovering the fail-closed-not-crash requirement required
+  fixing a real regression this same fix introduced in
+  `tests/test_phase8_redteam_fixes.py::test_finding1_tampered_partition_state_fails_closed`
+  (see that test's updated comment) — the tamper is now caught even
+  earlier (`onboard_verification` instead of
+  `partition_state_integrity_failure`), a strictly earlier fail-closed
+  detection point, not a weaker one.
+
+---
+
+## [ISSUE-021] Attestation freshness check had no floor — a future-dated quote never expired — second red-team finding #4
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review.
+- **Category:** logic bug / security finding
+- **Severity:** medium — never exercised by any of the 15 existing test
+  cases (only positive `backdate_seconds`, i.e. staleness, was ever
+  tested), so it was a genuinely uncovered gap, not a masked one.
+- **Description:** `attestation.py::verify_attestation()` computed
+  `age_seconds = time.time() - quote["timestamp"]` and rejected only when
+  `age_seconds > max_age_seconds`. A quote whose `timestamp` is in the
+  future yields a negative `age_seconds`, which is always less than
+  `max_age_seconds` and therefore always "fresh" — indefinitely, since
+  real time only ever moves the negative age closer to zero, never past
+  the staleness threshold on its own.
+- **Root cause:** the staleness check was designed around the one
+  attack it needed to catch (test case #12, an old/stale quote) and
+  never considered the symmetric case.
+- **Fix:** added a floor check (`age_seconds < 0`) that rejects a
+  future-dated attestation outright — a real boot process cannot
+  honestly produce a quote timestamped after the moment it was created.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding4_*`, 3 tests: a future-dated quote is rejected; a
+  normal fresh quote still passes; the pre-existing staleness check for
+  test case #12 is unaffected).
+
+---
+
+## [ISSUE-022] Persistent-process health check has no tie to artifact identity — second red-team finding #5 (documented, not fixed)
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review.
+- **Category:** documented limitation (not fixed this pass)
+- **Severity:** low-medium — for `cfs-real`/`fprime-real`, "healthy"
+  means only that one of `Stack.boot_success_markers` appeared in
+  stdout within the boot window; there is no hash tie-back to the
+  attested/installed binary in that specific check. A trivial
+  replacement binary that prints the magic marker string and does
+  nothing else would pass. `force_fail` (test case #11) short-circuits
+  before ever reaching this code path, so this specific forgeable-marker
+  vector is genuinely untested.
+- **Description / root cause:** the persistent-process health-check
+  strategy (ISSUE-003) was designed to solve a different problem —
+  long-running processes that never produce a fixed, diffable stdout
+  transcript — and correctness of *that* substitution was never
+  extended to also bind the observed marker to the specific binary's
+  hash.
+- **Fix:** none applied this pass. A real fix would need to correlate
+  the boot-success marker with a per-invocation nonce or the binary's own
+  hash (neither `core-cpu1` nor `Ref` currently print anything
+  hash-specific at boot), which is a bigger design change than this
+  pass's scope. Documented here and in Threat-Model.md as a stated,
+  known limitation of the persistent-process health-check strategy
+  rather than silently left unstated.
+- **Disclosure status:** n/a.
+- **Verified fixed:** n/a — intentionally not fixed; see above.
+
+---
+
+## [ISSUE-023] Provenance bound to git HEAD only, never checked for an uncommitted working tree — second red-team finding #6
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review.
+- **Category:** design flaw / security finding
+- **Severity:** low-medium — real but narrow: a binary built from a
+  locally-modified (uncommitted) source tree gets provenance claiming
+  the same `source_commit` as a clean checkout at that same HEAD, so the
+  provenance record's source binding can silently diverge from what was
+  actually compiled. Never exercised by test cases #1/#2.
+- **Description:** `provenance.py::_current_source_commit()` records
+  `git rev-parse HEAD` unconditionally, with no check for uncommitted
+  changes (`git status --porcelain`).
+- **Root cause:** the binding check was designed around "does the
+  binary's hash match what provenance claims" (test case #1), never
+  "does the recorded source identity itself reflect what was actually on
+  disk at build time."
+- **Fix:** new `provenance.py::_source_tree_dirty()` records the true
+  ambient `git status --porcelain` result in every generated provenance
+  document (`source_tree_dirty`, transparency, always computed).
+  `verify_provenance()` gained an opt-in `require_clean_tree` parameter
+  (default `False`) that treats a dirty-tree provenance record as a
+  validity failure. Deliberately NOT enabled by `ground_auth.py`'s
+  default call: this project's own repository is routinely dirty during
+  active development (this exact session included), so enforcing it
+  unconditionally would fail every evaluation run made while iterating
+  on the code — an environment/workflow fact about this project, not a
+  security property worth conflating with a real attack. The check is
+  real, tested, and the correct default for an actual CI release
+  pipeline gating what reaches a spacecraft; stated explicitly as
+  opt-in rather than silently wired in or silently omitted.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding6_*`, 3 tests: dirty tree rejected when
+  `require_clean_tree=True`; not enforced by default; clean tree passes
+  even when required).
+
+---
+
+## [ISSUE-024] Evaluation scenario_13 never exercised the real pipeline — second red-team finding #7
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review, specifically
+  the ask to audit the evaluation harness's own construction for
+  vacuous tests.
+- **Category:** measurement-validity bug (evaluation code, not the
+  pipeline it measures)
+- **Severity:** medium — this is exactly the "metric that can't fail
+  regardless of whether the mechanism works" pattern reviewer objection
+  9 exists to guard against, found in this project's own evaluation
+  code rather than the pipeline.
+- **Description:** `evaluation/experiment.py::scenario_13()` called
+  `monitoring.reconcile_inventory()` directly with hardcoded,
+  deliberately-mismatched constants
+  (`ground_expected_version=2, spacecraft_confirmed_version=1`, a
+  synthetic hash string) instead of driving the check through a real
+  `pipeline.run()`. This guaranteed "100% detection" for test case #13
+  by construction — it demonstrated that `reconcile_inventory()` can
+  tell two different numbers apart, not that the pipeline produces a
+  genuine disagreement when something really does go wrong.
+- **Root cause:** written as a direct unit-style exercise of the
+  mechanism (mirroring `test_phase4_pipeline.py`'s own hand-built-state
+  approach for test case #13) and never revisited once `scenario_15`
+  established the pattern for driving the same underlying attack (a
+  forced S5 rollback) through a real pipeline call.
+- **Fix:** rewrote `scenario_13` to run a confirmed baseline at S5, then
+  a forced health-check failure that causes a genuine rollback back to
+  the baseline slot — so ground's `version` argument for the second call
+  genuinely disagrees with what the spacecraft actually confirms,
+  through `pipeline.py`'s own `reconcile_inventory()` call. Moved `"13"`
+  from `SINGLE_VERSION_SCENARIOS` to `PAIRED_VERSION_SCENARIOS`
+  accordingly. Test cases #13 and #15 now correctly share one real
+  attack trigger while checking two independently-meaningful result
+  fields (`inventory_reconciled`, `telemetry_consistent`).
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding7_scenario_13_detects_a_real_inventory_mismatch`)
+  confirms the rewritten scenario still reports `caught: True` when
+  driven through the real pipeline.
+
+---
+
+## [ISSUE-025] report.py aggregated traceability/artifact-size fields from trial 0 only — second red-team finding #8
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review.
+- **Category:** measurement-validity bug (evaluation code)
+- **Severity:** low-medium — timing and success/reproducibility were
+  properly aggregated across all `n_trials`; `traceability_completeness`
+  and every artifact-size figure were not. These fields are expected to
+  be deterministic across trials for the same condition (same code path
+  every time), so this was unlikely to have silently hidden a real
+  regression in the numbers already published — but nothing was actually
+  checking that assumption.
+- **Description:** `evaluation/report.py::summarize_happy_path()` took
+  `trace = trials[0]["traceability_completeness"]` and every
+  `sizes[...] = trials[0][...]` unconditionally, never comparing against
+  any other trial.
+- **Root cause:** these fields were added expecting them to be constant
+  per condition, and the aggregation code never revisited that
+  assumption once means/CIs were added elsewhere in the same function
+  for genuinely variable fields (Phase 8, 2026-08-03).
+- **Fix:** now computes the full set of distinct values across all
+  trials for `traceability_completeness` and each size field; the
+  reported number is still trial[0]'s (unchanged behavior for anything
+  already citing these numbers), but a new `trial_metrics_consistent`
+  boolean and `trial_metrics_inconsistencies` list surface any
+  divergence explicitly rather than leaving it silently possible.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding8_*`, 2 tests: consistent trials flagged consistent with
+  an empty inconsistency list; a deliberately divergent trial is flagged,
+  naming the specific field, while the reported headline number stays
+  unchanged).
+
+---
+
+## [ISSUE-026] No automatic key-rotation path after signing-key or attestation-key revocation — second red-team finding #11
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review.
+- **Category:** design flaw / operational-hygiene finding
+- **Severity:** low — once a key is revoked (test case #7 or the
+  attestation-key equivalent), the system kept silently producing new
+  signatures/quotes with that same revoked key indefinitely; every one
+  of them guaranteed to fail verification downstream (the real defense,
+  which already worked correctly), but with no evidence trail pointing
+  at the actual moment an operator's mistake happened.
+- **Description:** `signing.py::sign()` and
+  `attestation.py::generate_attestation()` never checked
+  `is_revoked()`/`is_attestation_key_revoked()` before producing new
+  material with the current key.
+- **Root cause:** revocation was designed and tested purely from the
+  verification side (Phase 8 findings #2/#6); the signing/attestation
+  side was never asked "should this even happen if the key is already
+  known-bad."
+- **Fix, and an explicit design tension worth stating:** the natural fix
+  (refuse to sign/attest with a revoked key) was tried first and
+  reverted — it broke the existing, correct test case #7 design (revoke
+  the key, then attempt a release still signed with it, and rely on
+  *downstream verification* to catch it) and the equivalent attestation
+  regression test, both of which deliberately model an
+  operator/system that hasn't rotated yet, with the defense correctly
+  living in `verify()`/`verify_attestation()`, not in the signer itself.
+  The actual fix: `sign()` and `generate_attestation()` now log a
+  distinct evidence record ("signing/quoting with an already-revoked
+  key") when this happens, giving visibility without changing control
+  flow or breaking the existing attack simulation.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding9_*`, 2 tests: signing/attesting with a revoked key still
+  succeeds without raising, and produces a distinct, queryable evidence
+  record naming the reason).
+
+---
+
+## [ISSUE-027] Prohibited-configuration policy check bypassable by type coercion — second red-team finding #10
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review.
+- **Category:** logic bug / security finding
+- **Severity:** low — the policy table itself is an explicitly-stated
+  test-only toy (`policy.py`'s own module docstring), but this is a
+  real, concrete evasion of the one rule it enforces.
+- **Description:** `policy.py::_matches()` used bare `config.get(k) ==
+  v` against the pattern `{"debug_mode": True}`. Python's `"true" ==
+  True` and `1 == True` behave inconsistently for the intended semantics
+  (`1 == True` is `True`, but a caller-supplied config of
+  `{"debug_mode": "true"}` — a plausible shape if the config arrived as
+  loosely-typed JSON or a string field — never matches the exact `True`
+  singleton), so a config meaning the same thing but spelled differently
+  silently bypassed the only rule in the deny-list.
+- **Root cause:** the deny-rule matcher was written assuming config
+  values always arrive as genuine Python booleans, never validated
+  against how a real caller-supplied config might actually be typed.
+- **Fix:** new `policy.py::_values_match()` normalizes boolean pattern
+  values against `True`/`False`, `"true"`/`"false"`/`"1"`/`"0"`/etc., and
+  numeric truthiness — while keeping exact-equality semantics for any
+  non-boolean pattern value, so this stays scoped to the boolean-flag
+  case rather than becoming a general fuzzy-match policy engine.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding10_*`, 3 parameterized tests: every truthy representation
+  is caught, every falsy representation still passes, non-boolean fields
+  keep exact-equality semantics).
+
+---
+
+## [ISSUE-028] Ablation baseline-invariant asserts were inconsistently guarded — second red-team finding #9
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review.
+- **Category:** latent fragility (no observed incorrect result)
+- **Severity:** low — currently harmless (the asserted invariant happens
+  to still hold under ablation for all three cases), but a latent
+  fragility: if mechanism behavior ever changed, these three would crash
+  the whole ablation run instead of degrading gracefully like their
+  siblings.
+- **Description:** `evaluation/ablation.py`'s `_ablation_case_04`,
+  `_ablation_case_05`, and `_ablation_case_12` called their internal
+  "baseline" sub-run with whatever `disable` tuple the caller passed
+  (correctly), but then unconditionally asserted an invariant
+  (`rejected_at is None` / `rollback_outcome == "confirmed"`) regardless
+  of whether the mechanism was ablated for that call.
+  `_ablation_case_08`, `_ablation_case_11`, and `_ablation_case_15`
+  already guarded the equivalent assertion with `if not disable:`.
+- **Root cause:** `_ablation_case_04`/`_05` were written this same
+  session (objection-5 fix) by copying `_ablation_case_12`'s existing
+  pattern, which itself predates the `if not disable:` guard convention
+  established later for `_08`/`_11`/`_15` — an inconsistency introduced
+  by not retrofitting the earlier-written functions once the safer
+  pattern was established.
+- **Fix:** added the same `if not disable:` guard to all three, for
+  consistency across every ablation case.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding11_*`, 3 tests confirming each of the three cases runs
+  without raising when its own mechanism is ablated).
+
+---
+
+## [ISSUE-029] Uplink tamper injection always corrupted the same byte offset — second red-team finding #12
+
+- **Date found:** 2026-08-05
+- **Found during:** Second (wider) blind red-team review.
+- **Category:** test-coverage narrowness (not a detection gap)
+- **Severity:** very low — not a security hole (whole-artifact
+  signature verification is location-agnostic, so detection was never
+  at risk), just needlessly narrow coverage: "modified in transit" (test
+  case #6) was only ever exercised as one specific single-byte-flip
+  location across the entire test suite.
+- **Description:** `uplink_sim/uplink.py::transmit()` always computed
+  `mid = len(data) // 2; data[mid] ^= 0xFF` for both the deterministic
+  `tamper` flag and random link-noise corruption.
+- **Root cause:** the midpoint was a simple, arbitrary implementation
+  choice made once in Phase 1 and never revisited.
+- **Fix:** picks a pseudo-random offset from the same seeded `rng`
+  instance instead of a fixed midpoint — `rng_seed` still makes a given
+  test call fully reproducible, it just no longer always lands on the
+  same byte.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding12_tamper_offset_varies_with_seed`) confirms 8 different
+  seeds produce more than one distinct corrupted-byte offset.
+
+---
+
 ## Notes on responsible disclosure
 
 If a real vulnerability is found in an upstream dependency (cFS itself,

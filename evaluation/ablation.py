@@ -21,18 +21,28 @@ either the attack goes fully undetected, or detection holds but recovery
 capability is specifically lost (the documented S3-vs-S4 distinction,
 now demonstrated with re-run data instead of just prose).
 
-Scope, stated explicitly rather than left implicit: only mechanisms
-gated directly inside src/pipeline.py's own `cond` object can be cleanly
-ablated this way — onboard_attestation, trusted_rollback,
-machine_readable_authorization. The prohibited-configuration policy
-check (test case #8) lives inside src/ground_authorization/ground_auth.py,
-which derives its own Condition independently via condition.preset() and
-ignores pipeline.py's ablated one — so "signature"/"sbom"/"provenance"
-mechanisms, and the S5 policy check specifically, are NOT ablatable via
-this script without also threading disable_mechanisms into
-ground_auth.authorize(). That's a natural follow-up, not a silent gap;
-noted here and in docs/Threat-Model.md so nobody mistakes "3 mechanisms
-ablated" for "all mechanisms ablated."
+Scope, stated explicitly rather than left implicit: as of 2026-08-05,
+`disable_mechanisms` is threaded all the way through
+`ground_authorization.ground_auth.authorize()` and
+`onboard_verification.onboard.verify_received_bundle()`, not just
+`pipeline.py`'s own `cond` object — see the reviewer-objection-#5 fix
+noted in those modules' docstrings. That makes SBOM, provenance, and the
+S5 policy check ablatable too (test cases #4, #5, #8 below), bringing
+coverage to 5 of the 6 mechanisms.
+
+`signature` is deliberately excluded, for a reason worth stating rather
+than working around: it is the one mechanism active at every single
+condition from S0 through S5 (see condition.CONDITION_PRESETS) — S0 *is*
+"signature only," the floor of the whole ladder. There is no defined
+condition below S0 to fall back to if signature verification is
+switched off, and neither `ground_auth.authorize()` nor `signing.verify()`
+guard the actual signature check behind `cond.active("signature")` in the
+first place (it runs unconditionally, by design — the one universal
+baseline). Forcing it off via `disable_mechanisms` would exercise a code
+path that reflects no real, definable operating condition, so "ablating
+signature" would demonstrate an implementation quirk, not a meaningful
+claim about the ladder. This is noted in docs/Threat-Model.md as a
+stated, principled scope boundary, not an oversight.
 
 Run with: python3 evaluation/ablation.py             # cfs
           python3 evaluation/ablation.py fprime       # fprime
@@ -64,11 +74,12 @@ def _ablation_case_12(stack: str, disable: tuple[str, ...], version_pair: tuple[
     nothing left to trip it."""
     baseline_version, attack_version = version_pair
     baseline = run(condition_name="S4", version=baseline_version, stack=stack, disable_mechanisms=disable)
-    assert baseline.rollback_outcome == "confirmed", (
-        f"baseline run did not confirm as expected (stack={stack!r}, disable={disable!r}): "
-        f"rollback_outcome={baseline.rollback_outcome!r}, health_ok={baseline.health_ok!r}, "
-        f"rejected_at={baseline.rejected_at!r}"
-    )
+    if not disable:
+        assert baseline.rollback_outcome == "confirmed", (
+            f"baseline run did not confirm as expected (stack={stack!r}, disable={disable!r}): "
+            f"rollback_outcome={baseline.rollback_outcome!r}, health_ok={baseline.health_ok!r}, "
+            f"rejected_at={baseline.rejected_at!r}"
+        )
     t0 = time.perf_counter()
     result = run(
         condition_name="S4",
@@ -154,6 +165,93 @@ def _ablation_case_15(stack: str, disable: tuple[str, ...], version_pair: tuple[
     }
 
 
+def _ablation_case_04(stack: str, disable: tuple[str, ...], version_pair: tuple[int, int]) -> dict:
+    """Test case #4 (SBOM declares a known-vulnerable dependency) at S1.
+    Normally caught by ground_auth.authorize()'s SBOM check
+    (verify_sbom -> ground_authorization). Ablating "sbom" now reaches
+    ground_auth.py's own Condition (2026-08-05 fix), so the whole
+    `if checks_passed and cond.active("sbom"):` block is skipped
+    entirely — no SBOM is even required, let alone checked."""
+    baseline_version, attack_version = version_pair
+    baseline = run(condition_name="S1", version=baseline_version, stack=stack, disable_mechanisms=disable)
+    if not disable:
+        assert baseline.rejected_at is None, (
+            f"baseline run was unexpectedly rejected (stack={stack!r}, disable={disable!r}): "
+            f"rejected_at={baseline.rejected_at!r}"
+        )
+    t0 = time.perf_counter()
+    result = run(
+        condition_name="S1",
+        version=attack_version,
+        inject_vulnerable_dependency=True,
+        stack=stack,
+        disable_mechanisms=disable,
+    )
+    elapsed = time.perf_counter() - t0
+    return {"caught": result.rejected_at == "ground_authorization", "elapsed_seconds": elapsed}
+
+
+def _ablation_case_05(stack: str, disable: tuple[str, ...], version_pair: tuple[int, int]) -> dict:
+    """Test case #5 (unauthorized/rogue build runner) at S2. Normally
+    caught by ground_auth.authorize()'s provenance check (builder-id
+    verification inside verify_provenance -> ground_authorization).
+    Ablating "provenance" skips generate_provenance() in pipeline.py
+    (so no provenance record is even produced) AND, via the 2026-08-05
+    fix, ground_auth.py's own `if checks_passed and cond.active
+    ("provenance"):` block — the rogue builder_id is never inspected by
+    anything."""
+    baseline_version, attack_version = version_pair
+    baseline = run(condition_name="S2", version=baseline_version, stack=stack, disable_mechanisms=disable)
+    if not disable:
+        assert baseline.rejected_at is None, (
+            f"baseline run was unexpectedly rejected (stack={stack!r}, disable={disable!r}): "
+            f"rejected_at={baseline.rejected_at!r}"
+        )
+    t0 = time.perf_counter()
+    result = run(
+        condition_name="S2",
+        version=attack_version,
+        builder_id="rogue-unregistered-runner",
+        stack=stack,
+        disable_mechanisms=disable,
+    )
+    elapsed = time.perf_counter() - t0
+    return {"caught": result.rejected_at == "ground_authorization", "elapsed_seconds": elapsed}
+
+
+def _ablation_case_08(stack: str, disable: tuple[str, ...], version_pair: tuple[int, int]) -> dict:
+    """Test case #8 (correct signature, prohibited configuration) at S5.
+    Normally caught twice over: once by ground_auth.authorize()'s policy
+    check, and independently by onboard.verify_received_bundle()'s
+    redundant spacecraft-side check (Phase 8 finding #4 fix). Ablating
+    "machine_readable_authorization" now has to switch off BOTH checks
+    (the 2026-08-05 fix threads disable_mechanisms into onboard.py too) —
+    otherwise the onboard-side redundancy would silently catch the
+    attack anyway and make the ablation look like it changed nothing,
+    for a reason that has nothing to do with the mechanism itself."""
+    baseline_version, attack_version = version_pair
+    baseline = run(condition_name="S5", version=baseline_version, stack=stack, disable_mechanisms=disable)
+    if not disable:
+        assert baseline.rollback_outcome == "confirmed", (
+            f"baseline run did not confirm as expected (stack={stack!r}): "
+            f"rollback_outcome={baseline.rollback_outcome!r}, rejected_at={baseline.rejected_at!r}"
+        )
+    t0 = time.perf_counter()
+    result = run(
+        condition_name="S5",
+        version=attack_version,
+        configuration={"debug_mode": True},
+        stack=stack,
+        disable_mechanisms=disable,
+    )
+    elapsed = time.perf_counter() - t0
+    return {
+        "caught": result.rejected_at in ("ground_authorization", "onboard_verification"),
+        "rejected_at": result.rejected_at,
+        "elapsed_seconds": elapsed,
+    }
+
+
 # Each entry: (test_case, mechanism, condition, runner, metric). "metric"
 # is the dict key the ablation is actually judged on — for #12 and #15
 # that's "caught" (detection itself is lost when ablated); for #11 it's
@@ -161,9 +259,12 @@ def _ablation_case_15(stack: str, disable: tuple[str, ...], version_pair: tuple[
 # specifically is lost) since "caught" for #11 is deliberately designed
 # to stay true either way (see _ablation_case_11's docstring).
 ABLATIONS = [
+    ("4", "sbom", "S1", _ablation_case_04, "caught"),
+    ("5", "provenance", "S2", _ablation_case_05, "caught"),
     ("12", "onboard_attestation", "S4", _ablation_case_12, "caught"),
     ("11", "trusted_rollback", "S4", _ablation_case_11, "recovered"),
     ("15", "machine_readable_authorization", "S5", _ablation_case_15, "caught"),
+    ("8", "machine_readable_authorization", "S5", _ablation_case_08, "caught"),
 ]
 
 

@@ -161,6 +161,28 @@ def generate_attestation(
     with open(installed_binary_path, "rb") as f:
         measured_hash = hashlib.sha256(f.read()).hexdigest()
 
+    # Second red-team pass, finding #11 (2026-08-05) — same reasoning as
+    # signing.py's identical fix: log visibility for "quoting with an
+    # already-revoked attestation key," deliberately not refusing to
+    # produce the quote at all, since test case #6's own regression test
+    # (revoke, then run() through S4) models exactly that and expects
+    # the *downstream* verify_attestation() check to catch it, not this
+    # function to block it outright.
+    if is_attestation_key_revoked():
+        store.record(
+            pipeline_stage="boot_attestation",
+            condition=condition_name,
+            artifact_ref=measured_hash,
+            actor="onboard_attestation_agent",
+            result="fail",
+            detail={
+                "reason": "quoting with an already-revoked attestation key — no "
+                "automatic rotation occurred; an operator must call "
+                "_generate_attestation_keypair(force=True)",
+                "key_fingerprint": _fingerprint(ATTESTATION_PUBLIC_KEY_PATH),
+            },
+        )
+
     quote_time = time.time() - backdate_seconds
     quote = {
         "measured_binary": installed_binary_path.name,
@@ -264,6 +286,29 @@ def verify_attestation(
             test_case_injected="12",
         )
         return False, "attestation is stale"
+
+    # Second red-team pass, finding #4 (2026-08-05): the check above only
+    # ever rejected a quote for being too OLD. A quote whose `timestamp`
+    # is in the future gives a negative `age_seconds`, which is always
+    # `< max_age_seconds` and therefore always "fresh" by the check
+    # above — indefinitely, since real time only ever moves the negative
+    # age closer to zero, never past the staleness threshold on its own.
+    # A "pre-dated" attestation is not physically possible for a real
+    # boot process to produce honestly, so treat one as invalid rather
+    # than silently trusting it.
+    if age_seconds < 0:
+        store.record(
+            pipeline_stage="attestation_verification",
+            condition=condition_name,
+            artifact_ref=expected_hash,
+            actor="health_monitor",
+            result="fail",
+            detail={
+                "reason": "attestation timestamp is in the future",
+                "age_seconds": age_seconds,
+            },
+        )
+        return False, "attestation timestamp is in the future"
 
     if quote["measured_hash"] != expected_hash:
         store.record(

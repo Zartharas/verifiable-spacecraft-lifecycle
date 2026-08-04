@@ -1,4 +1,508 @@
 {
+  "4": {
+    "mechanism_ablated": "sbom",
+    "condition": "S1",
+    "metric_judged": "caught",
+    "baseline_rate": 1.0,
+    "ablated_rate": 0.0,
+    "effect_specifically_attributable_to_mechanism": true,
+    "baseline_trials": [
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9055724199861288
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9941510140197352
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8852993570035324
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.410751379095018
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9120782819809392
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8840742899337783
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9607842409750447
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.054966481984593
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.0139134289929643
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.990340293967165
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.066313344053924
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8843692549271509
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9699915089877322
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.927099747932516
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9918457550229505
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8735817240085453
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9544716200325638
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8965383970644325
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.0405627549625933
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.943014431046322
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.0514603899791837
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9372462470782921
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9334508130559698
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8661132849520072
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.969317469978705
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8876662760740146
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.85857862199191
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9058430369477719
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8677141160005704
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.92715507093817
+      }
+    ],
+    "ablated_trials": [
+      {
+        "caught": false,
+        "elapsed_seconds": 0.902639716048725
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8808926559286192
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.0906002469127998
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9344014429952949
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9476325119612738
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.0553277969593182
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8692924520000815
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9946091580204666
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.0466944619547576
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8728423430584371
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.0279059840831906
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9227495769737288
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.1740582000929862
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.3467626729980111
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.005944553995505
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.0761193269863725
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.3236134949838743
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.2132876620162278
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.2257383149117231
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.1995209290180355
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.1672509670024738
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.3343228460289538
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.2425587959587574
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.150810332968831
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9470454290276393
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9158255690708756
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9637076969956979
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.0662017490249127
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.1950800680788234
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.0133924830006436
+      }
+    ]
+  },
+  "5": {
+    "mechanism_ablated": "provenance",
+    "condition": "S2",
+    "metric_judged": "caught",
+    "baseline_rate": 1.0,
+    "ablated_rate": 0.0,
+    "effect_specifically_attributable_to_mechanism": true,
+    "baseline_trials": [
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9019938349956647
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9318529919255525
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8609874460380524
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9038893550168723
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.0092526179505512
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.0435562459751964
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.1134094800800085
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.2913619969040155
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9397106079850346
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8751229300396517
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8952922000316903
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.0081544070271775
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.0345880830427632
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9282203550683334
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.0562462660018355
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9217472879681736
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.902054209029302
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9254778090398759
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9231813160004094
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9229471189901233
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9498857270227745
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9448037729598582
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.860710990964435
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 1.0034443809418008
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.988271530950442
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9695252209203318
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9911039740545675
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.8773806439712644
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9854458749759942
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.9477931129513308
+      }
+    ],
+    "ablated_trials": [
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8580282960319892
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9016395240323618
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9430050789378583
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9425388430245221
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.899038712028414
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8691813129698858
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8981402149656788
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8636960160220042
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9614606749964878
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9421326119918376
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 1.064599096076563
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9190698759630322
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8631562730297446
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9483386919600889
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8805741730611771
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.880053241038695
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8540540230460465
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.90497257898096
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8843917630147189
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8720990539295599
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9820592829491943
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9193986590253189
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9186543329851702
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8746533339144662
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8834188380278647
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9898677140008658
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8644372340058908
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8619767120108008
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.8824192710453644
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.9191877660341561
+      }
+    ]
+  },
   "12": {
     "mechanism_ablated": "onboard_attestation",
     "condition": "S4",
@@ -9,245 +513,245 @@
     "baseline_trials": [
       {
         "caught": true,
-        "elapsed_seconds": 0.424984072917141
+        "elapsed_seconds": 0.9128300480078906
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.44463876890949905
+        "elapsed_seconds": 0.9414152179379016
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4321005219826475
+        "elapsed_seconds": 0.9215511860093102
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.42886331595946103
+        "elapsed_seconds": 0.9562913679983467
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4312674000393599
+        "elapsed_seconds": 0.9429706980008632
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.45920402801129967
+        "elapsed_seconds": 0.9065529499202967
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.44514438905753195
+        "elapsed_seconds": 1.166274128947407
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.43479957699310035
+        "elapsed_seconds": 1.207842361065559
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4758490340318531
+        "elapsed_seconds": 1.196763884043321
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4676906809909269
+        "elapsed_seconds": 0.9667228880571201
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4448892769869417
+        "elapsed_seconds": 1.07725151500199
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4561819840455428
+        "elapsed_seconds": 1.0011273920536041
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4192136189667508
+        "elapsed_seconds": 1.03428850392811
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.48696011991705745
+        "elapsed_seconds": 1.0392724049743265
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.42524722404778004
+        "elapsed_seconds": 0.9921908940887079
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.42969513696152717
+        "elapsed_seconds": 1.1364886119263247
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.42711831198539585
+        "elapsed_seconds": 0.9851658300030977
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4783819180447608
+        "elapsed_seconds": 0.9600508681032807
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4480018359608948
+        "elapsed_seconds": 0.9530331240966916
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4364972050534561
+        "elapsed_seconds": 1.139610816957429
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4179218210047111
+        "elapsed_seconds": 0.9272573330672458
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4451551359379664
+        "elapsed_seconds": 0.9779949999647215
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.45904773205984384
+        "elapsed_seconds": 0.9182188250124454
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.43004183610901237
+        "elapsed_seconds": 1.0246152669424191
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4150976350065321
+        "elapsed_seconds": 0.9561481679556891
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.45238695305306464
+        "elapsed_seconds": 1.012873467989266
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4618738719727844
+        "elapsed_seconds": 0.9405072570079938
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.43456869397778064
+        "elapsed_seconds": 1.0283889099955559
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.4148770390311256
+        "elapsed_seconds": 1.1822546659968793
       },
       {
         "caught": true,
-        "elapsed_seconds": 0.45403103600256145
+        "elapsed_seconds": 1.0024237378966063
       }
     ],
     "ablated_trials": [
       {
         "caught": false,
-        "elapsed_seconds": 0.4817280580755323
+        "elapsed_seconds": 0.9346402259543538
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.43823317904025316
+        "elapsed_seconds": 1.0251171120908111
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4228825810132548
+        "elapsed_seconds": 1.0228911810554564
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.445066790911369
+        "elapsed_seconds": 1.0348074799403548
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.48084698210004717
+        "elapsed_seconds": 0.9824729519896209
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4885246290359646
+        "elapsed_seconds": 1.1104173440253362
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4277335909428075
+        "elapsed_seconds": 1.0583410299150273
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4508345640497282
+        "elapsed_seconds": 1.455438886070624
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.48305178491864353
+        "elapsed_seconds": 1.753470640978776
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.40583570301532745
+        "elapsed_seconds": 1.0585123390192166
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4359711130382493
+        "elapsed_seconds": 1.1341025419533253
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.45796723500825465
+        "elapsed_seconds": 1.0740337050519884
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4994088669773191
+        "elapsed_seconds": 0.9930068880785257
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4451066990150139
+        "elapsed_seconds": 2.3965705649461597
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4391816919669509
+        "elapsed_seconds": 1.6724510150961578
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4663048470392823
+        "elapsed_seconds": 1.834904185961932
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.48798535694368184
+        "elapsed_seconds": 1.6322278269799426
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.42966409598011523
+        "elapsed_seconds": 2.2790318389888853
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.41791247308719903
+        "elapsed_seconds": 1.015173449064605
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.42155691504012793
+        "elapsed_seconds": 1.0904402129817754
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4746728850295767
+        "elapsed_seconds": 1.1030224290443584
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4197968259686604
+        "elapsed_seconds": 1.1126308439997956
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4233171039959416
+        "elapsed_seconds": 1.0672415440203622
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4789137679617852
+        "elapsed_seconds": 1.0746168500045314
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4883778829826042
+        "elapsed_seconds": 1.0404596748994663
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.43312887102365494
+        "elapsed_seconds": 0.9500739380018786
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.44927630096208304
+        "elapsed_seconds": 1.0826020919485018
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4502624800661579
+        "elapsed_seconds": 0.9877314249752089
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.4048926020041108
+        "elapsed_seconds": 1.0362416009884328
       },
       {
         "caught": false,
-        "elapsed_seconds": 0.42721755197271705
+        "elapsed_seconds": 0.9981814249185845
       }
     ]
   },
@@ -264,210 +768,210 @@
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.39303262799512595
+        "elapsed_seconds": 0.9698979480890557
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.444264144054614
+        "elapsed_seconds": 0.9220906090922654
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.4350159539608285
+        "elapsed_seconds": 0.9868257569614798
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.3831838039914146
+        "elapsed_seconds": 0.9144502270501107
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.3984685289906338
+        "elapsed_seconds": 1.0340592180145904
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.4406888980884105
+        "elapsed_seconds": 0.94170685892459
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.4422933430178091
+        "elapsed_seconds": 0.9464817619882524
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.42625271691940725
+        "elapsed_seconds": 0.9379758010618389
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.4324506879784167
+        "elapsed_seconds": 0.9380724029615521
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.40857568092178553
+        "elapsed_seconds": 0.9295798490056768
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.42247192095965147
+        "elapsed_seconds": 0.9418237650534138
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.43279604299459606
+        "elapsed_seconds": 0.9479962079785764
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.41016491199843585
+        "elapsed_seconds": 0.9717934729997069
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.39781233004759997
+        "elapsed_seconds": 1.0094850270543247
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.43257504503708333
+        "elapsed_seconds": 0.9593336679972708
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.4273615040583536
+        "elapsed_seconds": 0.9949997559888288
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.48482130700722337
+        "elapsed_seconds": 0.9634341310011223
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.40270850504748523
+        "elapsed_seconds": 1.024640760035254
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.4487489560851827
+        "elapsed_seconds": 0.9366230299929157
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.42711418797262013
+        "elapsed_seconds": 1.035158172948286
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.4231745679862797
+        "elapsed_seconds": 0.9476994030410424
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.43660491600167006
+        "elapsed_seconds": 0.9647604579804465
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.4400021049659699
+        "elapsed_seconds": 1.0126002510078251
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.39335638703778386
+        "elapsed_seconds": 0.9480910630663857
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.425758967990987
+        "elapsed_seconds": 1.000686306040734
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.4428401809418574
+        "elapsed_seconds": 0.9661806899821386
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.49940557300578803
+        "elapsed_seconds": 0.9493949159514159
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.7875234000384808
+        "elapsed_seconds": 0.9213177890051156
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.6306489889975637
+        "elapsed_seconds": 0.9407768109813333
       },
       {
         "caught": true,
         "recovered": true,
         "rollback_outcome": "rolled_back",
         "rejected_at": "post_install_rolled_back",
-        "elapsed_seconds": 0.5406357400352135
+        "elapsed_seconds": 0.9679001660551876
       }
     ],
     "ablated_trials": [
@@ -476,210 +980,210 @@
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.7747887359000742
+        "elapsed_seconds": 1.0328828489873558
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.6910715979756787
+        "elapsed_seconds": 1.043558940058574
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.6675109209027141
+        "elapsed_seconds": 0.9778496039798483
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.8077110280282795
+        "elapsed_seconds": 0.9445678329793736
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.5461282030446455
+        "elapsed_seconds": 0.9981985939666629
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.4697261869441718
+        "elapsed_seconds": 0.9900897250045091
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.4886113560060039
+        "elapsed_seconds": 1.025965422973968
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.5363984310533851
+        "elapsed_seconds": 0.9657013709656894
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.47083018394187093
+        "elapsed_seconds": 0.9947007530136034
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.464731995947659
+        "elapsed_seconds": 1.0113110210513696
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.48014936898835003
+        "elapsed_seconds": 0.9521064679138362
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.4810423479648307
+        "elapsed_seconds": 0.9516237489879131
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.4545217410195619
+        "elapsed_seconds": 1.3640997559996322
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.4982213849434629
+        "elapsed_seconds": 1.0945003599626943
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.4674379730131477
+        "elapsed_seconds": 0.9437509010313079
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.44910813099704683
+        "elapsed_seconds": 1.2789041579235345
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.5034316020319238
+        "elapsed_seconds": 1.150661880034022
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.5060461208922789
+        "elapsed_seconds": 0.9973028090316802
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.4769541610730812
+        "elapsed_seconds": 1.0451247380115092
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.470788748934865
+        "elapsed_seconds": 0.9732253359397873
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.4529878699686378
+        "elapsed_seconds": 0.957731646951288
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.520464372006245
+        "elapsed_seconds": 0.9542275060666725
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.5166137639898807
+        "elapsed_seconds": 0.9781668409705162
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.5596217520069331
+        "elapsed_seconds": 1.0102007540408522
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.5604641929967329
+        "elapsed_seconds": 1.2474719870369881
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.523233418003656
+        "elapsed_seconds": 1.017301723943092
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.44096443604212254
+        "elapsed_seconds": 1.0573232639580965
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.4592941110022366
+        "elapsed_seconds": 0.9649411709979177
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.428673857008107
+        "elapsed_seconds": 1.1199653670191765
       },
       {
         "caught": true,
         "recovered": false,
         "rollback_outcome": null,
         "rejected_at": "post_install_unrecoverable_at_s3",
-        "elapsed_seconds": 0.44314342294819653
+        "elapsed_seconds": 1.1509319139877334
       }
     ]
   },
@@ -694,304 +1198,616 @@
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6776974839158356
+        "elapsed_seconds": 1.8475777499843389
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.644913541036658
+        "elapsed_seconds": 2.1936393389478326
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6033222379628569
+        "elapsed_seconds": 1.671329430071637
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5855896389111876
+        "elapsed_seconds": 1.868510260945186
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6000903069507331
+        "elapsed_seconds": 1.815977541031316
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5721494710305706
+        "elapsed_seconds": 1.6608345200074837
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6142055330565199
+        "elapsed_seconds": 1.7396299029933289
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5679202610626817
+        "elapsed_seconds": 1.7191654810449108
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5936688260408118
+        "elapsed_seconds": 1.7947504830081016
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6000405560480431
+        "elapsed_seconds": 2.1566021939506754
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.638689944986254
+        "elapsed_seconds": 2.010532540967688
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6712261199718341
+        "elapsed_seconds": 1.7117760010296479
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5822942549129948
+        "elapsed_seconds": 1.6652158260112628
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5854709330014884
+        "elapsed_seconds": 1.716725256992504
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5842904839664698
+        "elapsed_seconds": 1.7555064220214263
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5818236619234085
+        "elapsed_seconds": 1.761246211011894
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5837034879950806
+        "elapsed_seconds": 1.8314394049812108
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5851382199907675
+        "elapsed_seconds": 1.7240394650725648
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6090691440040246
+        "elapsed_seconds": 1.6772336590802297
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6708607689943165
+        "elapsed_seconds": 1.855418958934024
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.607465656939894
+        "elapsed_seconds": 1.9607757769990712
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5710057379910722
+        "elapsed_seconds": 1.7138032290386036
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5762579949805513
+        "elapsed_seconds": 1.7387211020104587
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5925120050087571
+        "elapsed_seconds": 1.7431533200433478
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6143168129492551
+        "elapsed_seconds": 1.800829139072448
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6044757969211787
+        "elapsed_seconds": 2.0973240659805015
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6480233899783343
+        "elapsed_seconds": 1.6410957999760285
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.6394172461004928
+        "elapsed_seconds": 1.6169056970393285
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.63680886302609
+        "elapsed_seconds": 1.585251876967959
       },
       {
         "caught": true,
         "telemetry_consistent": false,
-        "elapsed_seconds": 0.5897448339965194
+        "elapsed_seconds": 1.7082770760171115
       }
     ],
     "ablated_trials": [
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.41148188000079244
+        "elapsed_seconds": 1.058278703945689
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.4267950219800696
+        "elapsed_seconds": 1.0508206880185753
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.42136872094124556
+        "elapsed_seconds": 1.109206679975614
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.43230558396317065
+        "elapsed_seconds": 1.0576505239587277
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.4230693900026381
+        "elapsed_seconds": 1.0583584039704874
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.4063268699683249
+        "elapsed_seconds": 1.070628238026984
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.4971691950922832
+        "elapsed_seconds": 1.1926101109711453
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.6404204820282757
+        "elapsed_seconds": 1.270137942978181
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.5396693530492485
+        "elapsed_seconds": 1.041365820914507
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.6420359909534454
+        "elapsed_seconds": 1.0995163940824568
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.5987581139197573
+        "elapsed_seconds": 0.9602872629184276
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.5211139770690352
+        "elapsed_seconds": 0.9898542779264972
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.5014035500353202
+        "elapsed_seconds": 1.3393116319784895
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.5731447620783001
+        "elapsed_seconds": 1.0200600799871609
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.5689389189938083
+        "elapsed_seconds": 1.158770770067349
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.7286313869990408
+        "elapsed_seconds": 1.1453473740257323
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.57716540095862
+        "elapsed_seconds": 0.9563292040256783
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.4998840370681137
+        "elapsed_seconds": 0.9538781549781561
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.46458536200225353
+        "elapsed_seconds": 1.0271163429133594
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.48201384698040783
+        "elapsed_seconds": 1.0870116620790213
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.4277238240465522
+        "elapsed_seconds": 1.007628533989191
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.44646973395720124
+        "elapsed_seconds": 1.250663587008603
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.5645411340519786
+        "elapsed_seconds": 0.9798410820076242
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.46286215796135366
+        "elapsed_seconds": 0.9500551740638912
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.46667499700561166
+        "elapsed_seconds": 1.0624336269684136
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.445269440067932
+        "elapsed_seconds": 0.9876858659554273
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.4456787819508463
+        "elapsed_seconds": 0.9951437069103122
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.42227357998490334
+        "elapsed_seconds": 0.9857008390827104
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.4322309889830649
+        "elapsed_seconds": 1.0341758049326017
       },
       {
         "caught": false,
         "telemetry_consistent": null,
-        "elapsed_seconds": 0.4714370280271396
+        "elapsed_seconds": 1.1109817260876298
+      }
+    ]
+  },
+  "8": {
+    "mechanism_ablated": "machine_readable_authorization",
+    "condition": "S5",
+    "metric_judged": "caught",
+    "baseline_rate": 1.0,
+    "ablated_rate": 0.0,
+    "effect_specifically_attributable_to_mechanism": true,
+    "baseline_trials": [
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9289817970711738
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9553914360003546
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.8909669329877943
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 1.0124566280283034
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 1.0419784729601815
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.8717072060098872
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.8646910459501669
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.896091606002301
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9225884469924495
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9805077000055462
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9279153840616345
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9155052580172196
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9210765280295163
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 1.0059364319313318
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9305326190078631
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.8726984019158408
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.8762655860045925
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.909641903010197
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9190697440644726
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9939837870188057
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9781759440666065
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9523619399406016
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9442874270025641
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 1.0061907490016893
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9774789469083771
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 1.0521625860128552
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 0.9528848699992523
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 1.0536568029783666
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 1.001048207981512
+      },
+      {
+        "caught": true,
+        "rejected_at": "ground_authorization",
+        "elapsed_seconds": 1.023655571974814
+      }
+    ],
+    "ablated_trials": [
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.1589823230169713
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.2726276899920776
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 0.9951226289849728
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.020430296077393
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0835089980391786
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0784974329872057
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0175101180793718
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0610267120646313
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0294129860121757
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.154802680015564
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.1957877890672535
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.089351104106754
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 0.9968676359858364
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.03574149007909
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0338872709544376
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0889884809730574
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0308086929144338
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.036734706023708
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0425919899716973
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.1339675699127838
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0177621700568125
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.098920786054805
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0532998900162056
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.1160106520401314
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0750426040031016
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0835950410692021
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0088869020109996
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.075360841001384
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.148350392933935
+      },
+      {
+        "caught": false,
+        "rejected_at": null,
+        "elapsed_seconds": 1.0797782799927518
       }
     ]
   }

@@ -663,7 +663,8 @@ uses this to hold a target condition's configuration fixed except for
 one mechanism forced off, then re-runs the identical attack scenario used
 in `evaluation/experiment.py`.
 
-**Scope, stated explicitly:** only mechanisms gated directly inside
+**Scope, stated explicitly (as of 2026-08-03, superseded 2026-08-05 —
+see the update below):** only mechanisms gated directly inside
 `pipeline.py`'s own `Condition` object are cleanly ablatable this way —
 `onboard_attestation`, `trusted_rollback`, `machine_readable_authorization`.
 The S5 prohibited-configuration policy check (test case #8) lives inside
@@ -715,6 +716,120 @@ the stand-in artifacts. Raw results:
 `evaluation/results/phase8_ablation_{cfs,fprime,cfs-real,fprime-real}.json`.
 Still `PRELIMINARY_INTERNAL_ONLY` — one evaluation run per stack, not
 independently replicated elsewhere — see STATUS.md "Claims status."
+
+**Update (2026-08-05): extended to 5 of 6 mechanisms, closing the scope
+gap noted above.** `disable_mechanisms` is now threaded through
+`ground_authorization.ground_auth.authorize()` and
+`onboard_verification.onboard.verify_received_bundle()`, not just
+`pipeline.py`'s own gating (both modules' docstrings document the
+change). That makes `sbom`, `provenance`, and the S5 policy check
+ablatable, and specifically required fixing a subtler issue along the
+way: the S5 policy check (test case #8) is checked *twice* — once in
+`ground_auth.py`, redundantly again in `onboard.py` (Phase 8 finding #4,
+see above) — so ablating `machine_readable_authorization` had to silence
+*both* copies, or the untouched redundant check would have caught the
+attack anyway and made the ablation look like it changed nothing, for a
+reason having nothing to do with the mechanism's actual necessity.
+
+`signature` remains deliberately excluded — not a residual gap, but a
+stated design property: it is the one mechanism active at every
+condition from S0 through S5 (S0 *is* "signature only," the floor of the
+ladder), and neither `ground_auth.py` nor `signing.verify()` gate the
+actual check behind `cond.active("signature")` in the first place — it
+runs unconditionally, by design. There is no defined condition below S0
+to fall back to, so forcing it off would exercise an implementation
+quirk, not a claim about the ladder. See `evaluation/ablation.py`'s
+module docstring for the full reasoning.
+
+**Results (sandbox verification run, reduced trial counts — 10 trials
+for S1/S2 cases, 5 for the two S5 cases, due to a per-command time
+limit):**
+
+| Case | Mechanism ablated | Condition | Metric judged | Baseline | Ablated | Effect isolated to mechanism? |
+|---|---|---|---|---|---|---|
+| #4 (vulnerable dependency in SBOM) | `sbom` | S1 | caught | 100% | 0% | Yes |
+| #5 (rogue/unregistered builder) | `provenance` | S2 | caught | 100% | 0% | Yes |
+| #12 (stale attestation) | `onboard_attestation` | S4 | caught | 100% | 0% | Yes |
+| #11 (failed health check) | `trusted_rollback` | S4 | recovered | 100% | 0% | Yes |
+| #15 (false telemetry) | `machine_readable_authorization` | S5 | caught | 100% | 0% | Yes |
+| #8 (prohibited configuration) | `machine_readable_authorization` | S5 | caught | 100% | 0% | Yes |
+
+**Confirmed at full scale, 2026-08-05: user re-ran `python3
+evaluation/ablation.py` at the full `N_TRIALS = 30` against all four
+stacks — `cfs`, `fprime`, and, for the first time for this specific
+extension, the real `cfs-real`/`fprime-real` binaries.** All four stacks
+produced the identical table below, with every one of the 6 cases
+showing `effect_specifically_attributable_to_mechanism: true`:
+
+| Case | Mechanism ablated | Condition | Metric judged | Baseline | Ablated | Effect isolated to mechanism? |
+|---|---|---|---|---|---|---|
+| #4 (vulnerable dependency in SBOM) | `sbom` | S1 | caught | 100% | 0% | Yes |
+| #5 (rogue/unregistered builder) | `provenance` | S2 | caught | 100% | 0% | Yes |
+| #12 (stale attestation) | `onboard_attestation` | S4 | caught | 100% | 0% | Yes |
+| #11 (failed health check) | `trusted_rollback` | S4 | recovered | 100% | 0% | Yes |
+| #15 (false telemetry) | `machine_readable_authorization` | S5 | caught | 100% | 0% | Yes |
+| #8 (prohibited configuration) | `machine_readable_authorization` | S5 | caught | 100% | 0% | Yes |
+
+This means the extended ablation result — now 5 of 6 mechanisms, up from
+3 — holds at the standard 30-trial count and against genuine NASA cFS
+and F´ flight-software binaries, not just the stub artifacts or the
+sandbox's reduced-trial verification run above. Still
+`PRELIMINARY_INTERNAL_ONLY` — one evaluation run per stack, not
+independently replicated elsewhere — see STATUS.md "Claims status." Raw
+results: `evaluation/results/phase8_ablation_{cfs,fprime,cfs-real,
+fprime-real}.json`.
+
+## Phase 8 evaluation-code correctness tests (2026-08-05)
+
+**Motivation.** Every rate and timing figure in the paper's tables flows
+through four small functions in `evaluation/report.py`: `_wilson_ci`,
+`_mean_ci`, `_mean_stdev`, and the `summarize_happy_path`/
+`summarize_attack_cases`/`build_confusion_matrix` aggregators. None of
+that had a dedicated test before this — it was only ever exercised
+indirectly by running the full evaluation harness and eyeballing the
+output. A careful reviewer could reasonably ask "how do you know the
+measurement code itself is correct, independent of the pipeline it
+measures?" — this had no better answer than "we looked at it," which
+isn't evidence.
+
+**Method.** `tests/test_evaluation_report_correctness.py` (33 tests)
+verifies these functions three ways, in increasing order of rigor:
+
+1. `_wilson_ci` is cross-checked against `statsmodels.stats.proportion.
+   proportion_confint(method="wilson")` — an independent, third-party
+   implementation, not a second copy of the same formula written by the
+   same process that wrote the original. Reference values were generated
+   with statsmodels 0.14.6 and the exact 97.5th-percentile normal
+   quantile (`z = 1.959963984540054`, i.e. `scipy.stats.norm.ppf(0.975)`,
+   not the rounded `z = 1.96` `_wilson_ci` defaults to); passing that
+   exact `z` into `_wilson_ci` reproduces the statsmodels values to
+   1e-9. The rounded default is separately checked to be close (5e-4) —
+   confirming the 1.96 convention is a small, well-understood, and
+   correctly-applied approximation, not a sign the formula is wrong.
+   This test has no runtime dependency on statsmodels/scipy — the
+   reference values are hardcoded with the reproduction command in a
+   comment.
+2. `_mean_ci`/`_mean_stdev` are cross-checked against an independently
+   written closed-form computation using `statistics.mean`/`statistics.
+   stdev`, not by re-deriving `_mean_ci`'s own internal formula.
+3. Boundary/structural properties that must hold regardless of
+   implementation detail: the CI must contain the point estimate, must
+   narrow as `n` grows, must stay within `[0, 1]` for rates, must not
+   collapse to a zero-width interval at a 100%-or-0%-observed rate (the
+   exact failure mode a normal-approximation CI has at that boundary —
+   see this module's own docstring for why Wilson was chosen), and the
+   `n<2` guards for `_mean_ci`/`_mean_stdev` must return a sane point
+   value rather than propagating `statistics.StatisticsError`.
+4. `summarize_happy_path`/`summarize_attack_cases`/
+   `build_confusion_matrix` are exercised against a small, hand-computed
+   synthetic `raw` results fixture (not real evaluation output, and
+   deliberately not 100%/0% so a bug that always reports the trivial
+   rate wouldn't slip through) — checking the aggregation and
+   confusion-matrix rounding logic independently of any real trial data.
+
+**Result:** all 33 pass; see `tests/test_evaluation_report_correctness.py`
+for the full test list. This directly closes reviewer objection #9 in
+`docs/Research-Paper-Outline.md`.
 
 ## Phase 8 adaptive-attacker scenarios (2026-08-03)
 
@@ -963,6 +1078,131 @@ question of *whether* to fix these before the paper: they are fixed, and
 the honest framing for the paper is now "an independent review found N
 real gaps, and they were fixed and re-verified the same day," not merely
 "an independent review found gaps."
+
+## Phase 8 second independent (blind, AI) red-team review (2026-08-05)
+
+**Motivation.** After the first red-team review (above) and its fixes,
+a follow-up discussion surfaced a previously-undocumented meta-objection:
+the fix/verification work for the first review's own findings, plus the
+reviewer-objection-5/9 work done the same session (extending the
+ablation study, adding evaluation-code correctness tests), was itself
+designed by the same process (this author + Claude) being scrutinized —
+the exact recursion objection 7 exists to name. Separately, the first
+review's file coverage was narrower than the codebase even at the time
+it ran: it saw only 20 files under `src/`, explicitly excluding
+`build.py`, `health_check.py`, `uplink_sim/uplink.py`, and all of
+`evaluation/`.
+
+**Method.** A second fresh agent instance with no prior context was
+given all 27 `.py` files under `src/` and `evaluation/` this time —
+closing the file-coverage gap — and tasked with three things in order:
+(1) attack vectors/design gaps not covered by existing mechanisms/tests,
+with explicit emphasis on the files the first pass never saw; (2)
+construction problems in the evaluation harness itself (could a metric
+be guaranteed to show detection succeeding regardless of whether the
+underlying mechanism works — the exact "vacuous test" pattern reviewer
+objection 9 exists to guard against); (3) correctness/security issues in
+every file changed for the objection-5/9 fixes and the first red-team
+fixes, none of which had ever had independent review. Same caveat as the
+first pass, stated again rather than assumed still true: source comments
+name specific test-case numbers throughout, so this was not blind to
+*which* attacks were already known, only to what's uncovered beyond
+them.
+
+**Findings.** 12 findings, all independently re-verified against the
+actual source (not trusted from the sub-agent's report alone) before any
+fix was written:
+
+1. **SBOM was never bound to the artifact it describes.**
+   `ground_auth.authorize()` never checked the SBOM's declared hash
+   against the binary being authorized — only provenance had this
+   binding check. Masked in the normal flow (SBOM is always generated
+   from the same binary it ships with) but a real gap in `authorize()`
+   as a general function.
+2. **The Docker health-check fallback ran the wrong binary.** On any
+   non-Linux host (including the machine that produced this project's
+   own published real-cFS/F´ results), the fallback executed the
+   image's baked-in binary, never the actual installed artifact — the
+   module's own docstring claim ("re-runs the identical binary") was
+   false as implemented. Checked whether this corrupted any of the 15
+   published attack-matrix results: it did not (none rely on this
+   specific check to catch a tampered binary), but the underlying
+   implementation didn't match its own documented behavior on hardware
+   this project already cited results from.
+3. **Onboard verification had no independent downgrade defense**,
+   the sibling gap to finding #4 from the first review (S5 policy) —
+   fixed there, never generalized to downgrade protection.
+4. **Attestation freshness had no floor** — a future-dated quote never
+   expires (`age_seconds` goes negative and stays below the staleness
+   threshold indefinitely).
+5. **Persistent-process health check has no tie to artifact identity**
+   — a trivial replacement binary that prints the boot-success marker
+   string would pass. Documented as a known limitation, not fixed this
+   pass (see ISSUE-022 for the full reasoning).
+6. **Provenance bound to git HEAD only**, never checked for an
+   uncommitted working tree.
+7. **`evaluation/experiment.py::scenario_13` never exercised the real
+   pipeline** — called the mismatch-detector directly with hardcoded
+   constants, guaranteeing "100% detection" by construction. Exactly the
+   vacuous-test pattern the review was asked to hunt for, found in this
+   project's own evaluation code.
+8. **`report.py::summarize_happy_path` aggregated two field groups from
+   trial 0 only**, not across all trials, unlike every other metric in
+   the same function.
+9. **Ablation baseline-invariant asserts were inconsistently guarded**
+   across three of the six ablation cases — latent fragility, no
+   observed incorrect result.
+10. **The prohibited-configuration policy matcher was bypassable by type
+    coercion** — `{"debug_mode": "true"}` (string) evaded the same rule
+    `{"debug_mode": True}` (bool) catches.
+11. **No automatic key-rotation path after signing-key or
+    attestation-key revocation** — the system kept silently producing
+    new material with an already-revoked key indefinitely.
+12. **Uplink tamper injection always corrupted the same byte offset** —
+    a coverage-narrowness finding, not a detection gap (whole-artifact
+    signature verification is location-agnostic).
+
+**Fixes.** 11 of 12 were fixed (finding #5 documented as a known
+limitation instead — see ISSUE-022 for why a real fix is a bigger design
+change than this pass's scope). Notably, finding #11's most natural fix
+(refuse to sign/attest with a revoked key) was tried and reverted: it
+broke the existing, correct test case #7 design, which deliberately
+models an operator/system that hasn't rotated yet, with the defense
+correctly living in downstream verification. The actual fix adds
+visibility (a distinct evidence record) without changing that control
+flow — a real example of a red-team-suggested fix needing to be
+re-thought rather than applied literally. Full per-finding writeup:
+`ISSUES-AND-FIXES-LOG.md` ISSUE-018 through ISSUE-029.
+
+Verified via a new dedicated test file (`tests/test_second_redteam_fixes.py`,
+31 tests) plus a full re-run of the existing regression suite (66
+pre-existing tests across phases 1-4, 6, 7, the first red-team fixes, the
+ablation extension, and the evaluation-code correctness tests) — zero
+drift in any prior result. One genuine regression was caught and fixed
+during this re-run: the new onboard-side downgrade check (finding #3)
+reads partition state during onboard verification, which runs before
+`pipeline.py`'s own trusted_rollback try/except block — an uncaught
+`StateIntegrityError` there would have crashed `pipeline.run()` outright
+instead of returning a `PipelineResult`, breaking
+`test_phase8_redteam_fixes.py`'s existing tampered-partition-state test.
+Fixed by catching the error inside the new check itself and fail-closed
+denying, consistent with the fail-closed pattern used everywhere else
+this project checks integrity-protected state; the pre-existing test was
+updated to accept either of the two (now both genuinely fail-closed)
+detection points, since the fix makes detection happen earlier, not
+weaker. The re-extended ablation study (5/6 mechanisms) was re-confirmed
+clean at n=1 after all 12 fixes landed.
+
+This is the strongest available answer to objection 7's recursion short
+of a genuinely independent human audit: not just "a fresh reviewer found
+gaps" but "a fresh reviewer scoped specifically at what the previous
+review missed, including the fixes and extensions built the same
+session, found 12 more real gaps, and 11 were fixed and re-verified the
+same day." State this precisely in the paper, including the one
+documented-not-fixed exception and the one fix that had to be reverted
+and redesigned — both are more informative than a clean "all fixed" would
+be, and demonstrate the fix-verification loop catching its own mistake
+(the StateIntegrityError regression) working as intended.
 
 ## Phase 8 real-baseline comparison: python-tuf (2026-08-04)
 
