@@ -49,7 +49,7 @@ from rollback import rollback  # noqa: E402
 from policy.policy import PROHIBITED_CONFIGURATIONS  # noqa: E402,F401 (re-export for tests)
 from operational_monitoring import monitoring  # noqa: E402
 from evidence_store.authorization_evidence import generate_authorization_evidence  # noqa: E402
-from condition import preset  # noqa: E402
+from condition import preset, custom as condition_custom  # noqa: E402
 
 
 class PipelineResult:
@@ -102,6 +102,7 @@ def run(
     configuration: Optional[dict] = None,
     claimed_telemetry_success: Optional[bool] = None,
     stack: str = "cfs",
+    disable_mechanisms: tuple[str, ...] = (),
 ) -> PipelineResult:
     """
     `stack` selects the target artifact (see `src/target_stack.py`):
@@ -109,9 +110,17 @@ def run(
     see Threat-Model.md "Phase 6 results"). Only `build()` and
     `run_health_check()` actually branch on it; every other stage here
     works on `binary_path`/`installed_path` generically and is unchanged.
+
+    `disable_mechanisms` (Phase 8 ablation study, see
+    evaluation/ablation.py): forces the named mechanism(s) off while
+    leaving every other mechanism at `condition_name`'s normal setting.
+    Empty by default, which reproduces the exact prior behavior — every
+    existing call site and test is unaffected.
     """
     result = PipelineResult()
     cond = preset(condition_name)
+    if disable_mechanisms:
+        cond = condition_custom(cond, disable=disable_mechanisms)
     configuration = configuration or {}
 
     from evidence_store import EvidenceStore as _EvidenceStore

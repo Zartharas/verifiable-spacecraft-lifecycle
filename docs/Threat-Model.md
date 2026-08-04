@@ -644,3 +644,107 @@ phases). Placeholder structure per stage:
 Fill in per-stage detail here as `Technical-Design-Document.md` components
 are built — keep this document as the single source of truth for "what are
 we testing and why," separate from "how is it built."
+
+## Phase 8 ablation study (2026-08-03)
+
+**Motivation.** A 2026-08-03 rejection-risk review (recorded in
+`docs/Research-Paper-Outline.md`) identified the single biggest exposure
+across all target venues: every one of the 15 attack matrix test cases is
+evaluated only at the condition where its responsible mechanism is
+active, so "100% detection" could be read as "the test suite always
+trips," not as evidence the ladder's structure does isolable work. This
+section closes that gap directly.
+
+**Method.** `src/condition.py` gained `custom(base, disable=())`, and
+`src/pipeline.py`'s `run()` gained an optional `disable_mechanisms` tuple
+(empty by default — every prior call site/test is unaffected, confirmed
+via the full 41/41 suite passing unchanged). `evaluation/ablation.py`
+uses this to hold a target condition's configuration fixed except for
+one mechanism forced off, then re-runs the identical attack scenario used
+in `evaluation/experiment.py`.
+
+**Scope, stated explicitly:** only mechanisms gated directly inside
+`pipeline.py`'s own `Condition` object are cleanly ablatable this way —
+`onboard_attestation`, `trusted_rollback`, `machine_readable_authorization`.
+The S5 prohibited-configuration policy check (test case #8) lives inside
+`src/ground_authorization/ground_auth.py`, which derives its own
+`Condition` independently via `condition.preset()` and does not see
+`pipeline.py`'s ablation — so `signature`/`sbom`/`provenance` and the
+policy check specifically are not covered by this pass. That is a
+deliberate scope boundary, not an oversight, and a natural follow-up if a
+reviewer asks for it.
+
+**Results (5 trials each, both `cfs` and `fprime` stub stacks — identical
+on both):**
+
+| Case | Mechanism ablated | Condition | Metric judged | Baseline | Ablated | Effect isolated to mechanism? |
+|---|---|---|---|---|---|---|
+| #12 (stale attestation) | `onboard_attestation` | S4 | caught | 100% | 0% | Yes |
+| #11 (failed health check) | `trusted_rollback` | S4 | **recovered** | 100% | 0% | Yes (caught stays 100% — see below) |
+| #15 (false telemetry) | `machine_readable_authorization` | S5 | caught | 100% | 0% | Yes |
+
+Case #11 is the most interesting result and worth stating precisely: with
+`trusted_rollback` ablated, the pipeline falls into the S3-equivalent
+branch (attestation + health check still run since `onboard_attestation`
+stays active), so the failure is still *detected*
+(`rejected_at == "post_install_unrecoverable_at_s3"`, `caught` stays 100%
+even ablated) — but `recovered` (rollback actually succeeding) drops from
+100% to 0%. This is the project's existing S3-vs-S4 narrative
+("S3 tells you something is wrong but can't yet do anything about it")
+demonstrated with actual re-run data instead of only prose, and it's a
+stronger result for the paper than a simple caught/not-caught table would
+have been: it shows the ladder degrades gracefully (detection survives
+losing one layer down) rather than failing all-or-nothing.
+
+Raw results: `evaluation/results/phase8_ablation_cfs.json` /
+`phase8_ablation_fprime.json`. Not yet run against the real `cfs-real`/
+`fprime-real` binaries (requires the user's Docker-capable Mac, same as
+Phase 7's statistical evaluation) — claims from this ablation study are
+`PRELIMINARY_INTERNAL_ONLY` against the stub stacks only until that
+real-stack run happens; see STATUS.md "Claims status."
+
+## Phase 8 adaptive-attacker scenarios (2026-08-03)
+
+**Motivation.** The same rejection-risk review flagged a second, related
+gap: every original test case injects exactly one attack vector, never
+two combined — leaving untested whether an attacker who tries several
+techniques at once could slip past a check that stops any one of them in
+isolation (e.g., hoping a caught violation is logged but doesn't actually
+halt the pipeline before a second vector matters downstream).
+
+**Method.** `evaluation/adaptive_attacks.py` combines two existing attack
+vectors in the same `pipeline.run()` call and checks not just whether the
+combined attack was caught, but whether the pipeline demonstrably halted
+before the second vector was ever exercised (via `PipelineResult` fields
+that stay at their `None` default only if that stage was never reached
+— e.g. `onboard_verified is None` means `transmit()`/onboard verification
+never ran at all, not that it ran and happened to pass).
+
+**Scenarios and results (5 trials each, both `cfs` and `fprime` — identical):**
+
+| Scenario | Condition | Combined vectors | Caught | Halted before 2nd vector exercised? |
+|---|---|---|---|---|
+| A | S2 | rogue/unregistered builder_id (#5) + in-transit tamper (#6) | 100% | 100% — `onboard_verified` stayed `None`; `transmit()` was never called |
+| B | S4 | interrupted installation (#10) + stale attestation (#12) | 100% | 100% — `attestation_path`/`health_ok` stayed `None`; attestation was never generated |
+
+Both confirm the pipeline is fail-closed at the *first* violated layer
+rather than merely "eventually catches everything somehow" — a
+meaningfully stronger property than the original 15 isolated-vector
+cases demonstrate on their own, and a direct answer to the
+"detection-by-construction" reviewer objection.
+
+**Scope, stated explicitly:** these two scenarios test whether earlier
+detection *halts* the pipeline before a second, independent vector is
+exercised — they do not yet test a genuinely time-adaptive attacker
+(e.g. one that behaves correctly through a bounded health-check window
+and only misbehaves afterward, exploiting the fact that health checks
+here are one-shot at install time, not continuous). That "sleeper"
+adaptive-attacker class would require new runtime behavior in the
+artifacts themselves (not just new pipeline.run() kwargs) and is
+explicitly out of scope for this pass — a real limitation worth stating
+in the paper rather than silently overclaiming "adaptive attacker" to
+mean more than what was actually tested.
+
+Raw results: `evaluation/results/phase8_adaptive_cfs.json` /
+`phase8_adaptive_fprime.json`. Same `PRELIMINARY_INTERNAL_ONLY` status
+and real-stack caveat as the ablation study above.

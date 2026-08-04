@@ -19,6 +19,25 @@ regardless of stack; only the file paths differ.
 
 Run with: python3 evaluation/report.py           # cfs (Phase 5, unchanged)
           python3 evaluation/report.py fprime     # fprime (Phase 6)
+
+Phase 8 (2026-08-03): added 95% confidence intervals, per the
+rejection-risk review in docs/Research-Paper-Outline.md flagging that
+reporting a bare rate/mean from 5 trials with no interval was the
+weakest single methodological gap. Two different CI methods are used
+deliberately, not one applied blindly to everything:
+
+- Rates (success/reproducible/detection rate) use the Wilson score
+  interval, not a normal approximation. A normal-approximation CI on a
+  proportion breaks down exactly at the boundary (a 100% or 0% observed
+  rate — which is common here, since most conditions/cases show
+  clean 100% or 0% across trials) and can report an invalid interval
+  like [1.0, 1.0] with zero width or extend past [0, 1]. Wilson's
+  interval handles boundary rates correctly and needs no library beyond
+  stdlib math.
+- Timing means use a normal-approximation CI (mean +/- 1.96 *
+  stdev/sqrt(n)), which is the standard choice for a continuous
+  measurement at n=30 — reasonable here given the Central Limit Theorem
+  and that these are sandbox-timing measurements, not a bounded rate.
 """
 
 from __future__ import annotations
@@ -63,6 +82,32 @@ def _mean_stdev(values: list[float]) -> tuple[float, float]:
     return statistics.mean(values), statistics.stdev(values)
 
 
+def _wilson_ci(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """95% Wilson score interval for a binomial proportion. Chosen over a
+    normal-approximation CI specifically because it stays valid at the
+    boundary (p=0 or p=1), which is the common case here — see module
+    docstring."""
+    if n == 0:
+        return 0.0, 0.0
+    p = successes / n
+    denom = 1 + z**2 / n
+    center = (p + z**2 / (2 * n)) / denom
+    half_width = z * ((p * (1 - p) / n) + (z**2 / (4 * n**2))) ** 0.5 / denom
+    lo = max(0.0, center - half_width)
+    hi = min(1.0, center + half_width)
+    return lo, hi
+
+
+def _mean_ci(values: list[float], z: float = 1.96) -> tuple[float, float]:
+    """95% normal-approximation CI for a mean — see module docstring for
+    why this (rather than Wilson) is used for continuous timing values."""
+    if len(values) < 2:
+        return (values[0], values[0]) if values else (0.0, 0.0)
+    mean_v, stdev_v = _mean_stdev(values)
+    half_width = z * stdev_v / (len(values) ** 0.5)
+    return mean_v - half_width, mean_v + half_width
+
+
 def load_raw_results() -> dict:
     with open(RAW_RESULTS_PATH) as f:
         return json.load(f)
@@ -73,9 +118,15 @@ def summarize_happy_path(raw: dict) -> dict:
     baseline_sizes = None
     for condition, trials in raw["happy_path"].items():
         times = [t["elapsed_seconds"] for t in trials]
+        n = len(trials)
         mean_t, stdev_t = _mean_stdev(times)
-        reproducible_rate = sum(1 for t in trials if t["reproducible"]) / len(trials)
-        success_rate = sum(1 for t in trials if t["success"]) / len(trials)
+        mean_t_ci = _mean_ci(times)
+        reproducible_successes = sum(1 for t in trials if t["reproducible"])
+        success_successes = sum(1 for t in trials if t["success"])
+        reproducible_rate = reproducible_successes / n
+        success_rate = success_successes / n
+        reproducible_rate_ci = _wilson_ci(reproducible_successes, n)
+        success_rate_ci = _wilson_ci(success_successes, n)
         trace = trials[0]["traceability_completeness"]
         sizes = {
             "sbom_bytes": trials[0]["sbom_size"],
@@ -91,9 +142,13 @@ def summarize_happy_path(raw: dict) -> dict:
 
         summary[condition] = {
             "success_rate": success_rate,
+            "success_rate_ci95": success_rate_ci,
             "reproducible_rate": reproducible_rate,
+            "reproducible_rate_ci95": reproducible_rate_ci,
             "mean_elapsed_seconds": mean_t,
+            "mean_elapsed_seconds_ci95": mean_t_ci,
             "stdev_elapsed_seconds": stdev_t,
+            "n_trials": n,
             "traceability_completeness": trace,
             "record_count_mean": _mean_stdev([t["record_count"] for t in trials])[0],
             "storage_overhead_bytes": sizes,
@@ -109,14 +164,18 @@ def summarize_attack_cases(raw: dict) -> dict:
     for test_case, info in raw["attack_cases"].items():
         trials = info["trials"]
         times = [t["elapsed_seconds"] for t in trials]
+        n = len(trials)
         mean_t, stdev_t = _mean_stdev(times)
+        mean_t_ci = _mean_ci(times)
         caught = sum(1 for t in trials if t["caught"])
         summary[test_case] = {
             "condition": info["condition"],
-            "detection_rate": caught / len(trials),
-            "n_trials": len(trials),
+            "detection_rate": caught / n,
+            "detection_rate_ci95": _wilson_ci(caught, n),
+            "n_trials": n,
             "metric_label": "time_to_trusted_restoration" if test_case in RECOVERY_TEST_CASES else "time_to_identify",
             "mean_elapsed_seconds": mean_t,
+            "mean_elapsed_seconds_ci95": mean_t_ci,
             "stdev_elapsed_seconds": stdev_t,
         }
     return summary
@@ -188,30 +247,45 @@ def _write_markdown_report(summary: dict) -> None:
         "full caveat list."
     )
     lines.append("")
+    lines.append(
+        "**All rates below are 95% Wilson score intervals; all timing means "
+        "are 95% normal-approximation intervals** (see this file's module "
+        "docstring for why two different methods are used). n = number of "
+        "trials, shown per row."
+    )
+    lines.append("")
     lines.append("## Happy path per condition")
     lines.append("")
     lines.append(
-        "| Condition | Success rate | Reproducible rate | Mean time (s) | "
+        "| Condition | n | Success rate (95% CI) | Reproducible rate (95% CI) | Mean time s (95% CI) | "
         "Traceability | Overhead vs S0 (bytes) | Mean attestation age (s) |"
     )
-    lines.append("|---|---|---|---|---|---|---|")
+    lines.append("|---|---|---|---|---|---|---|---|")
     for condition, s in summary["happy_path"].items():
         age = f"{s['mean_attestation_age_seconds']:.4f}" if s["mean_attestation_age_seconds"] is not None else "n/a"
+        succ_lo, succ_hi = s["success_rate_ci95"]
+        repro_lo, repro_hi = s["reproducible_rate_ci95"]
+        t_lo, t_hi = s["mean_elapsed_seconds_ci95"]
         lines.append(
-            f"| {condition} | {s['success_rate']:.0%} | {s['reproducible_rate']:.0%} | "
-            f"{s['mean_elapsed_seconds']:.4f} | {s['traceability_completeness']:.0%} | "
+            f"| {condition} | {s['n_trials']} | {s['success_rate']:.0%} ({succ_lo:.0%}-{succ_hi:.0%}) | "
+            f"{s['reproducible_rate']:.0%} ({repro_lo:.0%}-{repro_hi:.0%}) | "
+            f"{s['mean_elapsed_seconds']:.4f} ({t_lo:.4f}-{t_hi:.4f}) | "
+            f"{s['traceability_completeness']:.0%} | "
             f"{s['overhead_vs_s0_bytes']} | {age} |"
         )
     lines.append("")
     lines.append("## Attack matrix detection results (all 15 test cases)")
     lines.append("")
-    lines.append("| Test case | Condition | Detection rate | Metric | Mean time (s) | Stdev (s) |")
+    lines.append("| Test case | Condition | n | Detection rate (95% CI) | Metric | Mean time s (95% CI) |")
     lines.append("|---|---|---|---|---|---|")
     for tc in sorted(summary["attack_cases"], key=int):
         s = summary["attack_cases"][tc]
+        det_lo, det_hi = s["detection_rate_ci95"]
+        t_lo, t_hi = s["mean_elapsed_seconds_ci95"]
         lines.append(
-            f"| #{tc} | {s['condition']} | {s['detection_rate']:.0%} | {s['metric_label']} | "
-            f"{s['mean_elapsed_seconds']:.4f} | {s['stdev_elapsed_seconds']:.4f} |"
+            f"| #{tc} | {s['condition']} | {s['n_trials']} | "
+            f"{s['detection_rate']:.0%} ({det_lo:.0%}-{det_hi:.0%}) | {s['metric_label']} | "
+            f"{s['mean_elapsed_seconds']:.4f} ({t_lo:.4f}-{t_hi:.4f}) |"
         )
     lines.append("")
     lines.append("## Update acceptance accuracy (confusion matrix, per condition)")

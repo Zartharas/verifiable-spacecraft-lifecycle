@@ -442,6 +442,111 @@ debugging session.
 
 ---
 
+## [ISSUE-009] macOS build-reproducibility fix (`-Wl,-no_uuid`) now makes stub binaries fail to load entirely
+
+- **Date found:** 2026-08-04
+- **Found during:** Phase 8, running the just-added ablation study and
+  adaptive-attacker scenarios (plus the routine 30-trial evaluation) on
+  the user's Mac for the first time since the trial-count bump. Every S4+
+  happy-path run failed health validation with `returncode: -6` (SIGABRT)
+  on both the `cfs` and `fprime` stub stacks — a plain, no-attack-injected
+  run, not one of the 15 attack cases.
+- **Category:** bug (regression, environment/toolchain-version-dependent)
+- **Severity:** high — blocked the entire evaluation suite (happy path,
+  all 15 attack cases, the new ablation/adaptive scenarios) against both
+  stub stacks on macOS; did not affect the Linux sandbox at all, which is
+  exactly why it went unnoticed until now.
+- **Description:** Running the crashing binary directly
+  (`work/partitions/A/installed_binary`) surfaced the real error, which
+  `health_check.py`'s `subprocess.run(..., capture_output=True)` had been
+  silently discarding (it only logs `stdout`/`returncode`, never
+  `stderr`): `dyld[...]: missing LC_UUID load command`, then `abort`
+  (exit 134). Confirmed precisely, not guessed: compiling the exact same
+  source without the `-Wl,-no_uuid` flag ran cleanly (exit 0, correct
+  output) on the same machine.
+- **Root cause:** `src/build/build.py`'s `_compile()` has added
+  `-Wl,-no_uuid` on Darwin since the very first Phase 1 session, to make
+  ld64's per-link output bit-identical across two independent compiles
+  (ld64 otherwise embeds a fresh random UUID load command on every
+  link). That flag was verified working on the user's Mac at the time.
+  Between then and now, macOS/Xcode updated (confirmed via `sw_vers`:
+  macOS 26.5.2, build 25F84; `clang --version`: Apple clang 21.0.0) to a
+  dyld that now hard-requires the LC_UUID load command at load time —
+  what used to be a load-time non-issue is now a fatal `abort()`. The
+  flag itself, not anything in this project's own pipeline logic, is the
+  direct cause.
+- **Fix:** Removed `-Wl,-no_uuid` from `_compile()` entirely. Added
+  `_mask_macho_uuid()` (parses the Mach-O header/load-command list
+  directly, zeroes the 16 UUID bytes inside any `LC_UUID` command it
+  finds, no-ops on anything that isn't a little-endian 64-bit Mach-O
+  binary — i.e., a complete no-op on Linux/ELF) and
+  `_sha256_reproducibility()`, used **only** for the build-reproducibility
+  comparison (`hash_a_masked == hash_b_masked`) inside `build()` — never
+  for the artifact's identity hash (`artifact_ref`/downstream
+  `artifact_hash`), which still uses the real, unmasked file content.
+  This preserves the original "two independent compiles are the same
+  code" guarantee without touching the shipped binary's loadability at
+  all — the same "characterize the exact non-deterministic bytes rather
+  than hide them" approach already used for the real cFS embedded
+  build-timestamp finding (see `docs/Threat-Model.md` "Phase 7
+  reproducibility verification"). Does not handle FAT/universal
+  (multi-architecture) Mach-O binaries — stated limitation (falls back to
+  no-op for those too), not a silent gap.
+- **Disclosure status:** n/a — this project's own code/flag choice, not
+  an upstream dependency issue.
+- **Verified fixed:** Linux: full 41/41 regression suite passes unchanged
+  (confirms the masking function is a true no-op there — `_mask_macho_uuid`
+  tested directly against non-Mach-O bytes too). **macOS: confirmed,
+  2026-08-04** — user re-ran the full 30-trial evaluation (happy path,
+  all 15 attack cases, Phase 8 ablation study, Phase 8 adaptive-attacker
+  scenarios) against both `cfs` and `fprime` stub stacks from a clean
+  `work/` directory: all completed cleanly with the exact predicted
+  100%/0% rates throughout — no SIGABRT, no load failures. Real
+  `cfs-real`/`fprime-real` re-run still pending.
+
+---
+
+## [ISSUE-010] ISSUE-007 regression test silently depended on Docker being absent from the test environment
+
+- **Date found:** 2026-08-04
+- **Found during:** re-verifying ISSUE-009's fix on the user's Mac — the
+  full test suite ran clean except one unrelated failure:
+  `test_enoexec_with_docker_fallback_but_docker_unavailable_raises_runtime_error`
+  reported "DID NOT RAISE RuntimeError".
+- **Category:** bug (test design flaw — environment-dependent test)
+- **Severity:** low — the test gave a false sense of coverage rather than
+  masking a real production bug; `_launch_process` itself was never
+  wrong.
+- **Description:** The test configured a bogus, non-existent Docker
+  image and asserted that `_launch_process` raises `RuntimeError` because
+  "the `docker` command itself isn't available/working in this
+  environment" (its own docstring, written for the original authoring
+  sandbox, which has no Docker installed at all). On the user's Mac —
+  where Docker Desktop is installed and running, required by Phase 7's
+  real-stack work — `docker run --rm this-image-does-not-exist-anywhere
+  ...` still launches the `docker` CLI process successfully; the "image
+  not found" failure happens later, asynchronously, inside the container
+  runtime, not as a Python-level `OSError` from `Popen`. So on any
+  machine with Docker actually installed, this test silently stopped
+  exercising the code path it claimed to, without ever failing loudly
+  about it — until trial count 30 made every test run's environment
+  differences matter more, surfacing it now.
+- **Root cause:** the test relied on a real, uncontrolled external
+  process's failure mode instead of a deterministic mock — a form of the
+  same category of hazard this whole log has repeatedly caught elsewhere
+  (state or a signal that depends on something outside the test's actual
+  control silently producing a misleading result).
+- **Fix:** `monkeypatch.setattr(health_check.subprocess, "Popen", ...)`
+  to deterministically fail the *second* `Popen` call (the Docker
+  fallback attempt) regardless of whether real Docker is present —
+  reusing the exact pattern the file's other two Docker-related tests
+  already used, for a different reason, two tests below this one.
+- **Disclosure status:** n/a — this project's own test code.
+- **Verified fixed:** yes — full 41/41 suite passes on both the Linux
+  sandbox and the user's Mac (Docker installed) after the fix.
+
+---
+
 ## Notes on responsible disclosure
 
 If a real vulnerability is found in an upstream dependency (cFS itself,

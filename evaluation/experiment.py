@@ -56,7 +56,16 @@ from operational_monitoring import monitoring  # noqa: E402
 from evidence_store import EvidenceStore  # noqa: E402
 from attestation.attestation import DEFAULT_FRESHNESS_SECONDS  # noqa: E402
 
-N_TRIALS = 5
+N_TRIALS = 30
+# Phase 8 (2026-08-03): bumped from 5 to 30 per the rejection-risk review
+# in docs/Research-Paper-Outline.md — 5 trials was too thin to support a
+# reported confidence interval with any real precision. report.py now
+# computes Wilson score intervals for rates and normal-approximation CIs
+# for timing means; see its module docstring for why those specific
+# methods were chosen. The pipeline itself is close to deterministic
+# (little real stochastic variance beyond real-binary boot timing), which
+# is the actual justification for 30 being sufficient rather than needing
+# hundreds of trials — stated explicitly here rather than left implicit.
 
 ALL_CONDITIONS = ["S0", "S1", "S2", "S3", "S4", "S5"]
 

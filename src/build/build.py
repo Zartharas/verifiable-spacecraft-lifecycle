@@ -52,8 +52,8 @@ Swap a stack's `source_dir`/`binary_name` (stub) or `prebuilt_binary_path`
 from __future__ import annotations
 
 import hashlib
-import platform
 import shutil
+import struct
 import subprocess
 import sys
 from pathlib import Path
@@ -73,6 +73,63 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+_MH_MAGIC_64 = 0xFEEDFACF
+_LC_UUID = 0x1B
+
+
+def _mask_macho_uuid(data: bytes) -> bytes:
+    """Zero out the 16 UUID bytes inside a Mach-O binary's LC_UUID load
+    command before hashing, so ld64's per-link random UUID (see below)
+    doesn't make two byte-identical compiles register as "not
+    reproducible." A no-op — returns `data` unchanged — for anything
+    that isn't a little-endian 64-bit Mach-O binary (ELF on Linux, for
+    instance), so this has zero effect outside macOS.
+
+    ISSUE-009 (2026-08-04): the original fix for this same
+    non-determinism was `-Wl,-no_uuid` (added in the very first Phase 1
+    session, verified working then). Confirmed on a Mac running macOS
+    26.5.2 / Apple clang 21 that this flag now makes the binary fail to
+    load at all — dyld aborts with "missing LC_UUID load command"
+    (SIGABRT). Whatever dyld version this was originally verified
+    against apparently tolerated a UUID-less binary; the current one
+    does not. Masking the UUID bytes post-link, rather than stripping
+    the load command at link time, gets the same "two independent
+    compiles are identical modulo a known, precisely-characterized
+    field" property without touching loadability — the same "isolate
+    the exact non-deterministic bytes rather than hide them" approach
+    already used for the real cFS build-timestamp finding (see
+    docs/Threat-Model.md "Phase 7 reproducibility verification").
+
+    Does not handle FAT/universal (multi-architecture) Mach-O binaries —
+    stated limitation, not a silent gap; falls back to no-op (returns
+    `data` unchanged) for those too, same as for non-Mach-O input.
+    """
+    if len(data) < 32 or struct.unpack_from("<I", data, 0)[0] != _MH_MAGIC_64:
+        return data
+    data = bytearray(data)
+    ncmds = struct.unpack_from("<I", data, 16)[0]
+    offset = 32  # size of mach_header_64
+    for _ in range(ncmds):
+        if offset + 8 > len(data):
+            break
+        cmd, cmdsize = struct.unpack_from("<II", data, offset)
+        if cmd == _LC_UUID and cmdsize == 24 and offset + 24 <= len(data):
+            for i in range(offset + 8, offset + 24):
+                data[i] = 0
+        offset += cmdsize
+    return bytes(data)
+
+
+def _sha256_reproducibility(path: Path) -> str:
+    """Hash used ONLY for the build-reproducibility comparison (never as
+    the artifact's identity hash elsewhere) — masks a Mach-O LC_UUID's
+    bytes first (no-op on Linux/ELF) so ld64's per-link random UUID
+    doesn't register as a reproducibility failure. See
+    _mask_macho_uuid()/ISSUE-009."""
+    with open(path, "rb") as f:
+        return hashlib.sha256(_mask_macho_uuid(f.read())).hexdigest()
+
+
 def _compile(source: Path, output: Path, compiler: str) -> None:
     """
     Deterministic compile: strip build-path strings, fix debug info,
@@ -88,13 +145,17 @@ def _compile(source: Path, output: Path, compiler: str) -> None:
     Platform note: on macOS, gcc/g++ are aliased to Apple's clang/ld64,
     and ld64 embeds a UUID load command (LC_UUID) in every Mach-O binary
     that is NOT guaranteed content-deterministic across separate link
-    invocations the way GNU ld's output is on Linux. `-Wl,-no_uuid`
-    disables that load command. This flag is Apple-linker-specific and
-    would fail on Linux's GNU ld, hence the platform check. This
-    discrepancy is itself a small piece of evidence for why
-    Technical-Design-Document.md specifies a pinned Docker build
-    environment rather than trusting the host toolchain — host-toolchain
-    "reproducibility" is platform-dependent in ways like this one.
+    invocations the way GNU ld's output is on Linux. The original fix
+    (`-Wl,-no_uuid`, disabling that load command entirely) is no longer
+    used here — confirmed (ISSUE-009, 2026-08-04) that it now makes the
+    binary fail to load at all on a current macOS/dyld. Reproducibility
+    is instead verified by masking the UUID's bytes before hashing (see
+    `_mask_macho_uuid`/`_sha256_reproducibility` below) rather than by
+    stripping the load command at link time. This discrepancy is itself
+    a small piece of evidence for why Technical-Design-Document.md
+    specifies a pinned Docker build environment rather than trusting the
+    host toolchain — host-toolchain "reproducibility" is platform- and
+    even OS-version-dependent in ways like this one.
     """
     output.parent.mkdir(parents=True, exist_ok=True)
     cmd = [
@@ -103,8 +164,6 @@ def _compile(source: Path, output: Path, compiler: str) -> None:
         f"-fdebug-prefix-map={source.parent}=.",
         "-frandom-seed=fixed-seed-for-reproducibility",
     ]
-    if platform.system() == "Darwin":
-        cmd += ["-Wl,-no_uuid"]
     cmd += ["-o", str(output), str(source)]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
@@ -198,7 +257,16 @@ def build(condition_name: str = "S0", stack: str = "cfs") -> dict:
 
     hash_a = _sha256(build_a)
     hash_b = _sha256(build_b)
-    reproducible = hash_a == hash_b
+    # Reproducibility is judged on the UUID-masked hash, not the raw one
+    # (see ISSUE-009 / _mask_macho_uuid): on Linux this is a no-op (ELF,
+    # not Mach-O) so hash_a_masked == hash_a exactly and behavior is
+    # unchanged; on macOS, ld64 embeds a fresh random UUID per link, so
+    # hash_a != hash_b even for identical compiles, but hash_a_masked ==
+    # hash_b_masked correctly reflects that the compiled code itself is
+    # identical.
+    hash_a_masked = _sha256_reproducibility(build_a)
+    hash_b_masked = _sha256_reproducibility(build_b)
+    reproducible = hash_a_masked == hash_b_masked
 
     artifact_ref = hash_a  # binary content hash is the artifact's identity downstream
 
@@ -213,6 +281,8 @@ def build(condition_name: str = "S0", stack: str = "cfs") -> dict:
             "build_mode": "compile_from_source",
             "source": str(source.relative_to(REPO_ROOT)),
             "hash_run_a": hash_a,
+            "hash_run_a_masked": hash_a_masked,
+            "hash_run_b_masked": hash_b_masked,
             "hash_run_b": hash_b,
             "reproducible": reproducible,
             "note": f"stand-in artifact ({stack_def.description}), not the real framework",

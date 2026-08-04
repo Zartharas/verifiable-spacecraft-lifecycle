@@ -3,7 +3,7 @@
     "S0": [
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.25976649999211077,
+        "elapsed_seconds": 0.3076782999560237,
         "success": true,
         "reproducible": true,
         "record_count": 7,
@@ -15,7 +15,7 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.24864819399954285,
+        "elapsed_seconds": 0.28003093996085227,
         "success": true,
         "reproducible": true,
         "record_count": 7,
@@ -27,7 +27,7 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.3071192010102095,
+        "elapsed_seconds": 0.27427665796130896,
         "success": true,
         "reproducible": true,
         "record_count": 7,
@@ -39,7 +39,7 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.3157842740038177,
+        "elapsed_seconds": 0.2558499580482021,
         "success": true,
         "reproducible": true,
         "record_count": 7,
@@ -51,7 +51,307 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.2894756640016567,
+        "elapsed_seconds": 0.26649210089817643,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.29001469106879085,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2830085939494893,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2719936420908198,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.39056479604914784,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27829450101125985,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2863998779794201,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.29277278401423246,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2909399629570544,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27940607198979706,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2641054328996688,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2758822760079056,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.26832799904514104,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27057845308445394,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.261407912010327,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.29521535604726523,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2732556819682941,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.25884694198612124,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.26846371695864946,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.25816376705188304,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2752458279719576,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2632702129194513,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27865969599224627,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2703643270069733,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.5178749490296468,
+        "success": true,
+        "reproducible": true,
+        "record_count": 7,
+        "traceability_completeness": 1.0,
+        "sbom_size": 0,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2936302829766646,
         "success": true,
         "reproducible": true,
         "record_count": 7,
@@ -65,7 +365,7 @@
     "S1": [
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.31109012599335983,
+        "elapsed_seconds": 0.2741632650140673,
         "success": true,
         "reproducible": true,
         "record_count": 9,
@@ -77,7 +377,7 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.27840157999889925,
+        "elapsed_seconds": 0.2836788030108437,
         "success": true,
         "reproducible": true,
         "record_count": 9,
@@ -89,7 +389,7 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.31853530601074453,
+        "elapsed_seconds": 0.30993142595980316,
         "success": true,
         "reproducible": true,
         "record_count": 9,
@@ -101,7 +401,7 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.30265487398719415,
+        "elapsed_seconds": 0.3472589540760964,
         "success": true,
         "reproducible": true,
         "record_count": 9,
@@ -113,7 +413,307 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.36261870099406224,
+        "elapsed_seconds": 0.31234297901391983,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.31047937797848135,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.4641081589506939,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2933890699641779,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.36281133198644966,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.28609851805958897,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2880429099313915,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2766476790420711,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.28324271691963077,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.30362158396746963,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2905334089882672,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.275468343985267,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.28702002798672765,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.3520361810224131,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2906295779393986,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2829340820899233,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.279056569095701,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27089681499637663,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2690911840181798,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.282196995918639,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27343969501089305,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27016972505953163,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27780015696771443,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2903210270451382,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2921801219927147,
+        "success": true,
+        "reproducible": true,
+        "record_count": 9,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 0,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.26935271895490587,
         "success": true,
         "reproducible": true,
         "record_count": 9,
@@ -127,7 +727,7 @@
     "S2": [
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.3334619169909274,
+        "elapsed_seconds": 0.2709570199949667,
         "success": true,
         "reproducible": true,
         "record_count": 12,
@@ -139,7 +739,7 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.3040664129948709,
+        "elapsed_seconds": 0.2805802539223805,
         "success": true,
         "reproducible": true,
         "record_count": 12,
@@ -151,7 +751,7 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.3601502109959256,
+        "elapsed_seconds": 0.2764453360578045,
         "success": true,
         "reproducible": true,
         "record_count": 12,
@@ -163,7 +763,7 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.36931298099807464,
+        "elapsed_seconds": 0.2785358550027013,
         "success": true,
         "reproducible": true,
         "record_count": 12,
@@ -175,21 +775,321 @@
       },
       {
         "attestation_age_seconds": null,
-        "elapsed_seconds": 0.37792974899639376,
+        "elapsed_seconds": 0.29829185002017766,
         "success": true,
         "reproducible": true,
         "record_count": 12,
         "traceability_completeness": 1.0,
         "sbom_size": 613,
         "provenance_size": 651,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.30122266500256956,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.29881452093832195,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.29601292905863374,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.29812855599448085,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.30967636895366013,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27859494206495583,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2808577499818057,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2704081350238994,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.28348452399950475,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2686382100218907,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2775343069806695,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.3174321911064908,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.3092238949611783,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.3441291629569605,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27556744299363345,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.31327882094774395,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2972974340664223,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.29186051490250975,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.29584495397284627,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2879440459655598,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2829759670421481,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.28122685092967004,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.2940765239764005,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.27977387700229883,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 0,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": null,
+        "elapsed_seconds": 0.28560647391714156,
+        "success": true,
+        "reproducible": true,
+        "record_count": 12,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
         "attestation_size": 0,
         "authorization_evidence_size": 0
       }
     ],
     "S3": [
       {
-        "attestation_age_seconds": 0.006690263748168945,
-        "elapsed_seconds": 0.34399774800112937,
+        "attestation_age_seconds": 0.0013339519500732422,
+        "elapsed_seconds": 0.6314892560476437,
         "success": true,
         "reproducible": true,
         "record_count": 15,
@@ -200,8 +1100,20 @@
         "authorization_evidence_size": 0
       },
       {
-        "attestation_age_seconds": 0.006774187088012695,
-        "elapsed_seconds": 0.30928929800575133,
+        "attestation_age_seconds": 0.001262664794921875,
+        "elapsed_seconds": 0.3230312439845875,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 367,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0014028549194335938,
+        "elapsed_seconds": 0.2891601219307631,
         "success": true,
         "reproducible": true,
         "record_count": 15,
@@ -212,8 +1124,56 @@
         "authorization_evidence_size": 0
       },
       {
-        "attestation_age_seconds": 0.005987644195556641,
-        "elapsed_seconds": 0.36151441000401974,
+        "attestation_age_seconds": 0.0012660026550292969,
+        "elapsed_seconds": 0.3241661569336429,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.001260995864868164,
+        "elapsed_seconds": 0.2882374080363661,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0014150142669677734,
+        "elapsed_seconds": 0.30818149796687067,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013020038604736328,
+        "elapsed_seconds": 0.29945685202255845,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012700557708740234,
+        "elapsed_seconds": 0.31080583203583956,
         "success": true,
         "reproducible": true,
         "record_count": 15,
@@ -224,34 +1184,274 @@
         "authorization_evidence_size": 0
       },
       {
-        "attestation_age_seconds": 0.0061719417572021484,
-        "elapsed_seconds": 0.3002400539990049,
+        "attestation_age_seconds": 0.0013036727905273438,
+        "elapsed_seconds": 0.3199579840293154,
         "success": true,
         "reproducible": true,
         "record_count": 15,
         "traceability_completeness": 1.0,
         "sbom_size": 613,
         "provenance_size": 651,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.001293182373046875,
+        "elapsed_seconds": 0.28523927298374474,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013020038604736328,
+        "elapsed_seconds": 0.32162277202587575,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
         "attestation_size": 367,
         "authorization_evidence_size": 0
       },
       {
-        "attestation_age_seconds": 0.007517099380493164,
-        "elapsed_seconds": 0.36693111299246084,
+        "attestation_age_seconds": 0.001249074935913086,
+        "elapsed_seconds": 0.29070785001385957,
         "success": true,
         "reproducible": true,
         "record_count": 15,
         "traceability_completeness": 1.0,
         "sbom_size": 613,
-        "provenance_size": 651,
+        "provenance_size": 652,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013401508331298828,
+        "elapsed_seconds": 0.3489945239853114,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
         "attestation_size": 367,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0020177364349365234,
+        "elapsed_seconds": 0.439505179063417,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 367,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012371540069580078,
+        "elapsed_seconds": 0.3323946420568973,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 365,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.001535177230834961,
+        "elapsed_seconds": 0.4345918119652197,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.001447916030883789,
+        "elapsed_seconds": 0.349637822015211,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012516975402832031,
+        "elapsed_seconds": 0.28426197299268097,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 367,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013110637664794922,
+        "elapsed_seconds": 0.33201093110255897,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0018239021301269531,
+        "elapsed_seconds": 0.33616690698545426,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 367,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012722015380859375,
+        "elapsed_seconds": 0.32960569707211107,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 367,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012660026550292969,
+        "elapsed_seconds": 0.3419805180747062,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0016438961029052734,
+        "elapsed_seconds": 0.4239629589719698,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012989044189453125,
+        "elapsed_seconds": 0.33201585395727307,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 367,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012621879577636719,
+        "elapsed_seconds": 0.3876425620401278,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.001361846923828125,
+        "elapsed_seconds": 0.36699217499699444,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0015616416931152344,
+        "elapsed_seconds": 0.3838297980837524,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 367,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.001486063003540039,
+        "elapsed_seconds": 0.38080037489999086,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 366,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013730525970458984,
+        "elapsed_seconds": 0.4253984730457887,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 365,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013840198516845703,
+        "elapsed_seconds": 0.3762114600976929,
+        "success": true,
+        "reproducible": true,
+        "record_count": 15,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 366,
         "authorization_evidence_size": 0
       }
     ],
     "S4": [
       {
-        "attestation_age_seconds": 0.007959604263305664,
-        "elapsed_seconds": 0.365844341009506,
+        "attestation_age_seconds": 0.0012979507446289062,
+        "elapsed_seconds": 0.3692361949943006,
         "success": true,
         "reproducible": true,
         "record_count": 17,
@@ -262,106 +1462,358 @@
         "authorization_evidence_size": 0
       },
       {
-        "attestation_age_seconds": 0.007348775863647461,
-        "elapsed_seconds": 0.35542138099845033,
+        "attestation_age_seconds": 0.001277923583984375,
+        "elapsed_seconds": 0.37598549691028893,
         "success": true,
         "reproducible": true,
         "record_count": 17,
         "traceability_completeness": 1.0,
         "sbom_size": 613,
         "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012850761413574219,
+        "elapsed_seconds": 0.3492684589000419,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012769699096679688,
+        "elapsed_seconds": 0.35454134398605675,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012791156768798828,
+        "elapsed_seconds": 0.3388447890756652,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013201236724853516,
+        "elapsed_seconds": 0.35963864100631326,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0014979839324951172,
+        "elapsed_seconds": 0.7074083030456677,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0011708736419677734,
+        "elapsed_seconds": 0.3190184039995074,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013270378112792969,
+        "elapsed_seconds": 0.3300829000072554,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012595653533935547,
+        "elapsed_seconds": 0.3223167449468747,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
         "attestation_size": 360,
         "authorization_evidence_size": 0
       },
       {
-        "attestation_age_seconds": 0.0079803466796875,
-        "elapsed_seconds": 0.5689987899968401,
+        "attestation_age_seconds": 0.0012438297271728516,
+        "elapsed_seconds": 0.3411310079973191,
         "success": true,
         "reproducible": true,
         "record_count": 17,
         "traceability_completeness": 1.0,
         "sbom_size": 613,
-        "provenance_size": 651,
+        "provenance_size": 652,
+        "attestation_size": 358,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012431144714355469,
+        "elapsed_seconds": 0.32210907503031194,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013959407806396484,
+        "elapsed_seconds": 0.33796668995637447,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
         "attestation_size": 360,
         "authorization_evidence_size": 0
       },
       {
-        "attestation_age_seconds": 0.008733510971069336,
-        "elapsed_seconds": 0.3697070670023095,
+        "attestation_age_seconds": 0.0012431144714355469,
+        "elapsed_seconds": 0.33796188107226044,
         "success": true,
         "reproducible": true,
         "record_count": 17,
         "traceability_completeness": 1.0,
         "sbom_size": 613,
-        "provenance_size": 651,
+        "provenance_size": 652,
         "attestation_size": 360,
         "authorization_evidence_size": 0
       },
       {
-        "attestation_age_seconds": 0.007168292999267578,
-        "elapsed_seconds": 0.38559765901300125,
+        "attestation_age_seconds": 0.0018050670623779297,
+        "elapsed_seconds": 0.40848487708717585,
         "success": true,
         "reproducible": true,
         "record_count": 17,
         "traceability_completeness": 1.0,
         "sbom_size": 613,
-        "provenance_size": 651,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012831687927246094,
+        "elapsed_seconds": 0.3840062440140173,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013041496276855469,
+        "elapsed_seconds": 0.37361631798557937,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0015282630920410156,
+        "elapsed_seconds": 0.4019462460419163,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
         "attestation_size": 360,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0016717910766601562,
+        "elapsed_seconds": 0.3694733229931444,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012710094451904297,
+        "elapsed_seconds": 0.3575049990322441,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012879371643066406,
+        "elapsed_seconds": 0.36278156097978354,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012922286987304688,
+        "elapsed_seconds": 0.36557100201025605,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 360,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0017812252044677734,
+        "elapsed_seconds": 0.3767131009371951,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012860298156738281,
+        "elapsed_seconds": 0.32982373191043735,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012962818145751953,
+        "elapsed_seconds": 0.35329340503085405,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 360,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0013320446014404297,
+        "elapsed_seconds": 0.31707826897036284,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.001210927963256836,
+        "elapsed_seconds": 0.3254271330079064,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012438297271728516,
+        "elapsed_seconds": 0.34227367595303804,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012438297271728516,
+        "elapsed_seconds": 0.32752527005504817,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 360,
+        "authorization_evidence_size": 0
+      },
+      {
+        "attestation_age_seconds": 0.0012898445129394531,
+        "elapsed_seconds": 0.3441072270506993,
+        "success": true,
+        "reproducible": true,
+        "record_count": 17,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
         "authorization_evidence_size": 0
       }
     ],
     "S5": [
       {
-        "attestation_age_seconds": 0.00580143928527832,
-        "elapsed_seconds": 0.43105693299730774,
-        "success": true,
-        "reproducible": true,
-        "record_count": 21,
-        "traceability_completeness": 1.0,
-        "sbom_size": 613,
-        "provenance_size": 651,
-        "attestation_size": 360,
-        "authorization_evidence_size": 4124
-      },
-      {
-        "attestation_age_seconds": 0.008286476135253906,
-        "elapsed_seconds": 0.5473364240024239,
-        "success": true,
-        "reproducible": true,
-        "record_count": 21,
-        "traceability_completeness": 1.0,
-        "sbom_size": 613,
-        "provenance_size": 651,
-        "attestation_size": 360,
-        "authorization_evidence_size": 4124
-      },
-      {
-        "attestation_age_seconds": 0.007119178771972656,
-        "elapsed_seconds": 0.4801240209926618,
-        "success": true,
-        "reproducible": true,
-        "record_count": 21,
-        "traceability_completeness": 1.0,
-        "sbom_size": 613,
-        "provenance_size": 651,
-        "attestation_size": 360,
-        "authorization_evidence_size": 4124
-      },
-      {
-        "attestation_age_seconds": 0.006524324417114258,
-        "elapsed_seconds": 0.4287044510128908,
-        "success": true,
-        "reproducible": true,
-        "record_count": 21,
-        "traceability_completeness": 1.0,
-        "sbom_size": 613,
-        "provenance_size": 651,
-        "attestation_size": 360,
-        "authorization_evidence_size": 4124
-      },
-      {
-        "attestation_age_seconds": 0.005137205123901367,
-        "elapsed_seconds": 0.41377887899579946,
+        "attestation_age_seconds": 0.0012938976287841797,
+        "elapsed_seconds": 0.4078858089633286,
         "success": true,
         "reproducible": true,
         "record_count": 21,
@@ -369,6 +1821,354 @@
         "sbom_size": 613,
         "provenance_size": 651,
         "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.001251220703125,
+        "elapsed_seconds": 0.40874875895678997,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0012729167938232422,
+        "elapsed_seconds": 0.423014813917689,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.001283884048461914,
+        "elapsed_seconds": 0.43384312198031694,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0012867450714111328,
+        "elapsed_seconds": 0.5176716239657253,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0013060569763183594,
+        "elapsed_seconds": 0.4938198239542544,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0013430118560791016,
+        "elapsed_seconds": 0.43405963794793934,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0013692378997802734,
+        "elapsed_seconds": 0.6541747340233997,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 360,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0021419525146484375,
+        "elapsed_seconds": 0.6212918419623747,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 651,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0012900829315185547,
+        "elapsed_seconds": 0.6440133099677041,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0015811920166015625,
+        "elapsed_seconds": 0.6240314869210124,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0020689964294433594,
+        "elapsed_seconds": 0.8585722720017657,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 360,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0012810230255126953,
+        "elapsed_seconds": 0.6201892810640857,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0013549327850341797,
+        "elapsed_seconds": 0.4611409470671788,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0020799636840820312,
+        "elapsed_seconds": 0.5637929319636896,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0024116039276123047,
+        "elapsed_seconds": 0.4722248080652207,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 360,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.001669168472290039,
+        "elapsed_seconds": 0.5168259569909424,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0013010501861572266,
+        "elapsed_seconds": 0.436694618081674,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0021140575408935547,
+        "elapsed_seconds": 0.5136716089909896,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 360,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0012767314910888672,
+        "elapsed_seconds": 0.41507532191462815,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 360,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0015659332275390625,
+        "elapsed_seconds": 0.5252671919297427,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0012862682342529297,
+        "elapsed_seconds": 0.4093948700465262,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 358,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0012488365173339844,
+        "elapsed_seconds": 0.5199486070778221,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 360,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.001313924789428711,
+        "elapsed_seconds": 0.47460015199612826,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.002134084701538086,
+        "elapsed_seconds": 0.8263561649946496,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0012938976287841797,
+        "elapsed_seconds": 0.42570232204161584,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0015590190887451172,
+        "elapsed_seconds": 0.5108620310202241,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 358,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.001207113265991211,
+        "elapsed_seconds": 0.43430236307904124,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0012359619140625,
+        "elapsed_seconds": 0.4867720330366865,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 359,
+        "authorization_evidence_size": 4124
+      },
+      {
+        "attestation_age_seconds": 0.0013232231140136719,
+        "elapsed_seconds": 0.4119004380190745,
+        "success": true,
+        "reproducible": true,
+        "record_count": 21,
+        "traceability_completeness": 1.0,
+        "sbom_size": 613,
+        "provenance_size": 652,
+        "attestation_size": 360,
         "authorization_evidence_size": 4124
       }
     ]
@@ -379,23 +2179,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.33376171499548946
+          "elapsed_seconds": 0.36122799199074507
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.2974476329982281
+          "elapsed_seconds": 0.3018465139903128
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.28976217200397514
+          "elapsed_seconds": 0.2865222719265148
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.4108632220013533
+          "elapsed_seconds": 0.3628444380592555
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.46345525499782525
+          "elapsed_seconds": 0.2968566929921508
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.38596772495657206
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.33237999002449214
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3542231540195644
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3545507069211453
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.31793454999569803
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3453151669818908
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3068520430242643
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34291875700000674
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3034390630200505
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28631881391629577
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3843196789966896
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29640896106138825
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29491807892918587
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30394989997148514
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.302139965002425
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.36089553602505475
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29755961894989014
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29266240901779383
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2921884579118341
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2886129160178825
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.38473975006490946
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30838685703929514
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3009625030681491
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4062749519944191
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3051820760592818
         }
       ]
     },
@@ -404,23 +2304,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.28125522499613
+          "elapsed_seconds": 0.22993508004583418
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3314825900015421
+          "elapsed_seconds": 0.31078600394539535
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.25115849199937657
+          "elapsed_seconds": 0.22409828403033316
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.22766674000013154
+          "elapsed_seconds": 0.34493694198317826
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.23233199899550527
+          "elapsed_seconds": 0.2333546670852229
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2237829859368503
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4175129500217736
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.24164235207717866
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.22503447497729212
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.225246052024886
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28948479692917317
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.22497965290676802
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.23170141200535
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.22617232601623982
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.22110307693947107
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.22282115800771862
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2933601971017197
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2364461749093607
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.22894112195353955
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.22633040405344218
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.22016820695716888
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2949013850884512
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2274303330341354
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.24101749795954674
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2267048549838364
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2212086319923401
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29651164705865085
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.22747884702403098
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.23022382392082363
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.22216007905080914
         }
       ]
     },
@@ -429,23 +2429,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.2888803679961711
+          "elapsed_seconds": 0.36208583193365484
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.31654802999401
+          "elapsed_seconds": 0.2926423150347546
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.2767018580052536
+          "elapsed_seconds": 0.2811522069387138
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.29254748999665026
+          "elapsed_seconds": 0.37900913297198713
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3197946169966599
+          "elapsed_seconds": 0.28363513795193285
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3510544910095632
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29117444006260484
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29246362997218966
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.36124568700324744
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30195797397755086
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28182125196326524
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29932396300137043
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2869980699615553
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.36695615795906633
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2715040900511667
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2829973450861871
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28208673000335693
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2890382210025564
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28867328201886266
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2893514729803428
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29075628996361047
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.290985947009176
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2963242190890014
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.27764190803281963
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29986613895744085
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28983905201312155
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2775993589311838
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3033062410540879
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2844272090587765
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2863103849813342
         }
       ]
     },
@@ -454,23 +2554,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.29606397601310164
+          "elapsed_seconds": 0.2725744729395956
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.2884104630065849
+          "elapsed_seconds": 0.2775926840258762
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.23569159999897238
+          "elapsed_seconds": 0.2749571179738268
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.25245067599462345
+          "elapsed_seconds": 0.2786190928891301
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.29287435600417666
+          "elapsed_seconds": 0.2715382130118087
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2764226539293304
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.42503078398294747
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.47475954703986645
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2915254170075059
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2832625020528212
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2836645420175046
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29145241098012775
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.27695186296477914
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2905947210965678
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2867507530609146
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2874352819053456
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29891887202393264
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2822402269812301
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28557186503894627
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.42809881700668484
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28498033504001796
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4104048410663381
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2822463200427592
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2777374420547858
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28496485901996493
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5262312649283558
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4922145139425993
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29522471595555544
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4217524629784748
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4417735879542306
         }
       ]
     },
@@ -479,23 +2679,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.345626580005046
+          "elapsed_seconds": 0.2942795689450577
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.28086097800405696
+          "elapsed_seconds": 0.29329671896994114
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.2684035490092356
+          "elapsed_seconds": 0.2973432029830292
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.25228586100274697
+          "elapsed_seconds": 0.3035275449510664
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.31521544099086896
+          "elapsed_seconds": 0.29534165910445154
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30187341198325157
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28568370698485523
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30257582606282085
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3073141509667039
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29833336907904595
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2826248499331996
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2951799030415714
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2855998540762812
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2931610089726746
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29645897005684674
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2931537210242823
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3031282309675589
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29258084506727755
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28926891402807087
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3102737810695544
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3003554039169103
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.31171403592452407
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3215789860114455
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30691624199971557
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.297451930004172
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3196840339805931
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3356185939628631
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.33460916101466864
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2945083730155602
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3018199559301138
         }
       ]
     },
@@ -504,23 +2804,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.2505829459987581
+          "elapsed_seconds": 0.3104110639542341
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.2534212460013805
+          "elapsed_seconds": 0.2950083849718794
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.28249177600082476
+          "elapsed_seconds": 0.2886299629462883
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3020762130036019
+          "elapsed_seconds": 0.26978515600785613
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.4080888870084891
+          "elapsed_seconds": 0.29676608892623335
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2839429780142382
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2771006890106946
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2785654090112075
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2738385939737782
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2855954470578581
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.281081723049283
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28938145795837045
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2809808460297063
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3011062979931012
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28056092001497746
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29885328898672014
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2911512659629807
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2892862180015072
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34558243898209184
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2952977609820664
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28106508892960846
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4483490629354492
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3034564059926197
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.8485607790062204
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30979998293332756
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30703609494958073
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28847113403026015
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4216635230695829
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29336076497565955
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2968381280079484
         }
       ]
     },
@@ -529,23 +2929,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.33100307699351106
+          "elapsed_seconds": 0.2895179450279102
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.34014896700682584
+          "elapsed_seconds": 0.28251801698934287
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.33511838800041005
+          "elapsed_seconds": 0.28268087608739734
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.33363539099809714
+          "elapsed_seconds": 0.29238303494639695
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.31741858599707484
+          "elapsed_seconds": 0.29506334802135825
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.31209689599927515
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30250031501054764
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.307328526978381
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3183585850056261
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3027281239628792
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29819821496494114
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2913362799445167
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2873130819061771
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28150509507395327
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2941960039315745
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2789900100324303
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2870199210010469
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28792208794038743
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28229438606649637
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.27929384098388255
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2748134909197688
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2988588269799948
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30769405397586524
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3075300420168787
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29139600903727114
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30524057301227003
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30652250396087766
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3174912399845198
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4199807500699535
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3400443149730563
         }
       ]
     },
@@ -554,23 +3054,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.3358862339955522
+          "elapsed_seconds": 0.30530992592684925
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.32152076000056695
+          "elapsed_seconds": 0.2902467109961435
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3420881810015999
+          "elapsed_seconds": 0.3130535000236705
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.33894760999828577
+          "elapsed_seconds": 0.3189303600229323
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3432486529927701
+          "elapsed_seconds": 0.3093605899484828
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3057184460340068
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2893868440296501
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2887164319399744
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.31883796595502645
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.28989719098899513
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3068303340114653
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29571541596669704
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3159984259400517
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2866790699772537
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3256459169788286
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30449360504280776
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.311239956994541
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30828469700645655
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3339625389780849
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3442467150744051
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.33143397397361696
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.425520175951533
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3196523309452459
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4702762420056388
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.31158887105993927
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.41465373302344233
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.31009670498315245
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.32998760999180377
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3235974450362846
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29960699507500976
         }
       ]
     },
@@ -579,23 +3179,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.4113927290018182
+          "elapsed_seconds": 0.302594596054405
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.32939605199499056
+          "elapsed_seconds": 0.30200955702457577
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3203932500036899
+          "elapsed_seconds": 0.3045314719201997
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.32768362198839895
+          "elapsed_seconds": 0.3010748539818451
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3598412040009862
+          "elapsed_seconds": 0.296687770052813
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.2884027960244566
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.32680706307291985
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3118670230032876
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3167615639977157
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3303565949900076
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.308489945018664
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3207381230313331
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3353868069825694
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.32457398890983313
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3032024960266426
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3079935589339584
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.29589758010115474
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30585719796363264
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5632027769461274
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.33981420705094934
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4020439140731469
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3187952149892226
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.30848445498850197
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3205898510059342
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.83841188903898
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34689867694396526
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.36446562700439245
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3258283579489216
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3199971889844164
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.6397968530654907
         }
       ]
     },
@@ -604,23 +3304,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.39013802898989525
+          "elapsed_seconds": 0.7398372140014544
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.5110449640051229
+          "elapsed_seconds": 0.37029857002198696
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.4859306369908154
+          "elapsed_seconds": 0.37370800296775997
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.4131794249988161
+          "elapsed_seconds": 0.34458117198664695
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.36786439499701373
+          "elapsed_seconds": 0.3342101200250909
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3883718749275431
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3225364559330046
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3540292599936947
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3245870880782604
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.337727089994587
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.350926902028732
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.32275071006733924
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3489396700169891
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.313116920995526
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3363059679977596
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.358447159989737
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3484663089038804
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3894718720111996
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.36138165602460504
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34273029991891235
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34262825397308916
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4503866919549182
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.342244339059107
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3174176759785041
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.32964336895383894
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3032152970554307
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3207275359891355
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.32468016201164573
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.32361704390496016
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3471750720636919
         }
       ]
     },
@@ -629,23 +3429,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.3415267640084494
+          "elapsed_seconds": 0.31096544198226184
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3793935279973084
+          "elapsed_seconds": 0.33585545199457556
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.39729882500250824
+          "elapsed_seconds": 0.32553767191711813
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3937870980007574
+          "elapsed_seconds": 0.34527533093933016
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.43468506300996523
+          "elapsed_seconds": 0.3527634390629828
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34698094392661005
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3146151910768822
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.31414378399495035
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.31394525000359863
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3170331970322877
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3242583390092477
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34703593305312097
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3441966960672289
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.335976833011955
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.32454824401065707
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.31862158398143947
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.32780495390761644
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4277559439651668
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3335536379599944
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.313192130997777
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3271359120262787
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3095336320111528
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3938347490038723
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3672074100468308
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3479971770429984
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34024485491681844
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.7473887440282851
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4467660969821736
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3696437739999965
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3410928189987317
         }
       ]
     },
@@ -654,23 +3554,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.40445381798781455
+          "elapsed_seconds": 0.44204771600198
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3518300940049812
+          "elapsed_seconds": 0.36080369690898806
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.341208664001897
+          "elapsed_seconds": 0.4026923570781946
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.30563021601119544
+          "elapsed_seconds": 0.3847001940011978
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.5215778650017455
+          "elapsed_seconds": 0.3558990249875933
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.35945168195758015
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.37241518101654947
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.35269969003275037
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34388881199993193
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3685069279745221
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3707790659973398
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3529244320234284
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3590525310719386
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3558424540096894
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.36259467294439673
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3511313609778881
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3907751990482211
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3866531129460782
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3658213319722563
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3901216470403597
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.36870647105388343
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4913989190245047
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.40857685590162873
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3944669980555773
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3736636299872771
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3769073319854215
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3833487689262256
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.41415907989721745
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.41338319098576903
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.39603053394239396
         }
       ]
     },
@@ -679,23 +3679,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.0027672040014294907
+          "elapsed_seconds": 0.00022402603644877672
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.0016523989907000214
+          "elapsed_seconds": 0.0001769840018823743
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.001542233003419824
+          "elapsed_seconds": 0.00016805005725473166
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.0018003589939326048
+          "elapsed_seconds": 0.00016241497360169888
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.001557335999677889
+          "elapsed_seconds": 0.0001636330271139741
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.0001608880702406168
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.0001555329654365778
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.0001592219341546297
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00015448499470949173
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.0001537950010970235
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.0001528930151835084
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.0001520609948784113
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.0001577100483700633
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00015557999722659588
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00015119300223886967
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00015178206376731396
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.0001502509694546461
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00017096498049795628
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00016004603821784258
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00017861602827906609
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00016223499551415443
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00021662493236362934
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00022253801580518484
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.0002350149443373084
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00023151107598096132
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00020402995869517326
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00016870105173438787
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00018382398411631584
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.00021622504573315382
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.0001722379820421338
         }
       ]
     },
@@ -704,23 +3804,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.38474756199866533
+          "elapsed_seconds": 0.367141593946144
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3860908049973659
+          "elapsed_seconds": 0.43395237100776285
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.39058442300301977
+          "elapsed_seconds": 0.41624385700561106
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.3743923229922075
+          "elapsed_seconds": 0.43871486303396523
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.34487890200398397
+          "elapsed_seconds": 0.4336432619020343
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.35631055501289666
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.35192192695103586
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3954458140069619
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.48113297403324395
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.374569125007838
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3513619650620967
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.35181671497412026
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34863668703474104
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3453236579662189
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.36347507406026125
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.338326271972619
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3542480330215767
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3762425120221451
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3690880120266229
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34141590900253505
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.34729225002229214
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3383794300025329
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4078918060986325
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.40006524801719934
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.33310899103526026
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4000415119808167
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.38620045804418623
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3772725099697709
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5886935070157051
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.3751142839901149
         }
       ]
     },
@@ -729,23 +3929,123 @@
       "trials": [
         {
           "caught": true,
-          "elapsed_seconds": 0.41409934499824885
+          "elapsed_seconds": 0.48717069800477475
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.39545657200505957
+          "elapsed_seconds": 0.5301409719977528
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.46590040999581106
+          "elapsed_seconds": 0.6434668159345165
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.4575929040001938
+          "elapsed_seconds": 0.4750429700361565
         },
         {
           "caught": true,
-          "elapsed_seconds": 0.4929272419976769
+          "elapsed_seconds": 0.5678329690126702
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.47086463298182935
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.618397634010762
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5387693060329184
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.508185758953914
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5382315469905734
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4741671960800886
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.48920225095935166
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.6605161869665608
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5691869570873678
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5682434539776295
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5222359409090132
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.47338635800406337
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4700022629695013
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4534809539327398
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5427590860053897
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.46496863500215113
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.7396954980213195
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5427806089865044
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5297538760351017
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4737394310068339
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5723833169322461
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5519831040874124
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.4673619809327647
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.48412583500612527
+        },
+        {
+          "caught": true,
+          "elapsed_seconds": 0.5499001749558374
         }
       ]
     }

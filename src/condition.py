@@ -68,6 +68,31 @@ def preset(condition_name: str) -> Condition:
     return Condition(name=condition_name, mechanisms=mechanisms)
 
 
+def custom(base: Condition, disable: tuple[str, ...] = ()) -> Condition:
+    """Build a Condition from an existing one with specific mechanisms
+    forced off, every other mechanism left exactly as `base` had it.
+
+    Added for the Phase 8 ablation study (see evaluation/ablation.py):
+    jumping between S0-S5 presets changes multiple mechanisms at once, so
+    it can't isolate which single mechanism is responsible for catching a
+    given attack case. This holds a target condition's configuration fixed
+    and flips off just the named mechanism(s), so a reviewer-facing claim
+    like "attack case #11 is caught by onboard_attestation specifically,
+    not by something else at S4" can be demonstrated directly rather than
+    inferred.
+    """
+    for m in disable:
+        if m not in MECHANISM_ACTIVATION_ORDER:
+            raise ValueError(
+                f"Unknown mechanism '{m}'. Known: {MECHANISM_ACTIVATION_ORDER}"
+            )
+    mechanisms = dict(base.mechanisms)
+    for m in disable:
+        mechanisms[m] = False
+    label = ",".join(disable) if disable else "none"
+    return Condition(name=f"{base.name}-ablate({label})", mechanisms=mechanisms)
+
+
 def load(path: Path | str = DEFAULT_CONDITION_FILE) -> Condition:
     path = Path(path)
     if not path.exists():

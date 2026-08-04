@@ -67,11 +67,35 @@ def test_enoexec_with_no_docker_fallback_raises_runtime_error(garbage_binary):
         _launch_process(garbage_binary, stack_def)
 
 
-def test_enoexec_with_docker_fallback_but_docker_unavailable_raises_runtime_error(garbage_binary):
-    """docker_image IS configured, but the `docker` command itself isn't
-    available/working in this environment (true in this authoring
-    sandbox, which has no Docker) — must still raise loudly, not record
-    a misleading health-check failure."""
+def test_enoexec_with_docker_fallback_but_docker_unavailable_raises_runtime_error(
+    garbage_binary, monkeypatch
+):
+    """docker_image IS configured, but the Docker fallback itself fails to
+    launch (e.g. `docker` not installed, daemon not running) — must still
+    raise loudly, not record a misleading health-check failure.
+
+    Deliberately monkeypatched rather than relying on a real environment
+    lacking Docker (ISSUE-009-adjacent lesson learned the hard way, 2026-08-04):
+    this test originally invoked the real `docker` binary and asserted a
+    RuntimeError, which held only in the authoring sandbox (no Docker
+    installed at all, so `Popen(["docker", ...])` itself raised OSError).
+    On a machine with Docker Desktop actually installed and running (e.g.
+    the one Phase 7's real-stack work required), `docker run` with a
+    bogus image name still launches the `docker` CLI process successfully
+    — the "image not found" failure happens later, asynchronously, inside
+    the container runtime, not as a Popen-time OSError — so the test
+    silently stopped exercising the code path it claimed to. Monkeypatching
+    Popen to fail on the second (Docker) call, deterministically, is what
+    the two tests below already do for a different reason; this test
+    should have used the same approach from the start."""
+
+    def _fake_popen(cmd, **kwargs):
+        if cmd[0] == "docker":
+            raise OSError("docker: command not found (simulated)")
+        raise OSError(errno.ENOEXEC, "Exec format error")
+
+    monkeypatch.setattr(health_check.subprocess, "Popen", _fake_popen)
+
     stack_def = _stack(
         garbage_binary,
         docker_image="this-image-does-not-exist-anywhere",

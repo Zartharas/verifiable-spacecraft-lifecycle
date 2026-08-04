@@ -1,0 +1,998 @@
+{
+  "12": {
+    "mechanism_ablated": "onboard_attestation",
+    "condition": "S4",
+    "metric_judged": "caught",
+    "baseline_rate": 1.0,
+    "ablated_rate": 0.0,
+    "effect_specifically_attributable_to_mechanism": true,
+    "baseline_trials": [
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4244176840875298
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.5226900409907103
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.40466430003289133
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.44938802695833147
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4343920599203557
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4034012040356174
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.408411783981137
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4545840930659324
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4320679949596524
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4592839990509674
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.5488801809260622
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.38727761805057526
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.39812123600859195
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.39741115807555616
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4184301949571818
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4116722410544753
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4103042940841988
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.40934393694624305
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4188798610121012
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.3827745739836246
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4385733410017565
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4235222799470648
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.3768772189505398
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.39145872404333204
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.3953824919881299
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.47317257209215313
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.49995842308271676
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.4154360890388489
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.41439654398709536
+      },
+      {
+        "caught": true,
+        "elapsed_seconds": 0.40866658405866474
+      }
+    ],
+    "ablated_trials": [
+      {
+        "caught": false,
+        "elapsed_seconds": 0.407839557970874
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.46398192702326924
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.4273352649761364
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.43587916891556233
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.3994675159920007
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.407503514084965
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.36493001296184957
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.3973486719187349
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.39275128999724984
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.3978104069828987
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.46702677209395915
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.41160457697696984
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.4212860460393131
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.41587721498217434
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.41394381888676435
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.44558615901041776
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.374177930993028
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.4102886680047959
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.40850855701137334
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.40679482801351696
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.40192555193789303
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.38022162998095155
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.41337759396992624
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.41836878401227295
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.42162600299343467
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.40428539202548563
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.4117530989460647
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.5944772789953277
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.41008569905534387
+      },
+      {
+        "caught": false,
+        "elapsed_seconds": 0.40266554697882384
+      }
+    ]
+  },
+  "11": {
+    "mechanism_ablated": "trusted_rollback",
+    "condition": "S4",
+    "metric_judged": "recovered",
+    "baseline_rate": 1.0,
+    "ablated_rate": 0.0,
+    "effect_specifically_attributable_to_mechanism": true,
+    "baseline_trials": [
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.38133549003396183
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.378831569920294
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3779681670712307
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3740091399522498
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.33502131002023816
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3768475550459698
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3750144900986925
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3738379389978945
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3755830799927935
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3995466019259766
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3738299610558897
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3798609330551699
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.44464982009958476
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.37418061995413154
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3908811639994383
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.4799684670288116
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.5811390170129016
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.37050782702863216
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3752704350044951
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.44939537497702986
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.372546597965993
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.3854466039920226
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.5976242480101064
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.4672010070644319
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.35922044608742
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.36790155502967536
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.44086214900016785
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.39924827602226287
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.366255542030558
+      },
+      {
+        "caught": true,
+        "recovered": true,
+        "rollback_outcome": "rolled_back",
+        "rejected_at": "post_install_rolled_back",
+        "elapsed_seconds": 0.44647012592758983
+      }
+    ],
+    "ablated_trials": [
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.4124630440492183
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.40065458603203297
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.4459765169303864
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.4368677260354161
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.38592525699641556
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.40777071996126324
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.4577626569662243
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.36812624195590615
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.378724433016032
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.47359336994122714
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.39661946694832295
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.36955686600413173
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.3576449260581285
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.3838114619720727
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.3833098050672561
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.3705351799726486
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.356908070971258
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.35769400908611715
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.38391002803109586
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.3801195740234107
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.4057152880122885
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.3744892670074478
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.3928762909490615
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.4266983140259981
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.39355013705790043
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.37395173497498035
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.3716237669577822
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.3814815980149433
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.3755719360196963
+      },
+      {
+        "caught": true,
+        "recovered": false,
+        "rollback_outcome": null,
+        "rejected_at": "post_install_unrecoverable_at_s3",
+        "elapsed_seconds": 0.35256226698402315
+      }
+    ]
+  },
+  "15": {
+    "mechanism_ablated": "machine_readable_authorization",
+    "condition": "S5",
+    "metric_judged": "caught",
+    "baseline_rate": 1.0,
+    "ablated_rate": 0.0,
+    "effect_specifically_attributable_to_mechanism": true,
+    "baseline_trials": [
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.4879092200426385
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5416491980431601
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5108609759481624
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.4872304209275171
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5420378330163658
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5307434380520135
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5592972469748929
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5474348870338872
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5479457640321925
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.492957676993683
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.49668338999617845
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5579097610898316
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.4948535249568522
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5201894378988072
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5423418449936435
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5253834300674498
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5113749450538307
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5274313690606505
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5535395770566538
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.49228503892663866
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5175552730215713
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.542913714889437
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5074130339780822
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5630480989348143
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5753433739300817
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.551795121980831
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5368416160345078
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5636785828974098
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.508211386972107
+      },
+      {
+        "caught": true,
+        "telemetry_consistent": false,
+        "elapsed_seconds": 0.5755734420381486
+      }
+    ],
+    "ablated_trials": [
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.3806391269899905
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.39533507206942886
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.38071692700032145
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.38753891398664564
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.49220211093779653
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.40365781995933503
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.3874562989221886
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.3970869870390743
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.3978038640925661
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.41269595304038376
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.409697977011092
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.38469737907871604
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.366708502988331
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.39246535301208496
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.43245855101849884
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.39537872502114624
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.40658865799196064
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.38742146803997457
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.40525584598071873
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.38814795995131135
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.404110322939232
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.3920300679747015
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.4064140390837565
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.3989683510735631
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.37630849599372596
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.3793454139959067
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.47420799697283655
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.40946433995850384
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.38526885001920164
+      },
+      {
+        "caught": false,
+        "telemetry_consistent": null,
+        "elapsed_seconds": 0.37277334998361766
+      }
+    ]
+  }
+}

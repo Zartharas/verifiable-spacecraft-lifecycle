@@ -3,9 +3,22 @@
   "happy_path": {
     "S0": {
       "success_rate": 1.0,
+      "success_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "reproducible_rate": 1.0,
+      "reproducible_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "mean_elapsed_seconds": 0.23988483282737433,
+      "mean_elapsed_seconds_ci95": [
+        0.22449600667664413,
+        0.2552736589781045
+      ],
       "stdev_elapsed_seconds": 0.017556357840285274,
+      "n_trials": 5,
       "traceability_completeness": 1.0,
       "record_count_mean": 7,
       "storage_overhead_bytes": {
@@ -20,9 +33,22 @@
     },
     "S1": {
       "success_rate": 1.0,
+      "success_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "reproducible_rate": 1.0,
+      "reproducible_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "mean_elapsed_seconds": 0.24782574917189776,
+      "mean_elapsed_seconds_ci95": [
+        0.24510171675763118,
+        0.2505497815861643
+      ],
       "stdev_elapsed_seconds": 0.0031077151281698676,
+      "n_trials": 5,
       "traceability_completeness": 1.0,
       "record_count_mean": 9,
       "storage_overhead_bytes": {
@@ -37,9 +63,22 @@
     },
     "S2": {
       "success_rate": 1.0,
+      "success_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "reproducible_rate": 1.0,
+      "reproducible_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "mean_elapsed_seconds": 0.279121703770943,
+      "mean_elapsed_seconds_ci95": [
+        0.2563495459670864,
+        0.3018938615747995
+      ],
       "stdev_elapsed_seconds": 0.02597963920600797,
+      "n_trials": 5,
       "traceability_completeness": 1.0,
       "record_count_mean": 12,
       "storage_overhead_bytes": {
@@ -54,9 +93,22 @@
     },
     "S3": {
       "success_rate": 1.0,
+      "success_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "reproducible_rate": 1.0,
+      "reproducible_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "mean_elapsed_seconds": 2.3783570329891517,
+      "mean_elapsed_seconds_ci95": [
+        2.3660518585807004,
+        2.390662207397603
+      ],
       "stdev_elapsed_seconds": 0.014038370638922534,
+      "n_trials": 5,
       "traceability_completeness": 1.0,
       "record_count_mean": 15,
       "storage_overhead_bytes": {
@@ -71,9 +123,22 @@
     },
     "S4": {
       "success_rate": 1.0,
+      "success_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "reproducible_rate": 1.0,
+      "reproducible_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "mean_elapsed_seconds": 2.3781525168102235,
+      "mean_elapsed_seconds_ci95": [
+        2.35697684449876,
+        2.399328189121687
+      ],
       "stdev_elapsed_seconds": 0.024158287121271237,
+      "n_trials": 5,
       "traceability_completeness": 1.0,
       "record_count_mean": 17,
       "storage_overhead_bytes": {
@@ -88,9 +153,22 @@
     },
     "S5": {
       "success_rate": 1.0,
+      "success_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "reproducible_rate": 1.0,
+      "reproducible_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "mean_elapsed_seconds": 2.6059354099910705,
+      "mean_elapsed_seconds_ci95": [
+        2.5657713335923664,
+        2.6460994863897747
+      ],
       "stdev_elapsed_seconds": 0.045821227082141515,
+      "n_trials": 5,
       "traceability_completeness": 1.0,
       "record_count_mean": 21,
       "storage_overhead_bytes": {
@@ -108,121 +186,241 @@
     "1": {
       "condition": "S2",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.2362277487758547,
+      "mean_elapsed_seconds_ci95": [
+        0.21898696083518843,
+        0.253468536716521
+      ],
       "stdev_elapsed_seconds": 0.019669170316830808
     },
     "2": {
       "condition": "S2",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.05580006518866867,
+      "mean_elapsed_seconds_ci95": [
+        0.05408329635934281,
+        0.057516834017994525
+      ],
       "stdev_elapsed_seconds": 0.0019585774510333465
     },
     "3": {
       "condition": "S1",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.20382846742868424,
+      "mean_elapsed_seconds_ci95": [
+        0.20205000504277007,
+        0.2056069298145984
+      ],
       "stdev_elapsed_seconds": 0.002028960607311507
     },
     "4": {
       "condition": "S1",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.20887309440877289,
+      "mean_elapsed_seconds_ci95": [
+        0.19306038846628468,
+        0.2246858003512611
+      ],
       "stdev_elapsed_seconds": 0.018039941528376804
     },
     "5": {
       "condition": "S2",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.21704194177873432,
+      "mean_elapsed_seconds_ci95": [
+        0.20908740074548526,
+        0.22499648281198337
+      ],
       "stdev_elapsed_seconds": 0.009074946163345051
     },
     "6": {
       "condition": "S0",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.2108642508275807,
+      "mean_elapsed_seconds_ci95": [
+        0.20448819291918993,
+        0.21724030873597147
+      ],
       "stdev_elapsed_seconds": 0.007274132097773938
     },
     "7": {
       "condition": "S0",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.2047967218561098,
+      "mean_elapsed_seconds_ci95": [
+        0.18942144854857831,
+        0.2201719951636413
+      ],
       "stdev_elapsed_seconds": 0.017540896065448196
     },
     "8": {
       "condition": "S5",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.21504945701453834,
+      "mean_elapsed_seconds_ci95": [
+        0.20848711879608167,
+        0.221611795232995
+      ],
       "stdev_elapsed_seconds": 0.007486650177456124
     },
     "9": {
       "condition": "S2",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.22209453519899397,
+      "mean_elapsed_seconds_ci95": [
+        0.21116371902891368,
+        0.23302535136907426
+      ],
       "stdev_elapsed_seconds": 0.01247043265604769
     },
     "10": {
       "condition": "S4",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_trusted_restoration",
       "mean_elapsed_seconds": 0.2632463226094842,
+      "mean_elapsed_seconds_ci95": [
+        0.2567223666932052,
+        0.26977027852576324
+      ],
       "stdev_elapsed_seconds": 0.007442861689291746
     },
     "11": {
       "condition": "S4",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_trusted_restoration",
       "mean_elapsed_seconds": 0.291634186799638,
+      "mean_elapsed_seconds_ci95": [
+        0.2772880864769525,
+        0.30598028712232345
+      ],
       "stdev_elapsed_seconds": 0.0163667630273247
     },
     "12": {
       "condition": "S4",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_trusted_restoration",
       "mean_elapsed_seconds": 2.36818000942003,
+      "mean_elapsed_seconds_ci95": [
+        2.343027158602906,
+        2.3933328602371535
+      ],
       "stdev_elapsed_seconds": 0.028695655232142698
     },
     "13": {
       "condition": "S5",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.0001861831871792674,
+      "mean_elapsed_seconds_ci95": [
+        0.0001612191325571055,
+        0.0002111472418014293
+      ],
       "stdev_elapsed_seconds": 2.8480266902638698e-05
     },
     "14": {
       "condition": "S4",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_trusted_restoration",
       "mean_elapsed_seconds": 0.2926506322110072,
+      "mean_elapsed_seconds_ci95": [
+        0.26405588495739873,
+        0.3212453794646156
+      ],
       "stdev_elapsed_seconds": 0.032622346254333655
     },
     "15": {
       "condition": "S5",
       "detection_rate": 1.0,
+      "detection_rate_ci95": [
+        0.5655085052479191,
+        1.0
+      ],
       "n_trials": 5,
       "metric_label": "time_to_identify",
       "mean_elapsed_seconds": 0.5051256007980556,
+      "mean_elapsed_seconds_ci95": [
+        0.4608502922918506,
+        0.5494009093042606
+      ],
       "stdev_elapsed_seconds": 0.05051153037992293
     }
   },

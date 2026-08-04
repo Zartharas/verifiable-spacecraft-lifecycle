@@ -287,6 +287,65 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
 
 ## What's next (immediate)
 
+- [x] Rejection-risk review against target venues (2026-08-03, see
+      `docs/Research-Paper-Outline.md`) — identified the "ceiling effect /
+      detection-by-construction" objection as the single biggest exposure,
+      plus statistical-thinness (5 trials, no CIs) and no-ablation gaps.
+      User chose to address 3 of 4 proposed mitigations before Phase 8, all
+      now **complete**:
+      1. Ablation study — `condition.custom()`/`pipeline.run()`'s new
+         `disable_mechanisms` param, `evaluation/ablation.py`; 3 mechanisms
+         ablated (onboard_attestation, trusted_rollback,
+         machine_readable_authorization), all showing exactly the
+         predicted effect on both stub stacks. See `docs/Threat-Model.md`
+         "Phase 8 ablation study."
+      2. Adaptive-attacker scenarios — `evaluation/adaptive_attacks.py`,
+         2 combined-vector scenarios confirming the pipeline halts at the
+         first violated layer rather than merely detecting-but-continuing.
+         See `docs/Threat-Model.md` "Phase 8 adaptive-attacker scenarios."
+      3. Trial count/CI — `N_TRIALS` bumped 5 -> 30 in
+         `evaluation/experiment.py`; `evaluation/report.py` now computes
+         95% Wilson score intervals for rates and normal-approximation
+         CIs for timing means (verified via synthetic-data smoke test;
+         Wilson CI confirmed well-behaved at 0%/100% boundaries).
+      All verified via the 41/41 regression suite (no changes to default
+      behavior) plus targeted smoke tests; **not yet re-run as the full
+      30-trial paper-scale evaluation** (the harness takes several
+      minutes at n=30, beyond a single sandboxed command — same chunking
+      pattern as Phase 5) and **not yet run against real
+      `cfs-real`/`fprime-real`** (requires the user's Docker-capable Mac).
+- [x] **ISSUE-009 found and fixed (2026-08-04):** the user's first attempt
+      to run the above on their Mac hit a wall immediately — every S4+
+      happy-path run on both stub stacks crashed with SIGABRT, no attack
+      injected. Root cause, confirmed not guessed: `-Wl,-no_uuid`
+      (Phase 1's original macOS build-reproducibility fix) now makes the
+      binary fail to *load* at all under the user's current dyld
+      (macOS 26.5.2 / Apple clang 21) — `dyld: missing LC_UUID load
+      command`. Fixed by removing that flag and instead masking the
+      Mach-O LC_UUID's bytes before hashing, only for the
+      reproducibility comparison (never the artifact's identity hash).
+      See `ISSUES-AND-FIXES-LOG.md` ISSUE-009. **macOS fix confirmed
+      2026-08-04:** user re-ran the full 30-trial evaluation, Phase 8
+      ablation study, and Phase 8 adaptive-attacker scenarios against
+      both `cfs` and `fprime` stub stacks from a clean `work/` directory
+      — all passed cleanly with the exact predicted 100%/0% rates
+      throughout (`phase5_report.md`, `phase6_report_fprime.md`,
+      `phase8_ablation_{cfs,fprime}.json`, `phase8_adaptive_{cfs,fprime}.json`
+      all now reflect real n=30 data on real macOS hardware, not just the
+      Linux sandbox).
+- [x] **ISSUE-010 found and fixed (2026-08-04):** the same re-run surfaced
+      one unrelated pytest failure —
+      `test_enoexec_with_docker_fallback_but_docker_unavailable_raises_runtime_error`
+      — caused by the test relying on Docker genuinely being absent from
+      the environment (true in the authoring sandbox, false on the
+      user's Mac, which has Docker Desktop installed for Phase 7). Fixed
+      by monkeypatching `subprocess.Popen` deterministically instead of
+      depending on the real `docker` binary's behavior. See
+      `ISSUES-AND-FIXES-LOG.md` ISSUE-010. 41/41 passing on both
+      environments now.
+- [ ] **You:** re-run the same evaluation/ablation/adaptive scripts
+      against real `cfs-real`/`fprime-real` (stub stacks are now done,
+      confirmed clean)
 - [ ] **You:** commit + push this session's changes
 - [ ] Move to Phase 8 (paper drafting and repo polish)
 - [ ] Consider reviewing prior related projects already present in the
