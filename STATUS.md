@@ -574,7 +574,64 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       See `docs/Threat-Model.md` "Phase 8 second independent red-team
       review" and `docs/Research-Paper-Outline.md` § 4 item 7's updated
       recursion note.
-- [ ] Move to Phase 8 (paper drafting and repo polish)
+- [x] **Committed and pushed, 2026-08-05: commit `11fd7df`** ("Phase 8:
+      extend ablation to 6 mechanisms, add eval-code correctness tests,
+      second red-team pass + 11 fixes"), 25 files changed (6354
+      insertions, 796 deletions) — the objection-5/9 work, the full
+      30-trial ablation confirmation, and all 12 second-red-team-pass
+      fixes from this session. Hit the same stale `.git/index.lock`
+      issue as the prior commit (see "Repository" section below);
+      cleared manually from the user's own Terminal (confirmed no real
+      git process running first) and the commit/push completed cleanly
+      on retry.
+- [ ] **Colleague (human) review requested, 2026-08-05.** As the
+      practical next step on objection 7's recursion — rather than a
+      third AI-driven red-team pass, which would still be spawned and
+      directed by the same author+AI process — the user is asking a
+      colleague to independently review the codebase (told to look at
+      `src/`/`evaluation/` fresh, without reading the red-team
+      write-ups first, focusing especially on the newest, least-reviewed
+      code). Not yet scheduled/completed; log findings the same way as
+      the two AI passes (ISSUES-AND-FIXES-LOG.md) once it happens,
+      whether it turns up nothing new (a fine and useful result —
+      convergent validity with the two AI passes) or something the AI
+      reviews missed.
+- [x] **Third independent (blind, AI) red-team pass complete, 2026-08-06
+      — different model/tool than the first two.** Run as a stopgap
+      while the human colleague review is still pending. The reviewer's
+      first attempt accidentally targeted an unrelated repo of the
+      author's with a similarly-named path; it caught the mismatch
+      itself and stopped, and was re-run cleanly once given the correct
+      path (see ISSUE-030 in ISSUES-AND-FIXES-LOG.md and the new
+      "Phase 8 third independent red-team review" section in
+      Threat-Model.md for the full account). Found one genuinely novel,
+      end-to-end-confirmed finding — the S5 policy deny-rule matched
+      config keys case-sensitively, so `{"DEBUG_MODE": True}` was
+      confirmed onboard and the signed authorization-evidence document
+      recorded `overall_result: "pass"` for a release carrying a
+      prohibited-intent configuration. Fixed in `src/policy/policy.py`
+      (case-fold the config keys once before matching, values-axis
+      semantics from ISSUE-027 untouched), regression tests added to
+      `tests/test_second_redteam_fixes.py`, and independently
+      re-confirmed via a direct `pipeline.run()` call that the bypass is
+      closed. Two other candidates the reviewer raised (SBOM
+      binding-skipped-when-`binary_path=None`, attestation quote has no
+      verifier nonce) both correctly reduced to already-documented items
+      on cross-check against the answer-key docs, not new issues. Full
+      per-file regression run, no drift (excluding the environment-
+      dependent real-Docker-binary tests in `test_phase7_real_builds.py`,
+      unaffected). This is the strongest evidence yet that the
+      independent-review process itself is doing real work: a genuinely
+      different reviewer found a real bypass that two prior AI passes and
+      the full test suite had all missed.
+- [ ] Move to Phase 8 (paper drafting and repo polish) — including the
+      writing-only work already scoped: objection 1 (make the
+      spacecraft-specific-constraints argument explicit and early, not
+      left implicit), objections 2 and 10 (honest, explicit scoping of
+      uplink-simulation realism and the Docker-timing confound in
+      Limitations), and the AI-use disclosure statement (objection 11,
+      deferred here from 2026-08-04/05 specifically to be drafted
+      alongside the paper itself).
 - [ ] Consider reviewing prior related projects already present in the
       Development Projects folder (`mission-aware-satellite-cyber-recovery`,
       `satcom-ttc-post-compromise-recovery`) for reusable components or
@@ -775,3 +832,4 @@ are available. Install Python packages with `pip3 install
 | 2026-08-05 | Executed the two objection-5/9 follow-ups approved the prior session. **Objection 5:** threaded `disable_mechanisms` through `ground_authorization.ground_auth.authorize()` and `onboard_verification.onboard.verify_received_bundle()` (previously each built its own `Condition` via `preset()` alone, immune to `pipeline.py`'s ablation override) — this also required fixing onboard's redundant S5 policy check so ablating `machine_readable_authorization` couldn't be silently caught by the un-ablated duplicate. Added 3 new ablation scenarios (`_ablation_case_04` SBOM, `_ablation_case_05` provenance, `_ablation_case_08` S5 policy) to `evaluation/ablation.py`, taking coverage from 3/6 to 5/6 mechanisms (`signature` deliberately excluded — it's the one mechanism active at every condition including the S0 floor, never itself gated by `cond.active()`). All 6 mechanisms confirmed showing clean 100%-active/0%-ablated isolation (run at n=10/n=5 due to this tool's per-command time limit — full 30-trial re-run still needed outside the sandbox before citing in the paper). Locked in with 4 fast regression tests (`tests/test_phase8_ablation_extension.py`). **Objection 9:** added 33 tests (`tests/test_evaluation_report_correctness.py`) for `evaluation/report.py`'s `_wilson_ci`/`_mean_ci`/`_mean_stdev` and its aggregation functions — `_wilson_ci` cross-checked against an independent third-party implementation (`statsmodels.stats.proportion.proportion_confint`, matching to 1e-9 at the exact normal quantile), `_mean_ci` cross-checked against an independently-written closed-form computation, plus boundary/structural properties and a hand-computed synthetic-fixture check of the aggregation logic. Full regression check: 66 pre-existing tests + 37 new tests, 103/103 passing, zero drift. | src/ground_authorization/ground_auth.py, src/onboard_verification/onboard.py, src/pipeline.py, evaluation/ablation.py, tests/test_phase8_ablation_extension.py (new), tests/test_evaluation_report_correctness.py (new), docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |
 | 2026-08-05 | User ran the full 30-trial ablation study on their Mac against all four stacks (`cfs`, `fprime`, `cfs-real`, `fprime-real`) — identical 100%/0% isolation on all 6 cases across every stack, confirming the sandbox's reduced-trial (n=10/n=5) verification run at full scale, including against the real cFS/F´ binaries. Recorded the two remaining reviewer-objection decisions: AI-disclosure statement deferred to the paper-drafting phase; repo stays private until publication. Then, per the user's request, discussed remaining challenges again — surfaced that this exact session's own fix work (objection 5/9) deepens objection 7's recursion, and that the first red-team pass never saw `build.py`/`health_check.py`/`uplink_sim/`/`evaluation/`. User chose to run a second, wider blind red-team pass rather than just document the gap or defer again. | docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |
 | 2026-08-05 | Ran a second fresh, context-free red-team agent with full `src/`+`evaluation/` coverage (27 files, closing the first pass's file-coverage gap) and an explicit mandate to review the fix code itself and audit the evaluation harness for vacuous tests. It reported 12 findings, all independently re-verified against source; user chose "fix all 12." Fixed 11 (SBOM-artifact binding, Docker health-check binary-mount mismatch, onboard-side independent downgrade check, attestation future-timestamp floor, provenance dirty-tree opt-in check, `scenario_13` rewritten off a hardcoded/vacuous call onto a real pipeline execution, `report.py`'s trial-0-only aggregation, ablation assertion-guard consistency, policy type-coercion bypass, signing/attestation revoked-key visibility logging, uplink tamper-offset diversification); documented finding #5 (health-check has no artifact-identity tie) as a known limitation instead. One fix (refuse to sign/attest with a revoked key) was tried, found to break the existing correct test case #7 design, and reverted for a visibility-only fix instead. Verified via 31 new tests (`tests/test_second_redteam_fixes.py`) plus a full re-run of the existing 66-test suite — caught and fixed one genuine regression along the way (the new onboard downgrade check needed to fail closed on a `StateIntegrityError` internally rather than let it propagate and crash `pipeline.run()`, which broke an existing red-team-fix test; updated that test to accept the new, earlier, still-fail-closed detection point). Re-confirmed the 5/6-mechanism ablation study still isolates cleanly after all 12 fixes. | src/sbom/sbom.py, src/health/health_check.py, src/onboard_verification/onboard.py, src/attestation/attestation.py, src/provenance/provenance.py, src/policy/policy.py, src/signing/signing.py, src/uplink_sim/uplink.py, src/pipeline.py, evaluation/ablation.py, evaluation/experiment.py, evaluation/report.py, tests/test_second_redteam_fixes.py (new), tests/test_phase8_redteam_fixes.py, ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |
+| 2026-08-06 | Ran a third independent (blind, AI) red-team pass, this time with a genuinely different model/tool than the first two, as a stopgap while the human colleague review remains pending. (The reviewer's first attempt accidentally ran against an unrelated, similarly-named local repo; it caught the structural mismatch itself, stopped, and was re-run cleanly against the correct path.) Found one novel, end-to-end-confirmed finding: the S5 policy deny-rule (`policy.py::_matches()`) matched config keys case-sensitively, so `{"DEBUG_MODE": True}` — meaning the exact same thing as the only prohibited-configuration rule — was never caught, and a real `pipeline.run()` call confirmed the release onboard with the signed authorization-evidence document itself recording `overall_result: "pass"`. This sits on a different axis than ISSUE-027 (second pass, finding #10), which fixed value representations, not key names. Fixed by case-folding the config once before matching; added 2 parametrized regression tests; independently re-confirmed end-to-end that the same config is now rejected at `ground_authorization` with no authorization-evidence document written at all. Two other candidates the reviewer raised (SBOM binding skipped when `binary_path=None`; attestation quote has no verifier nonce) both correctly cross-checked to already-documented items (ISSUE-018, ISSUE-021) rather than new issues, and it independently re-confirmed ISSUE-022's forgeable-boot-marker gap is still live. Full per-file regression run, no drift (excluding the unaffected, unchanged `test_phase7_real_builds.py`). Logged as ISSUE-030. | src/policy/policy.py, tests/test_second_redteam_fixes.py, ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, STATUS.md |

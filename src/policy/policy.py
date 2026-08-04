@@ -70,8 +70,31 @@ def _values_match(config_value, pattern_value) -> bool:
 def _matches(config: dict, pattern: dict) -> bool:
     """A config matches a prohibited pattern if every key/value in the
     pattern is present and equal in the config (a simple deny-rule
-    semantics — real Rego would express this more richly)."""
-    return all(_values_match(config.get(k), v) for k, v in pattern.items())
+    semantics — real Rego would express this more richly).
+
+    Third independent (blind, AI) red-team pass, finding #1 (2026-08-06):
+    key lookup used to be exact-case (`config.get(k)`), so a config that
+    means the exact same thing but spells the key differently —
+    `{"DEBUG_MODE": True}` instead of `{"debug_mode": True}` — never
+    matched the `debug_mode` rule at all and sailed through as if no
+    prohibited configuration existed. This was proven end-to-end through
+    `pipeline.run()` at S5: the release was confirmed onboard and the
+    signed authorization-evidence document recorded `overall_result:
+    "pass"`, with no failed records anywhere in it. That's a real
+    "report says PASS without a genuine check" failure, on a different
+    axis than second-red-team finding #10 (which fixed *value*
+    representations — `"true"` vs `True` — but never touched the *key*
+    name's case). Fix: build one case-folded view of `config` up front
+    and look each pattern key up in that, so any spelling of the same
+    key name is caught. If `config` happens to contain two keys that are
+    identical after casefolding (e.g. both `"DEBUG_MODE"` and
+    `"debug_mode"` present at once — not expected from a real caller,
+    but not impossible), the later key in dict-iteration order wins;
+    this is a deliberate simplification, not a silent bug, since a
+    caller sending contradictory casings of the same field is itself a
+    malformed request."""
+    folded_config = {k.lower(): v for k, v in config.items()}
+    return all(_values_match(folded_config.get(k.lower()), v) for k, v in pattern.items())
 
 
 def check_configuration(

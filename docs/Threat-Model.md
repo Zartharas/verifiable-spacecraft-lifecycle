@@ -1204,6 +1204,105 @@ and redesigned — both are more informative than a clean "all fixed" would
 be, and demonstrate the fix-verification loop catching its own mistake
 (the StateIntegrityError regression) working as intended.
 
+## Phase 8 third independent (blind, AI) red-team review (2026-08-06)
+
+**Motivation.** With the human-colleague review still pending on the
+colleague's own schedule, a third independent pass was run in the
+interim using a different model/tool than the first two passes — a
+genuinely different reviewer, not a third run of the same one. Given the
+same blind-review brief (don't read `docs/Threat-Model.md` or
+`ISSUES-AND-FIXES-LOG.md` until after independent testing; focus on the
+least-reviewed newest files; build a reproducible harness for anything
+found rather than asserting from a read-through) as the second pass.
+
+**A process note worth recording honestly.** The reviewer's first
+attempt ran against the wrong local repository — a similarly-named,
+unrelated project of the author's — and, to its credit, caught the
+structural mismatch itself (missing expected paths, wrong file names)
+and stopped rather than forcing its findings to fit. The author supplied
+the correct path and the review was re-run cleanly from scratch. Recorded
+here rather than omitted, consistent with this project's practice of
+logging process failures alongside code findings — this one happened to
+be human/operator error (a mistaken path), not a flaw in the review
+methodology itself, and the reviewer's own self-check is exactly the kind
+of caution the fail-closed design philosophy elsewhere in this project
+tries to instill in code.
+
+**Method.** Standard baseline first (full `pytest` run, `ablation.py`),
+then a full read of the same ten target files as the second pass, then
+targeted exploit hypotheses built as reproducible harnesses, then —
+only after its own testing was complete — the answer-key docs, to
+classify each candidate as novel, already-known/fixed, or predicted-by-
+the-threat-model-but-never-implemented.
+
+**Findings.** One novel, end-to-end-confirmed finding; two candidates
+that reduced to already-documented items on cross-check; one
+already-documented-but-deliberately-unfixed limitation independently
+re-confirmed still live:
+
+1. **Novel — S5 policy deny-rule key matched case-sensitively.**
+   `{"DEBUG_MODE": True}` meant the exact same thing as the only
+   prohibited-configuration rule but never matched it, because the
+   lookup was exact-case. Proven end-to-end through a real
+   `pipeline.run()` call: the release was confirmed onboard and the
+   signed authorization-evidence document itself recorded
+   `overall_result: "pass"` — the report-says-PASS-without-a-genuine-
+   check failure mode this project's entire methodology exists to catch.
+   Correctly identified as sitting on a different axis than ISSUE-027
+   (second pass, finding #10), which fixed how *values* are compared,
+   never how *keys* are looked up. See ISSUES-AND-FIXES-LOG.md ISSUE-030
+   for the full writeup and fix. This is the strongest single piece of
+   evidence yet that the independent-review process is doing real work
+   rather than rubber-stamping: a third reviewer, on the actual
+   repository, found a real end-to-end bypass that two prior review
+   passes and this project's own 130+ test suite had all missed.
+
+2. **Reduces to known — SBOM binding skipped when `binary_path=None`.**
+   Independently rediscovered the same optional-parameter shape already
+   documented as ISSUE-018 (first red-team pass): the binding check only
+   runs "when provided," and `ground_auth.authorize()` always provides
+   it, so this stays a latent, not pipeline-reachable, gap. Not logged
+   as a new issue.
+
+3. **Reduces to known/different-axis — attestation quote has no
+   verifier-supplied nonce.** A captured valid quote is theoretically
+   replayable within the 300-second freshness window without a fresh
+   boot; `measured_hash` binding limits this to the same binary, and the
+   pipeline always regenerates the quote each run, so it isn't a clean
+   end-to-end pipeline bypass the way finding 1 is. Correctly identified
+   as a different axis than ISSUE-021 (second pass, finding #4), which
+   only fixed the future-dated-timestamp floor. Recorded here as an
+   acknowledged design limitation rather than a logged issue, since no
+   concrete pipeline-reachable exploit was demonstrated for it (unlike
+   finding 1).
+
+4. **Independently re-confirmed still live — ISSUE-022's forgeable
+   boot-success marker.** Rather than trusting the issues log's own
+   "documented, not fixed" claim, the reviewer built a fresh harness: a
+   binary that does nothing but print the expected marker string passes
+   the persistent-process health check. Confirms ISSUE-022's status is
+   accurate and the gap has not silently regressed into something worse
+   (or been fixed without the log being updated).
+
+**Fix and verification.** ISSUE-030's fix, regression tests, and an
+independent end-to-end re-confirmation (the same `{"DEBUG_MODE": True}`
+config is now rejected at `ground_authorization` and no authorization-
+evidence document is written at all) are recorded in
+ISSUES-AND-FIXES-LOG.md. Full per-file regression run across every test
+file except the environment-dependent real-Docker-binary tests in
+`test_phase7_real_builds.py` (unaffected, unchanged) — no drift.
+
+**What this adds to the paper's answer to objection 7.** The second
+pass's writeup already states that a fresh reviewer scoped at a prior
+review's gaps is the strongest available answer short of a genuinely
+independent human audit. This third pass adds a materially different
+kind of evidence: a different model/tool, not just a fresh context
+window of the same one, finding a real bypass that survived two AI
+reviews and the full test suite. That is closer to genuine review
+diversity than repeating the same reviewer, though it is still AI, not
+the human colleague review that remains the honest gold-standard
+comparison and is still pending separately.
+
 ## Phase 8 real-baseline comparison: python-tuf (2026-08-04)
 
 **Motivation.** Reviewer objection 6 in Research-Paper-Outline.md § 4

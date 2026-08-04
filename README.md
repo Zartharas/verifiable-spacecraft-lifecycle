@@ -6,29 +6,38 @@ Core Flight System / cFS), with the goal of producing a reproducible prototype
 and a publishable comparative evaluation of software supply-chain assurance
 levels (S0–S5).
 
-## Who this is for
+## New here? Start with this
 
-This repo is maintained by a single independent researcher. These documents
-exist so that both the researcher and any AI assistant (Claude) picking the
-project back up mid-stream can reconstruct full context without re-deriving
-decisions already made. Read `STATUS.md` first in every new session.
+**First time cloning this repo to run or test it yourself?** Read
+`docs/Getting-Started.md` — step-by-step instructions to install, run the
+demo pipeline, run the test suite, and run the evaluation/ablation
+harnesses. No prior context needed.
+
+## Who the rest of this document is for
+
+This repo is maintained by a single independent researcher. The documents
+below exist so that both the researcher and any AI assistant (Claude) picking
+the project back up mid-stream can reconstruct full context without
+re-deriving decisions already made. Read `STATUS.md` first in every new
+session.
 
 ## Document index
 
 Read in this order when resuming work:
 
 1. **STATUS.md** — current state, what's done, what's next, open blockers. Read this first, always.
-2. **docs/PRD.md** — what we're building and why, scope, success criteria.
-3. **docs/Threat-Model.md** — the S0–S5 assurance ladder and the attack/test matrix that drives everything else.
-4. **docs/Pipeline-Flow-Document.md** — the end-to-end lifecycle flow (source → rollback), actors, data flow.
-5. **docs/Technical-Design-Document.md** — architecture, components, tech stack, schemas.
-6. **docs/Implementation-Plan.md** — phased build plan, milestones, task breakdown.
-7. **docs/Research-Paper-Outline.md** — how the prototype's results map to a paper, venue targets.
-8. **docs/Legal-Data-Sourcing-Notes.md** — what data/software sources are used and why they're legally clean for an independent researcher.
-9. **ISSUES-AND-FIXES-LOG.md** — every bug and security finding, root cause, fix, and disclosure status.
-10. **SECURITY.md** — responsible disclosure policy for this repo.
+2. **docs/Getting-Started.md** — for a human running/testing this for the first time (see above).
+3. **docs/PRD.md** — what we're building and why, scope, success criteria.
+4. **docs/Threat-Model.md** — the S0–S5 assurance ladder and the attack/test matrix that drives everything else, including all independent red-team review findings.
+5. **docs/Pipeline-Flow-Document.md** — the end-to-end lifecycle flow (source → rollback), actors, data flow.
+6. **docs/Technical-Design-Document.md** — architecture, components, tech stack, schemas.
+7. **docs/Implementation-Plan.md** — phased build plan, milestones, task breakdown.
+8. **docs/Research-Paper-Outline.md** — how the prototype's results map to a paper, venue targets.
+9. **docs/Legal-Data-Sourcing-Notes.md** — what data/software sources are used and why they're legally clean for an independent researcher.
+10. **ISSUES-AND-FIXES-LOG.md** — every bug and security finding, root cause, fix, and disclosure status.
+11. **SECURITY.md** — responsible disclosure policy for this repo.
 
-## Project structure (planned)
+## Project structure
 
 ```
 verifiable-spacecraft-lifecycle/       # repo root
@@ -37,6 +46,7 @@ verifiable-spacecraft-lifecycle/       # repo root
 ├── SECURITY.md                        # responsible disclosure policy
 ├── ISSUES-AND-FIXES-LOG.md            # bug/security fix ledger
 ├── docs/
+│   ├── Getting-Started.md             # start here if you're new
 │   ├── PRD.md
 │   ├── Threat-Model.md
 │   ├── Pipeline-Flow-Document.md
@@ -44,28 +54,29 @@ verifiable-spacecraft-lifecycle/       # repo root
 │   ├── Implementation-Plan.md
 │   ├── Research-Paper-Outline.md
 │   └── Legal-Data-Sourcing-Notes.md
-├── src/                                # pipeline code (to be created)
-│   ├── build/
-│   ├── provenance/
-│   ├── sbom/
-│   ├── signing/
-│   ├── ground-authorization/
-│   ├── uplink-sim/
-│   ├── onboard-verification/
-│   ├── attestation/
-│   └── rollback/
-├── cfs-app/                            # target cFS application under test
-├── tests/                              # attack/tamper injection test suite
-└── evaluation/                         # metrics collection, results, plots
+├── src/                                # pipeline code: build, signing, ground
+│   │                                     authorization, uplink sim, onboard
+│   │                                     verification, installation,
+│   │                                     attestation, rollback, policy, SBOM,
+│   │                                     provenance, evidence store
+├── cfs-app/, fprime-app/               # target applications under test
+│                                         (stand-in stubs by default; real
+│                                         NASA cFS/F´ via Docker, optional)
+├── tests/                              # attack/tamper injection + regression suite
+└── evaluation/                        # experiment runner, metrics, ablation study
 ```
-
-`src/`, `cfs-app/`, `tests/`, and `evaluation/` don't exist yet — they get
-created as implementation phases start (see `docs/Implementation-Plan.md`).
 
 ## Status
 
-See `STATUS.md` for the current phase. As of project setup (documentation
-phase), no code has been written yet.
+See `STATUS.md` for the current phase and detailed session log. In short:
+the full S0–S5 pipeline is built and tested (130+ tests passing), evaluated
+against two target stacks (NASA cFS and F´, both stand-in and real Docker
+builds) with a full statistical evaluation and mechanism-isolation ablation
+study, and has been through three rounds of independent (blind, AI)
+red-team review — see `docs/Threat-Model.md` and `ISSUES-AND-FIXES-LOG.md`
+for every finding and fix. Currently in the paper-drafting phase; a
+human-colleague code review is separately pending. The repo is expected to
+go public at publication.
 
 ## License
 

@@ -1246,6 +1246,69 @@ debugging session.
 
 ---
 
+## [ISSUE-030] S5 policy deny-rule matched config keys case-sensitively — third independent (blind, AI) red-team finding #1
+
+- **Date found:** 2026-08-06
+- **Found during:** A third independent (blind, AI) red-team pass —
+  different model/tool than the first two passes, deliberately re-run
+  against the whole repo from scratch (the reviewer briefly and
+  mistakenly ran its first pass against an unrelated repo of mine with a
+  similar name; caught and corrected before any findings were produced
+  against the wrong codebase).
+- **Category:** logic bug / security finding
+- **Severity:** high — this is not a low-severity representation quirk
+  like ISSUE-027; it is a genuine end-to-end authorization bypass. Proven
+  through a real `pipeline.run(condition_name="S5", configuration=
+  {"DEBUG_MODE": True})` call: the release was confirmed onboard
+  (`ground_approved=True`, `rejected_at=None`), and the signed S5
+  authorization-evidence document recorded `overall_result: "pass"` with
+  no failed records anywhere in it — the exact "report says PASS without
+  a genuine end-to-end check" failure mode this project's whole
+  methodology exists to catch.
+- **Description:** `policy.py::_matches()` looked up each pattern key
+  with exact-case `config.get(k)` against the only prohibited-configuration
+  rule, `{"debug_mode": True}`. A caller-supplied config meaning the
+  exact same thing but spelled with a different key case —
+  `{"DEBUG_MODE": True}` or `{"Debug_Mode": True}` — never matched the
+  rule at all (`config.get("debug_mode")` on a dict containing only
+  `"DEBUG_MODE"` returns `None`), so the policy check reported `pass`
+  as if no prohibited configuration existed.
+- **Root cause:** ISSUE-027 (2026-08-05, second red-team pass, finding
+  #10) fixed the *value* axis of this exact same rule — coercing
+  `"true"`/`1`/`"1"` to match the boolean pattern `True` — but never
+  touched the *key* axis. The two axes are independent: fixing how values
+  are compared says nothing about how keys are looked up. Neither the
+  second pass's tests nor any other test in the suite ever used a
+  case-variant key, so the gap was never exercised.
+- **Fix:** `policy.py::_matches()` now builds one case-folded view of the
+  caller's `config` up front (`{k.lower(): v for k, v in config.items()}`)
+  and looks each pattern key up in that, rather than in the original
+  dict. `_values_match()`'s exact-equality semantics for non-boolean
+  pattern values are untouched. If a config were ever to contain two keys
+  that collide after case-folding (e.g. both `"DEBUG_MODE"` and
+  `"debug_mode"` present at once — not expected from a real caller), the
+  later key in dict-iteration order wins; this is a documented
+  simplification, not a silent bug, since contradictory casings of the
+  same field in one request is itself a malformed input.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`
+  (`test_finding_case_variant_keys_are_caught`, 3 parametrized cases:
+  `DEBUG_MODE`, `Debug_Mode`, `debug_mode`, all correctly rejected; plus
+  `test_finding_case_variant_falsy_keys_still_pass` confirming falsy/absent
+  case-variant keys still pass, so the fix didn't turn into a general
+  fuzzy-match engine). Also independently re-confirmed end-to-end via a
+  direct `pipeline.run()` call after the fix: the same `{"DEBUG_MODE":
+  True}` config is now rejected at `ground_authorization`, and no
+  authorization-evidence document is written at all (the release never
+  reaches that stage). Full regression suite re-run per test file
+  (`test_phase1` through `test_phase8_redteam_fixes.py`,
+  `test_second_redteam_fixes.py`, `test_evaluation_report_correctness.py`,
+  `test_issue007_docker_fallback.py`) — all passing, no drift, excluding
+  the environment-dependent real-Docker-binary tests in
+  `test_phase7_real_builds.py` (unrelated to this fix, unchanged).
+
+---
+
 ## Notes on responsible disclosure
 
 If a real vulnerability is found in an upstream dependency (cFS itself,

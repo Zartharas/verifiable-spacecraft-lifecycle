@@ -399,6 +399,39 @@ def test_finding10_non_boolean_fields_keep_exact_equality():
     assert ok is True  # no rule for "some_other_field" at all
 
 
+# --- Third independent (blind, AI) red-team pass, finding #1: policy
+# key-name case-sensitivity bypass (2026-08-06) --------------------------
+#
+# Finding #10 above fixed the *value* axis ({"debug_mode": "true"} vs
+# True). It never touched the *key* axis: {"DEBUG_MODE": True} means the
+# exact same thing as the only prohibited pattern but never matched it,
+# because the old lookup was `config.get(k)` with the pattern's exact-case
+# key. Proven end-to-end through `pipeline.run(condition_name="S5",
+# configuration={"DEBUG_MODE": True})`: the release was confirmed onboard
+# and the signed S5 authorization-evidence document recorded
+# `overall_result: "pass"` with no failed records anywhere in it -- a
+# real "report says PASS without a genuine check" failure.
+
+
+@pytest.mark.parametrize(
+    "config",
+    [{"DEBUG_MODE": True}, {"Debug_Mode": True}, {"debug_mode": True}],
+)
+def test_finding_case_variant_keys_are_caught(config):
+    ok, reason = check_configuration(config, "hash123", condition_name="S5")
+    assert ok is False
+    assert "prohibited" in reason
+
+
+@pytest.mark.parametrize(
+    "config",
+    [{"DEBUG_MODE": False}, {"Debug_Mode": "false"}, {}],
+)
+def test_finding_case_variant_falsy_keys_still_pass(config):
+    ok, _reason = check_configuration(config, "hash123", condition_name="S5")
+    assert ok is True
+
+
 # --- Finding #11: ablation baseline-assertion guard consistency ---------
 
 
