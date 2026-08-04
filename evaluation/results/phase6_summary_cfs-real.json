@@ -4,21 +4,21 @@
     "S0": {
       "success_rate": 1.0,
       "success_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
       "reproducible_rate": 1.0,
       "reproducible_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "mean_elapsed_seconds": 0.23988483282737433,
+      "mean_elapsed_seconds": 0.2872020828188397,
       "mean_elapsed_seconds_ci95": [
-        0.22449600667664413,
-        0.2552736589781045
+        0.2738422677367945,
+        0.3005618979008849
       ],
-      "stdev_elapsed_seconds": 0.017556357840285274,
-      "n_trials": 5,
+      "stdev_elapsed_seconds": 0.03733404124762183,
+      "n_trials": 30,
       "traceability_completeness": 1.0,
       "record_count_mean": 7,
       "storage_overhead_bytes": {
@@ -34,21 +34,21 @@
     "S1": {
       "success_rate": 1.0,
       "success_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
       "reproducible_rate": 1.0,
       "reproducible_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "mean_elapsed_seconds": 0.24782574917189776,
+      "mean_elapsed_seconds": 0.2670967146327409,
       "mean_elapsed_seconds_ci95": [
-        0.24510171675763118,
-        0.2505497815861643
+        0.25847832743517524,
+        0.2757151018303065
       ],
-      "stdev_elapsed_seconds": 0.0031077151281698676,
-      "n_trials": 5,
+      "stdev_elapsed_seconds": 0.024084107537859313,
+      "n_trials": 30,
       "traceability_completeness": 1.0,
       "record_count_mean": 9,
       "storage_overhead_bytes": {
@@ -64,21 +64,21 @@
     "S2": {
       "success_rate": 1.0,
       "success_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
       "reproducible_rate": 1.0,
       "reproducible_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "mean_elapsed_seconds": 0.279121703770943,
+      "mean_elapsed_seconds": 0.30492457187113664,
       "mean_elapsed_seconds_ci95": [
-        0.2563495459670864,
-        0.3018938615747995
+        0.2962405870008442,
+        0.31360855674142907
       ],
-      "stdev_elapsed_seconds": 0.02597963920600797,
-      "n_trials": 5,
+      "stdev_elapsed_seconds": 0.024267420420881352,
+      "n_trials": 30,
       "traceability_completeness": 1.0,
       "record_count_mean": 12,
       "storage_overhead_bytes": {
@@ -94,92 +94,92 @@
     "S3": {
       "success_rate": 1.0,
       "success_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
       "reproducible_rate": 1.0,
       "reproducible_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "mean_elapsed_seconds": 2.3783570329891517,
+      "mean_elapsed_seconds": 2.511800067553607,
       "mean_elapsed_seconds_ci95": [
-        2.3660518585807004,
-        2.390662207397603
+        2.481270237891842,
+        2.5423298972153723
       ],
-      "stdev_elapsed_seconds": 0.014038370638922534,
-      "n_trials": 5,
+      "stdev_elapsed_seconds": 0.0853156958292812,
+      "n_trials": 30,
       "traceability_completeness": 1.0,
       "record_count_mean": 15,
       "storage_overhead_bytes": {
         "sbom_bytes": 595,
         "provenance_bytes": 642,
-        "attestation_bytes": 357,
+        "attestation_bytes": 356,
         "authorization_evidence_bytes": 0
       },
-      "total_overhead_bytes": 1594,
-      "overhead_vs_s0_bytes": 1594,
-      "mean_attestation_age_seconds": 0.005057811737060547
+      "total_overhead_bytes": 1593,
+      "overhead_vs_s0_bytes": 1593,
+      "mean_attestation_age_seconds": 0.0055040677388509115
     },
     "S4": {
       "success_rate": 1.0,
       "success_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
       "reproducible_rate": 1.0,
       "reproducible_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "mean_elapsed_seconds": 2.3781525168102235,
+      "mean_elapsed_seconds": 2.4831026357598605,
       "mean_elapsed_seconds_ci95": [
-        2.35697684449876,
-        2.399328189121687
+        2.432204397458499,
+        2.534000874061222
       ],
-      "stdev_elapsed_seconds": 0.024158287121271237,
-      "n_trials": 5,
+      "stdev_elapsed_seconds": 0.1422352717088215,
+      "n_trials": 30,
       "traceability_completeness": 1.0,
       "record_count_mean": 17,
       "storage_overhead_bytes": {
         "sbom_bytes": 595,
         "provenance_bytes": 642,
-        "attestation_bytes": 360,
+        "attestation_bytes": 359,
         "authorization_evidence_bytes": 0
       },
-      "total_overhead_bytes": 1597,
-      "overhead_vs_s0_bytes": 1597,
-      "mean_attestation_age_seconds": 0.004980659484863282
+      "total_overhead_bytes": 1596,
+      "overhead_vs_s0_bytes": 1596,
+      "mean_attestation_age_seconds": 0.005044166247049967
     },
     "S5": {
       "success_rate": 1.0,
       "success_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
       "reproducible_rate": 1.0,
       "reproducible_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "mean_elapsed_seconds": 2.6059354099910705,
+      "mean_elapsed_seconds": 2.774348961783107,
       "mean_elapsed_seconds_ci95": [
-        2.5657713335923664,
-        2.6460994863897747
+        2.72504936647954,
+        2.8236485570866745
       ],
-      "stdev_elapsed_seconds": 0.045821227082141515,
-      "n_trials": 5,
+      "stdev_elapsed_seconds": 0.1377678593042839,
+      "n_trials": 30,
       "traceability_completeness": 1.0,
       "record_count_mean": 21,
       "storage_overhead_bytes": {
         "sbom_bytes": 595,
         "provenance_bytes": 642,
-        "attestation_bytes": 360,
+        "attestation_bytes": 359,
         "authorization_evidence_bytes": 4124
       },
-      "total_overhead_bytes": 5721,
-      "overhead_vs_s0_bytes": 5721,
-      "mean_attestation_age_seconds": 0.004343557357788086
+      "total_overhead_bytes": 5720,
+      "overhead_vs_s0_bytes": 5720,
+      "mean_attestation_age_seconds": 0.0049376249313354496
     }
   },
   "attack_cases": {
@@ -187,248 +187,248 @@
       "condition": "S2",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.2362277487758547,
+      "mean_elapsed_seconds": 0.33526144726977997,
       "mean_elapsed_seconds_ci95": [
-        0.21898696083518843,
-        0.253468536716521
+        0.3213599310023036,
+        0.34916296353725634
       ],
-      "stdev_elapsed_seconds": 0.019669170316830808
+      "stdev_elapsed_seconds": 0.03884782675113175
     },
     "2": {
       "condition": "S2",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.05580006518866867,
+      "mean_elapsed_seconds": 0.06441038093374421,
       "mean_elapsed_seconds_ci95": [
-        0.05408329635934281,
-        0.057516834017994525
+        0.0626472743290306,
+        0.06617348753845782
       ],
-      "stdev_elapsed_seconds": 0.0019585774510333465
+      "stdev_elapsed_seconds": 0.004927006421877518
     },
     "3": {
       "condition": "S1",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.20382846742868424,
+      "mean_elapsed_seconds": 0.2778983502842796,
       "mean_elapsed_seconds_ci95": [
-        0.20205000504277007,
-        0.2056069298145984
+        0.2615892676513775,
+        0.2942074329171817
       ],
-      "stdev_elapsed_seconds": 0.002028960607311507
+      "stdev_elapsed_seconds": 0.04557577780742968
     },
     "4": {
       "condition": "S1",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.20887309440877289,
+      "mean_elapsed_seconds": 0.2523308736000521,
       "mean_elapsed_seconds_ci95": [
-        0.19306038846628468,
-        0.2246858003512611
+        0.2445524005559281,
+        0.26010934664417606
       ],
-      "stdev_elapsed_seconds": 0.018039941528376804
+      "stdev_elapsed_seconds": 0.021736965047002944
     },
     "5": {
       "condition": "S2",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.21704194177873432,
+      "mean_elapsed_seconds": 0.3186486518631379,
       "mean_elapsed_seconds_ci95": [
-        0.20908740074548526,
-        0.22499648281198337
+        0.3009483689709755,
+        0.3363489347553003
       ],
-      "stdev_elapsed_seconds": 0.009074946163345051
+      "stdev_elapsed_seconds": 0.04946349088908237
     },
     "6": {
       "condition": "S0",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.2108642508275807,
+      "mean_elapsed_seconds": 0.3096960707490022,
       "mean_elapsed_seconds_ci95": [
-        0.20448819291918993,
-        0.21724030873597147
+        0.28877881010103723,
+        0.33061333139696714
       ],
-      "stdev_elapsed_seconds": 0.007274132097773938
+      "stdev_elapsed_seconds": 0.05845334437808946
     },
     "7": {
       "condition": "S0",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.2047967218561098,
+      "mean_elapsed_seconds": 0.2753904909322349,
       "mean_elapsed_seconds_ci95": [
-        0.18942144854857831,
-        0.2201719951636413
+        0.2599670343676188,
+        0.29081394749685097
       ],
-      "stdev_elapsed_seconds": 0.017540896065448196
+      "stdev_elapsed_seconds": 0.04310089324051712
     },
     "8": {
       "condition": "S5",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.21504945701453834,
+      "mean_elapsed_seconds": 0.3288864667682598,
       "mean_elapsed_seconds_ci95": [
-        0.20848711879608167,
-        0.221611795232995
+        0.3098173419777352,
+        0.34795559155878436
       ],
-      "stdev_elapsed_seconds": 0.007486650177456124
+      "stdev_elapsed_seconds": 0.053288723467608656
     },
     "9": {
       "condition": "S2",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.22209453519899397,
+      "mean_elapsed_seconds": 0.33071732506311186,
       "mean_elapsed_seconds_ci95": [
-        0.21116371902891368,
-        0.23302535136907426
+        0.3111978076311195,
+        0.35023684249510423
       ],
-      "stdev_elapsed_seconds": 0.01247043265604769
+      "stdev_elapsed_seconds": 0.05454734698529349
     },
     "10": {
       "condition": "S4",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_trusted_restoration",
-      "mean_elapsed_seconds": 0.2632463226094842,
+      "mean_elapsed_seconds": 0.35242779629770665,
       "mean_elapsed_seconds_ci95": [
-        0.2567223666932052,
-        0.26977027852576324
+        0.34049966013297006,
+        0.36435593246244324
       ],
-      "stdev_elapsed_seconds": 0.007442861689291746
+      "stdev_elapsed_seconds": 0.03333321044091531
     },
     "11": {
       "condition": "S4",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_trusted_restoration",
-      "mean_elapsed_seconds": 0.291634186799638,
+      "mean_elapsed_seconds": 0.42611968267398576,
       "mean_elapsed_seconds_ci95": [
-        0.2772880864769525,
-        0.30598028712232345
+        0.4008389969557547,
+        0.4514003683922168
       ],
-      "stdev_elapsed_seconds": 0.0163667630273247
+      "stdev_elapsed_seconds": 0.07064694814833594
     },
     "12": {
       "condition": "S4",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_trusted_restoration",
-      "mean_elapsed_seconds": 2.36818000942003,
+      "mean_elapsed_seconds": 2.5810268244046406,
       "mean_elapsed_seconds_ci95": [
-        2.343027158602906,
-        2.3933328602371535
+        2.5312773836119877,
+        2.6307762651972935
       ],
-      "stdev_elapsed_seconds": 0.028695655232142698
+      "stdev_elapsed_seconds": 0.13902495380308016
     },
     "13": {
       "condition": "S5",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.0001861831871792674,
+      "mean_elapsed_seconds": 0.0003102720327054461,
       "mean_elapsed_seconds_ci95": [
-        0.0001612191325571055,
-        0.0002111472418014293
+        0.0002678267495742443,
+        0.0003527173158366479
       ],
-      "stdev_elapsed_seconds": 2.8480266902638698e-05
+      "stdev_elapsed_seconds": 0.00011861346444210582
     },
     "14": {
       "condition": "S4",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_trusted_restoration",
-      "mean_elapsed_seconds": 0.2926506322110072,
+      "mean_elapsed_seconds": 0.4672145195111322,
       "mean_elapsed_seconds_ci95": [
-        0.26405588495739873,
-        0.3212453794646156
+        0.42680982926897826,
+        0.5076192097532861
       ],
-      "stdev_elapsed_seconds": 0.032622346254333655
+      "stdev_elapsed_seconds": 0.11291102180937036
     },
     "15": {
       "condition": "S5",
       "detection_rate": 1.0,
       "detection_rate_ci95": [
-        0.5655085052479191,
+        0.8864829086095221,
         1.0
       ],
-      "n_trials": 5,
+      "n_trials": 30,
       "metric_label": "time_to_identify",
-      "mean_elapsed_seconds": 0.5051256007980556,
+      "mean_elapsed_seconds": 0.7200889248323317,
       "mean_elapsed_seconds_ci95": [
-        0.4608502922918506,
-        0.5494009093042606
+        0.6988809200597216,
+        0.7412969296049418
       ],
-      "stdev_elapsed_seconds": 0.05051153037992293
+      "stdev_elapsed_seconds": 0.059265829661406894
     }
   },
   "confusion_matrix": {
     "S0": {
-      "TP": 5,
+      "TP": 30,
       "FN": 0,
-      "TN": 10,
+      "TN": 60,
       "FP": 0,
       "attack_cases_covered": [
         "6",
@@ -436,9 +436,9 @@
       ]
     },
     "S1": {
-      "TP": 5,
+      "TP": 30,
       "FN": 0,
-      "TN": 10,
+      "TN": 60,
       "FP": 0,
       "attack_cases_covered": [
         "3",
@@ -446,9 +446,9 @@
       ]
     },
     "S2": {
-      "TP": 5,
+      "TP": 30,
       "FN": 0,
-      "TN": 20,
+      "TN": 120,
       "FP": 0,
       "attack_cases_covered": [
         "1",
@@ -458,16 +458,16 @@
       ]
     },
     "S3": {
-      "TP": 5,
+      "TP": 30,
       "FN": 0,
       "TN": 0,
       "FP": 0,
       "attack_cases_covered": []
     },
     "S4": {
-      "TP": 5,
+      "TP": 30,
       "FN": 0,
-      "TN": 20,
+      "TN": 120,
       "FP": 0,
       "attack_cases_covered": [
         "10",
@@ -477,9 +477,9 @@
       ]
     },
     "S5": {
-      "TP": 5,
+      "TP": 30,
       "FN": 0,
-      "TN": 15,
+      "TN": 90,
       "FP": 0,
       "attack_cases_covered": [
         "8",

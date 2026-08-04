@@ -343,9 +343,16 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       depending on the real `docker` binary's behavior. See
       `ISSUES-AND-FIXES-LOG.md` ISSUE-010. 41/41 passing on both
       environments now.
-- [ ] **You:** re-run the same evaluation/ablation/adaptive scripts
-      against real `cfs-real`/`fprime-real` (stub stacks are now done,
-      confirmed clean)
+- [x] **Real-stack (n=30) run complete, 2026-08-04.** User re-ran the full
+      evaluation, Phase 8 ablation study, and Phase 8 adaptive-attacker
+      scenarios against `cfs-real` and `fprime-real` — identical
+      100%/0% results to the stub stacks throughout, no exceptions. This
+      closes out the rejection-risk mitigation work entirely: all three
+      chosen mitigations (ablation, adaptive-attacker scenarios, 30-trial
+      CI reporting) are now verified against genuine NASA cFS/F´
+      binaries, not just the stand-in artifacts. See
+      `docs/Threat-Model.md`'s "Phase 8 ablation study"/"Phase 8
+      adaptive-attacker scenarios" update notes.
 - [ ] **You:** commit + push this session's changes
 - [ ] Move to Phase 8 (paper drafting and repo polish)
 - [ ] Consider reviewing prior related projects already present in the
@@ -450,20 +457,25 @@ not based on intent or partial progress.
   distinct from the manual verification described here.
 - Generalizability claims (beyond a single stack): `PRELIMINARY_INTERNAL_ONLY`
   — **strengthened, Phase 7 real-stack statistical evaluation
-  (2026-08-03).** The S0-S5 ladder's mechanisms and evidence schema, with
+  (2026-08-03), and again by Phase 8's ablation/adaptive-attacker work
+  (2026-08-04).** The S0-S5 ladder's mechanisms and evidence schema, with
   zero changes beyond the two stack-specific adapters, now show
   structurally identical repeated-trial results across four stacks: two
   stand-in artifacts (`cfs`, `fprime`, Phase 6) and two genuine NASA
-  flight-software frameworks (`cfs-real`, `fprime-real`, Phase 7). Still
-  `PRELIMINARY_INTERNAL_ONLY`, not fully citable: one evaluation run per
-  stack, on one or two machines, not independently replicated elsewhere.
-  This is nonetheless the strongest generalizability evidence gathered so
-  far — "the full S0-S5 ladder's mechanisms and evidence schema
-  generalize, with matching detection/recovery/reproducibility behavior,
-  across two architecturally distinct stand-in artifacts and two real
-  NASA flight-software frameworks" is a defensible characterization; "the
-  ladder is validated for operational use on real cFS/F´" is not (see
-  the permanent restriction below).
+  flight-software frameworks (`cfs-real`, `fprime-real`, Phase 7) — and,
+  as of Phase 8, this now covers not just the original 15 attack-matrix
+  cases but also the 3-mechanism ablation study and the 2 combined-vector
+  adaptive-attacker scenarios, all at n=30, all four stacks, all matching.
+  Still `PRELIMINARY_INTERNAL_ONLY`, not fully citable: one evaluation run
+  per stack, on one or two machines, not independently replicated
+  elsewhere. This is nonetheless the strongest generalizability evidence
+  gathered so far — "the full S0-S5 ladder's mechanisms and evidence
+  schema generalize, with matching detection/recovery/reproducibility
+  behavior — including under mechanism ablation and combined-vector
+  attacks — across two architecturally distinct stand-in artifacts and
+  two real NASA flight-software frameworks" is a defensible
+  characterization; "the ladder is validated for operational use on real
+  cFS/F´" is not (see the permanent restriction below).
 - CCSDS/protocol-conformance claims: `NOT_PERMITTED` — uplink simulator is
   CCSDS-*informed*, not a conformance-tested implementation (see PRD.md
   non-goals)

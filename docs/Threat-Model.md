@@ -697,11 +697,24 @@ have been: it shows the ladder degrades gracefully (detection survives
 losing one layer down) rather than failing all-or-nothing.
 
 Raw results: `evaluation/results/phase8_ablation_cfs.json` /
-`phase8_ablation_fprime.json`. Not yet run against the real `cfs-real`/
-`fprime-real` binaries (requires the user's Docker-capable Mac, same as
-Phase 7's statistical evaluation) — claims from this ablation study are
-`PRELIMINARY_INTERNAL_ONLY` against the stub stacks only until that
-real-stack run happens; see STATUS.md "Claims status."
+`phase8_ablation_fprime.json`.
+
+**Update (2026-08-04): re-run at n=30 against all four stacks, including
+both real frameworks.** After fixing ISSUE-009 (a macOS dyld/loadability
+regression in the build-reproducibility fix, unrelated to the ablation
+logic itself — see ISSUES-AND-FIXES-LOG.md), the user re-ran this study
+at the full 30-trial count against `cfs`, `fprime`, and — for the first
+time — the real `cfs-real`/`fprime-real` binaries. All four stacks
+produced the identical table above (100%/0% at n=30, same
+`effect_specifically_attributable_to_mechanism: true` for all three
+cases). This means the ablation result — the ladder's mechanisms doing
+real, isolable, individually-necessary work, and case #11's specific
+"detection survives, recovery doesn't" graceful-degradation finding — now
+holds against genuine NASA cFS and F´ flight-software binaries, not just
+the stand-in artifacts. Raw results:
+`evaluation/results/phase8_ablation_{cfs,fprime,cfs-real,fprime-real}.json`.
+Still `PRELIMINARY_INTERNAL_ONLY` — one evaluation run per stack, not
+independently replicated elsewhere — see STATUS.md "Claims status."
 
 ## Phase 8 adaptive-attacker scenarios (2026-08-03)
 
@@ -746,5 +759,17 @@ in the paper rather than silently overclaiming "adaptive attacker" to
 mean more than what was actually tested.
 
 Raw results: `evaluation/results/phase8_adaptive_cfs.json` /
-`phase8_adaptive_fprime.json`. Same `PRELIMINARY_INTERNAL_ONLY` status
-and real-stack caveat as the ablation study above.
+`phase8_adaptive_fprime.json`.
+
+**Update (2026-08-04): re-run at n=30 against all four stacks, including
+both real frameworks.** Same re-run as the ablation study above, same
+result: both combined-vector scenarios (A: rogue builder + transit
+tamper; B: interrupted install + stale attestation) scored 100%
+caught/100% halted-before-second-vector at n=30 against `cfs`, `fprime`,
+`cfs-real`, and `fprime-real` alike. The fail-closed-at-first-violation
+property holds against the real binaries, not just the stand-ins. Raw
+results:
+`evaluation/results/phase8_adaptive_{cfs,fprime,cfs-real,fprime-real}.json`.
+Still `PRELIMINARY_INTERNAL_ONLY` — same caveat as above — and the
+stated "sleeper attacker" scope limitation still applies regardless of
+which stack is used.
