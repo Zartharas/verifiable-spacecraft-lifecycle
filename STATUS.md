@@ -631,6 +631,11 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       independent-review process itself is doing real work: a genuinely
       different reviewer found a real bypass that two prior AI passes and
       the full test suite had all missed.
+- [x] **Committed and pushed, 2026-08-06: commit `f04e124`** (ISSUE-031
+      fix + 18 tests + docs — 7 files changed, 604 insertions, 34
+      deletions). Same recurring stale `.git/index.lock` issue as prior
+      commits; cleared from the user's own Terminal and the commit/push
+      completed cleanly on retry.
 - [x] **Fourth independent (blind, AI) red-team pass complete, 2026-08-06
       — different model/tool than the first three.** Specifically tasked
       with adversarially re-testing whether ISSUE-030's fix actually
