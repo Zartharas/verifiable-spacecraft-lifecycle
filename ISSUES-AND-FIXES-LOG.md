@@ -1309,6 +1309,153 @@ debugging session.
 
 ---
 
+## [ISSUE-031] ISSUE-030's fix was too narrow — five more policy-matcher bypasses, plus a confirm-time integrity gap — fourth independent (blind, AI) red-team pass
+
+- **Date found:** 2026-08-06
+- **Found during:** A fourth independent (blind, AI) red-team pass —
+  different model/tool than the first three, specifically tasked with
+  (a) adversarially re-testing whether ISSUE-030's fix actually held
+  rather than trusting its own regression tests, and (b) looking at
+  files no prior pass had scrutinized as closely. It correctly stopped
+  and re-confirmed the repo path/structure before starting (the safeguard
+  added after the third pass's mix-up worked as intended). It also hit a
+  genuine infrastructure outage in its own tooling (an escalation
+  backend returning 404 for the whole session) and worked around it
+  honestly — found a pre-installed interpreter with the needed
+  dependencies instead of fabricating or skipping the baseline — rather
+  than silently accepting a degraded review.
+- **Category:** logic bug / security finding (policy matcher) + defense-
+  in-depth hardening (partition confirm)
+- **Severity:** high for the policy-matcher findings (P4-K, P4-C, P4-N,
+  P4-U, P4-V below) — same reachable, end-to-end class as ISSUE-030
+  itself, since all go through the normal ground-authorization/onboard-
+  verification channel. Low/hardening-only for the partition-confirm
+  finding (P4-T) — see its own reachability note below.
+- **Description, five distinct re-defeats of ISSUE-030's fix, all
+  independently reproduced against the real code before this fix was
+  written (not trusted from the report alone):**
+  1. **P4-K (whitespace-in-key):** the third pass's fix case-folded with
+     `.lower()` but never stripped whitespace, so `{" debug_mode": True}`
+     / `{"debug_mode ": True}` never matched `"debug_mode"` at all.
+  2. **P4-C (collision-after-fold fail-open):** building one collapsed
+     `{folded_key: value}` dict means a config containing two keys that
+     fold to the same canonical form with different values — e.g. both
+     `"debug_mode": True` and `"DEBUG_MODE": False}` in the same request —
+     let a dict comprehension's "last key wins" pick the benign one. The
+     third pass's own fix docstring predicted this exact path and
+     dismissed it as "a caller sending contradictory casings... is
+     itself a malformed request" — true of an accidental caller, not of
+     an attacker deliberately crafting the shadow.
+  3. **P4-N (non-string key crash):** `k.lower()` assumed a string key;
+     a non-string key (e.g. `{1: True}`) raised `AttributeError` with
+     nothing between `check_configuration` and `pipeline.run()` to catch
+     it — a malformed config could crash the pipeline run outright
+     instead of producing a clean, fail-closed deny record.
+  4. **P4-U (Unicode fullwidth):** `.lower()` alone does not fold
+     Unicode width variants. Confirmed by direct test before writing the
+     fix, not assumed: `"Ｄebug_mode".casefold()` (fullwidth D, U+FF24)
+     stays fullwidth (`"ｄebug_mode"`), never becoming ASCII
+     `"debug_mode"` — NFKC normalization before casefolding is required,
+     and this was verified interactively rather than taking the
+     reviewer's word that `casefold()` alone would be the fix.
+  5. **P4-V (container-wrapped value):** a boolean intent wrapped in a
+     list or dict — `{"debug_mode": [True]}` / `{"debug_mode": {"enabled":
+     True}}` — fell through every branch of `_values_match`'s coercion to
+     its `return False` catch-all, an unlimited bypass class of "wrap the
+     same true value in a container."
+
+  All five were end-to-end proof points of the same failure class
+  ISSUE-030 named: `check_configuration` returned `(True, None)` and
+  logged an evidence record with `result: "pass"` for a config that
+  means exactly the same thing as the one prohibited pattern.
+  Reachability note for accurate severity: `configuration` is never
+  consumed by anything in the pipeline beyond this policy check itself
+  (confirmed by inspection — it is purely a policy-check input
+  representing "did this release carry prohibited config," matching
+  `policy.py`'s own module docstring) — these bypasses mean the *check*
+  fails to recognize the caller's stated intent, not that a live runtime
+  toggle gets flipped. That doesn't reduce the severity of the finding
+  (the whole point of the mechanism is the check), it just calibrates
+  what "bypass" means precisely.
+
+  Related but separately-scoped observation, **P4-I**: `onboard.py`'s
+  `check_prohibited_configuration` delegates to this exact same
+  `policy.check_configuration`/`_matches`, so any bypass of the matcher
+  defeats both the ground and onboard gates simultaneously — the two
+  checks are not independent on the config axis, only on the "did ground
+  and onboard receive the same config" axis they were actually added to
+  cover. Worth stating plainly rather than implying blanket defense-in-
+  depth; no separate fix, since fixing the shared matcher closes both.
+
+- **Root cause:** the third pass's fix addressed the literal reported
+  case-variant rather than the general representation-robustness problem
+  — the same category of narrow-fix mistake ISSUE-027 avoided for values
+  by handling a *class* of representations, repeated here for keys.
+- **Fix:** `policy.py::_matches()`/`_values_match()` rewritten. New
+  `_fold_key()` helper: skips (returns `None`, does not raise) non-string
+  keys; for string keys, strips whitespace and applies NFKC Unicode
+  normalization before casefolding. `_matches()` no longer builds one
+  collapsed dict — for each pattern key, it checks *every* config key
+  that folds to the same canonical form and fails closed if *any* of
+  them has a matching value (not just whichever one a dict comprehension
+  kept). `_values_match()`'s container branch falls back to Python's own
+  truthiness (`bool(x)`) rather than hand-enumerating list/dict/tuple —
+  confirmed this doesn't turn into a general fuzzy matcher: empty
+  containers (`[]`, `{}`, `()`) are conventionally falsy and still pass,
+  matching `debug_mode=False` semantics, not matching everything.
+- **Second finding, P4-T — `confirm_active()` had no re-hash immediately
+  before confirming (defense-in-depth, not a demonstrated bypass):**
+  `installation/partitions.py::confirm_active()` set `confirmed = True`
+  based solely on the caller's prior `verify_attestation`/
+  `run_health_check` results, without re-reading the slot's actual bytes
+  at confirm time — a gap between "verified" and "permanently trusted."
+  **Reachability, stated precisely:** exploiting this needs an adversary
+  capability none of this project's six threat actors (Threat-Model.md
+  § 2) grant — independent write access to the onboard partition slot's
+  bytes, timed to the exact in-process window between health-check and
+  confirm, through a channel other than the modeled uplink/installation
+  path. This is the same category as ISSUE-018 (SBOM binding "masked in
+  the normal flow"): a real code pattern, not a demonstrated end-to-end
+  bypass under this project's own stated adversary model. **Fix (applied
+  anyway, as cheap defense-in-depth):** `confirm_active()` now re-hashes
+  the slot immediately before setting `confirmed`, mirroring the re-hash
+  `revert_to_other()` already does before trusting the recovery slot on
+  rollback; fails closed and returns `(False, reason)` on mismatch
+  instead of silently confirming. `rollback.rollback.resolve()` updated
+  to treat a confirm-time integrity failure exactly like a failed health
+  check — falls through to the recovery path — instead of unconditionally
+  reporting `"confirmed"`.
+- **Documentation-only, no fix — P4-L (condition.yaml unprotected):**
+  the reviewer itself correctly downgraded this: `condition.yaml` is a
+  plain, unprotected file, but no production code path (`pipeline.run()`,
+  `authorize()`, `verify_received_bundle()`) ever reads it — all three
+  build `Condition` via `preset()`/`custom()` from a hardcoded string,
+  confirmed by grep — so tampering it cannot alter any pipeline run. A
+  latent documentation anomaly (the module advertises a file-based config
+  option nothing trusts), not an exploitable gap.
+- **Disclosure status:** n/a.
+- **Verified fixed:** yes — `tests/test_second_redteam_fixes.py`, 18 new
+  tests (`test_finding_p4k_*`, `test_finding_p4c_*`, `test_finding_p4n_*`,
+  `test_finding_p4u_*`, `test_finding_p4v_*` for the matcher rewrite;
+  `test_finding_p4t_*` for the confirm-time re-hash, including one that
+  drives it through `rollback.resolve()` end-to-end). All five matcher
+  re-defeats independently confirmed against the real `policy.py`
+  *before* the fix was written (not trusted from the report), and
+  re-confirmed closed after. `_ablation_case_11` (`trusted_rollback`) and
+  `_ablation_case_12` (`onboard_attestation`) — the two mechanisms
+  touching the code this fix changed — re-run directly and still isolate
+  correctly (baseline `recovered=True`/`caught=True` vs. ablated
+  `recovered=False`/`caught=False`). Full regression suite re-run per
+  test file — all passing, no drift, excluding the environment-dependent
+  real-Docker-binary tests in `test_phase7_real_builds.py` (unrelated,
+  unchanged). Full 6-mechanism ablation study not re-run at full scale in
+  this sandbox due to per-command time constraints (consistent with every
+  prior full ablation run needing either chunking or the user's own
+  machine) — the two rollback-adjacent cases were verified directly
+  instead, which covers the code this fix actually touched.
+
+---
+
 ## Notes on responsible disclosure
 
 If a real vulnerability is found in an upstream dependency (cFS itself,

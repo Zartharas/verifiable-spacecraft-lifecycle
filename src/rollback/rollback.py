@@ -33,12 +33,29 @@ def resolve(
       "confirmed"       — health + attestation both passed, now permanent
       "rolled_back"      — reverted to the other (confirmed) partition
       "recovery_failed"  — reversion itself failed (test case #14)
+
+    Fourth independent (blind, AI) red-team pass, finding P4-T
+    (2026-08-06): `partitions.confirm_active()` now re-verifies the
+    slot's on-disk bytes against the hash recorded at write time
+    immediately before confirming (see its docstring), and can itself
+    fail closed. Previously this function called it and unconditionally
+    returned "confirmed" without checking for a failure at all — treat a
+    confirm-time integrity failure exactly like a failed health check:
+    fall through to the same recovery path, not a silent "confirmed"
+    that never actually happened.
     """
     if health_ok and attestation_ok:
-        partitions.confirm_active(condition_name=condition_name)
-        return "confirmed", None
+        confirmed, confirm_reason = partitions.confirm_active(condition_name=condition_name)
+        if confirmed:
+            return "confirmed", None
+        # Confirm-time integrity check failed even though health +
+        # attestation passed earlier — treat it the same as any other
+        # reason to attempt recovery, not a silent pass-through.
+        reason = confirm_reason
+    else:
+        reason = None
 
-    reverted, reason = partitions.revert_to_other(condition_name=condition_name)
+    reverted, revert_reason = partitions.revert_to_other(condition_name=condition_name)
     if reverted:
-        return "rolled_back", reason
-    return "recovery_failed", reason
+        return "rolled_back", revert_reason or reason
+    return "recovery_failed", revert_reason or reason

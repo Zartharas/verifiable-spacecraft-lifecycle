@@ -189,20 +189,73 @@ def tentative_activate(slot: str, condition_name: str = "S4") -> None:
     )
 
 
-def confirm_active(condition_name: str = "S4") -> None:
+def confirm_active(condition_name: str = "S4") -> tuple[bool, Optional[str]]:
+    """Permanently confirm the currently-active slot.
+
+    Fourth independent (blind, AI) red-team pass, finding P4-T
+    (2026-08-06): this used to set `confirmed = True` based solely on the
+    caller's prior `verify_attestation`/`run_health_check` results,
+    without ever re-reading the slot's actual on-disk bytes here. Every
+    check between `write_and_verify` and this call reads the slot's
+    bytes fresh each time, but nothing re-verified them again
+    immediately before the permanent-confirm flag flips — a window in
+    which the slot's bytes could change without this function noticing,
+    installing whatever is on disk *at confirm time* as the confirmed
+    image, not necessarily what was actually attested/health-checked.
+
+    Reachability, stated precisely: exploiting this needs an adversary
+    capability this project's threat model (Threat-Model.md § 2) does
+    not grant any of its six threat actors — independent write access to
+    the onboard partition slot's bytes, timed to the exact in-process
+    window between health-check and confirm, through a channel other
+    than the modeled uplink/installation path. This is the same category
+    of gap as ISSUE-018 (SBOM binding "masked in the normal flow"): a
+    real code pattern, cheap and correct to close, not a demonstrated
+    end-to-end bypass under this project's own adversary model. Fixed
+    anyway as defense-in-depth, mirroring the re-hash `revert_to_other()`
+    already does before trusting the *other* slot on rollback — this
+    function now does the equivalent check on the slot being confirmed.
+    Fails closed (does not set `confirmed`) and returns `(False, reason)`
+    if the slot's bytes no longer match the hash recorded when it was
+    written, so a caller can treat this exactly like any other
+    fail-closed rejection rather than assuming confirm always succeeds."""
     store = EvidenceStore()
     state = _load_state()
     slot = state["active"]
-    state[slot]["confirmed"] = True
+    record = state[slot]
+    expected_hash = record.get("hash")
+    slot_path = _slot_path(slot)
+    actual_hash = _sha256_file(slot_path) if slot_path.exists() else None
+
+    if actual_hash != expected_hash:
+        store.record(
+            pipeline_stage="operational_monitoring",
+            condition=condition_name,
+            artifact_ref=expected_hash or "unknown",
+            actor="health_monitor",
+            result="fail",
+            detail={
+                "reason": "slot bytes no longer match the hash recorded at "
+                "write time — refusing to confirm what is actually on disk "
+                "now, not what was verified earlier",
+                "slot": slot,
+                "expected_hash": expected_hash,
+                "actual_hash": actual_hash,
+            },
+        )
+        return False, "slot integrity check failed at confirm time"
+
+    record["confirmed"] = True
     _save_state(state)
     store.record(
         pipeline_stage="operational_monitoring",
         condition=condition_name,
-        artifact_ref=state[slot]["hash"] or "unknown",
+        artifact_ref=expected_hash or "unknown",
         actor="health_monitor",
         result="pass",
         detail={"decision": "confirmed", "slot": slot},
     )
+    return True, None
 
 
 def revert_to_other(condition_name: str = "S4") -> tuple[bool, Optional[str]]:

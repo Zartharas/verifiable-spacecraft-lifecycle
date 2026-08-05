@@ -596,6 +596,13 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       whether it turns up nothing new (a fine and useful result —
       convergent validity with the two AI passes) or something the AI
       reviews missed.
+- [x] **Committed and pushed, 2026-08-06: commit `6f8a8bf`** (ISSUE-030
+      fix + tests + docs, plus new `docs/Getting-Started.md` and a
+      README refresh — 7 files changed, 528 insertions, 36 deletions).
+      Hit the same recurring stale `.git/index.lock` issue as prior
+      commits; cleared from the user's own Terminal (confirmed no real
+      git process running first) and the commit/push completed cleanly
+      on retry.
 - [x] **Third independent (blind, AI) red-team pass complete, 2026-08-06
       — different model/tool than the first two.** Run as a stopgap
       while the human colleague review is still pending. The reviewer's
@@ -624,6 +631,36 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       independent-review process itself is doing real work: a genuinely
       different reviewer found a real bypass that two prior AI passes and
       the full test suite had all missed.
+- [x] **Fourth independent (blind, AI) red-team pass complete, 2026-08-06
+      — different model/tool than the first three.** Specifically tasked
+      with adversarially re-testing whether ISSUE-030's fix actually
+      held (it didn't) and looking for anything new. Found five more
+      re-defeats of the same policy-matcher rule on axes the third
+      pass's fix missed (whitespace-in-key, key-collision fail-open,
+      non-string-key crash, Unicode fullwidth, container-wrapped
+      values), all independently re-verified against the real code
+      before any fix was written. Also found a real-but-not-reachable-
+      under-this-project's-threat-model gap in
+      `installation/partitions.py::confirm_active()` (no re-hash
+      immediately before confirming) and correctly self-scoped two more
+      observations as documentation-only. See ISSUE-031 in
+      ISSUES-AND-FIXES-LOG.md and the new "Phase 8 fourth independent
+      red-team review" section in Threat-Model.md for the full account,
+      including an honest note on the reviewer hitting and working
+      around a genuine tooling outage mid-session. Fixed `policy.py`'s
+      matcher properly this time (NFKC-normalize-and-casefold keys,
+      checked against every colliding key rather than one collapsed
+      dict, Python-truthiness fallback for container values) instead of
+      another narrow patch; hardened `confirm_active()`/
+      `rollback.resolve()` as defense-in-depth even though not reachable
+      by any of the six stated threat actors. 18 new regression tests in
+      `tests/test_second_redteam_fixes.py`. Full per-file regression run,
+      no drift; `_ablation_case_11`/`_ablation_case_12` (the two
+      mechanisms touching the changed code) re-verified directly to
+      still isolate correctly. Full 6-mechanism ablation study not
+      re-run at full scale in-sandbox due to per-command time
+      constraints, consistent with every prior full run needing chunking
+      or the user's own machine.
 - [ ] Move to Phase 8 (paper drafting and repo polish) — including the
       writing-only work already scoped: objection 1 (make the
       spacecraft-specific-constraints argument explicit and early, not
@@ -833,3 +870,4 @@ are available. Install Python packages with `pip3 install
 | 2026-08-05 | User ran the full 30-trial ablation study on their Mac against all four stacks (`cfs`, `fprime`, `cfs-real`, `fprime-real`) — identical 100%/0% isolation on all 6 cases across every stack, confirming the sandbox's reduced-trial (n=10/n=5) verification run at full scale, including against the real cFS/F´ binaries. Recorded the two remaining reviewer-objection decisions: AI-disclosure statement deferred to the paper-drafting phase; repo stays private until publication. Then, per the user's request, discussed remaining challenges again — surfaced that this exact session's own fix work (objection 5/9) deepens objection 7's recursion, and that the first red-team pass never saw `build.py`/`health_check.py`/`uplink_sim/`/`evaluation/`. User chose to run a second, wider blind red-team pass rather than just document the gap or defer again. | docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |
 | 2026-08-05 | Ran a second fresh, context-free red-team agent with full `src/`+`evaluation/` coverage (27 files, closing the first pass's file-coverage gap) and an explicit mandate to review the fix code itself and audit the evaluation harness for vacuous tests. It reported 12 findings, all independently re-verified against source; user chose "fix all 12." Fixed 11 (SBOM-artifact binding, Docker health-check binary-mount mismatch, onboard-side independent downgrade check, attestation future-timestamp floor, provenance dirty-tree opt-in check, `scenario_13` rewritten off a hardcoded/vacuous call onto a real pipeline execution, `report.py`'s trial-0-only aggregation, ablation assertion-guard consistency, policy type-coercion bypass, signing/attestation revoked-key visibility logging, uplink tamper-offset diversification); documented finding #5 (health-check has no artifact-identity tie) as a known limitation instead. One fix (refuse to sign/attest with a revoked key) was tried, found to break the existing correct test case #7 design, and reverted for a visibility-only fix instead. Verified via 31 new tests (`tests/test_second_redteam_fixes.py`) plus a full re-run of the existing 66-test suite — caught and fixed one genuine regression along the way (the new onboard downgrade check needed to fail closed on a `StateIntegrityError` internally rather than let it propagate and crash `pipeline.run()`, which broke an existing red-team-fix test; updated that test to accept the new, earlier, still-fail-closed detection point). Re-confirmed the 5/6-mechanism ablation study still isolates cleanly after all 12 fixes. | src/sbom/sbom.py, src/health/health_check.py, src/onboard_verification/onboard.py, src/attestation/attestation.py, src/provenance/provenance.py, src/policy/policy.py, src/signing/signing.py, src/uplink_sim/uplink.py, src/pipeline.py, evaluation/ablation.py, evaluation/experiment.py, evaluation/report.py, tests/test_second_redteam_fixes.py (new), tests/test_phase8_redteam_fixes.py, ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, docs/Research-Paper-Outline.md, STATUS.md |
 | 2026-08-06 | Ran a third independent (blind, AI) red-team pass, this time with a genuinely different model/tool than the first two, as a stopgap while the human colleague review remains pending. (The reviewer's first attempt accidentally ran against an unrelated, similarly-named local repo; it caught the structural mismatch itself, stopped, and was re-run cleanly against the correct path.) Found one novel, end-to-end-confirmed finding: the S5 policy deny-rule (`policy.py::_matches()`) matched config keys case-sensitively, so `{"DEBUG_MODE": True}` — meaning the exact same thing as the only prohibited-configuration rule — was never caught, and a real `pipeline.run()` call confirmed the release onboard with the signed authorization-evidence document itself recording `overall_result: "pass"`. This sits on a different axis than ISSUE-027 (second pass, finding #10), which fixed value representations, not key names. Fixed by case-folding the config once before matching; added 2 parametrized regression tests; independently re-confirmed end-to-end that the same config is now rejected at `ground_authorization` with no authorization-evidence document written at all. Two other candidates the reviewer raised (SBOM binding skipped when `binary_path=None`; attestation quote has no verifier nonce) both correctly cross-checked to already-documented items (ISSUE-018, ISSUE-021) rather than new issues, and it independently re-confirmed ISSUE-022's forgeable-boot-marker gap is still live. Full per-file regression run, no drift (excluding the unaffected, unchanged `test_phase7_real_builds.py`). Logged as ISSUE-030. | src/policy/policy.py, tests/test_second_redteam_fixes.py, ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, STATUS.md |
+| 2026-08-06 | Ran a fourth independent (blind, AI) red-team pass, a different model/tool than the first three, specifically tasked with adversarially re-testing whether ISSUE-030's fix actually held rather than trusting its own regression tests. It didn't: found 5 more re-defeats of the same `policy.py` matcher on axes the third pass's narrow fix missed (whitespace-in-key, key-collision-after-fold fail-open, non-string-key crash, Unicode fullwidth via NFKC, container-wrapped boolean values), plus a real-but-not-reachable-under-this-project's-stated-threat-model gap in `partitions.py::confirm_active()` (no re-hash immediately before permanently confirming a slot), plus two correctly-self-scoped documentation-only observations. All independently re-verified against the real code before any fix was written — every one of the five matcher bypasses reproduced directly, and the Unicode claim was interactively confirmed (`casefold()` alone does not fold fullwidth Latin; NFKC normalization first is required) rather than trusted from the report. Rewrote `policy.py`'s matcher properly this time (checks every colliding key rather than one collapsed dict, Python-truthiness fallback for containers) instead of another narrow patch; hardened `confirm_active()`/`rollback.resolve()` as defense-in-depth even though not reachable by any of the six stated threat actors. 18 new regression tests. Full per-file regression run, no drift; the two mechanisms touching the changed code (`_ablation_case_11` trusted_rollback, `_ablation_case_12` onboard_attestation) re-verified directly to still isolate correctly. Full 6-mechanism ablation study not re-run at full scale in-sandbox (per-command time constraints, consistent with every prior full run). Logged as ISSUE-031. | src/policy/policy.py, src/installation/partitions.py, src/rollback/rollback.py, tests/test_second_redteam_fixes.py, ISSUES-AND-FIXES-LOG.md, docs/Threat-Model.md, STATUS.md |

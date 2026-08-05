@@ -432,6 +432,97 @@ def test_finding_case_variant_falsy_keys_still_pass(config):
     assert ok is True
 
 
+# --- Fourth independent (blind, AI) red-team pass (2026-08-06) ----------
+#
+# The third pass's key-case fix above was itself too narrow: it
+# case-folded with `.lower()` and built a single collapsed dict, missing
+# whitespace, Unicode width variants, container-wrapped values, and
+# failing open on key collisions. See ISSUE-031 in
+# ISSUES-AND-FIXES-LOG.md for the full writeup.
+
+
+@pytest.mark.parametrize(
+    "config",
+    [{" debug_mode": True}, {"debug_mode ": True}, {"  debug_mode  ": True}],
+)
+def test_finding_p4k_whitespace_padded_keys_are_caught(config):
+    """P4-K: `.lower()` never stripped, so a key with stray leading/
+    trailing whitespace -- plausible from any config adapter that
+    doesn't trim -- sailed past the rule entirely."""
+    ok, reason = check_configuration(config, "hash123", condition_name="S5")
+    assert ok is False
+    assert "prohibited" in reason
+
+
+def test_finding_p4c_collision_after_fold_fails_closed():
+    """P4-C: a config containing two keys that fold to the same
+    canonical form with different values -- e.g. both "debug_mode" and
+    "DEBUG_MODE" -- must be caught if ANY of them carries the prohibited
+    value, not just whichever one a dict comprehension happens to keep
+    last. This is a deliberate attacker-crafted shadow, not an accident,
+    so "the caller sent contradictory casings" is not an excuse to let
+    it through."""
+    ok, reason = check_configuration(
+        {"debug_mode": True, "DEBUG_MODE": False}, "hash123", condition_name="S5"
+    )
+    assert ok is False
+    assert "prohibited" in reason
+
+    # the reverse ordering must be caught too -- this isn't "first key
+    # wins" replacing "last key wins", it's "any matching key wins"
+    ok, reason = check_configuration(
+        {"DEBUG_MODE": False, "debug_mode": True}, "hash123", condition_name="S5"
+    )
+    assert ok is False
+
+
+def test_finding_p4n_non_string_keys_do_not_crash():
+    """P4-N: a non-string key (e.g. from a malformed/loosely-typed
+    caller) used to raise AttributeError with nothing between
+    check_configuration and pipeline.run() to catch it -- a malformed
+    config could crash the whole pipeline run instead of producing a
+    clean, fail-closed deny record. Must return normally."""
+    ok, reason = check_configuration({1: True, None: True}, "hash123", condition_name="S5")
+    assert ok is True  # no string key matches "debug_mode" -- not a crash, not a false deny
+    assert reason is None
+
+
+def test_finding_p4u_unicode_fullwidth_key_is_caught():
+    """P4-U: `.lower()` alone does not fold Unicode width variants --
+    "Ｄebug_mode" (fullwidth D, U+FF24) lower-cases to "ｄebug_mode"
+    (still fullwidth), never to ASCII "debug_mode". NFKC normalization
+    before casefolding is required."""
+    ok, reason = check_configuration({"Ｄebug_mode": True}, "hash123", condition_name="S5")
+    assert ok is False
+    assert "prohibited" in reason
+
+
+@pytest.mark.parametrize(
+    "config",
+    [{"debug_mode": [True]}, {"debug_mode": {"enabled": True}}, {"debug_mode": (True,)}],
+)
+def test_finding_p4v_container_wrapped_true_is_caught(config):
+    """P4-V: a boolean intent wrapped in a list/dict/tuple fell through
+    every branch of the old coercion to the `return False` catch-all --
+    an unlimited bypass class of "wrap the same true value in a
+    container". Falls back to Python's own truthiness now."""
+    ok, reason = check_configuration(config, "hash123", condition_name="S5")
+    assert ok is False
+    assert "prohibited" in reason
+
+
+@pytest.mark.parametrize(
+    "config",
+    [{"debug_mode": []}, {"debug_mode": {}}, {"debug_mode": ()}],
+)
+def test_finding_p4v_empty_containers_are_falsy_not_a_match(config):
+    """The truthiness fallback must not turn into a fuzzy matcher that
+    treats ANY container as true -- an empty list/dict/tuple is
+    conventionally falsy and must still pass, same as debug_mode=False."""
+    ok, _reason = check_configuration(config, "hash123", condition_name="S5")
+    assert ok is True
+
+
 # --- Finding #11: ablation baseline-assertion guard consistency ---------
 
 
@@ -473,3 +564,76 @@ def test_finding12_tamper_offset_varies_with_seed(tmp_path):
         f"tamper injection produced the same byte offset across 8 different "
         f"seeds ({offsets}) -- expected diversity, not a fixed midpoint"
     )
+
+
+# --- Fourth pass, finding P4-T: confirm_active TOCTOU / swap-after-verify
+# (2026-08-06) -------------------------------------------------------------
+#
+# Reachability note (stated in ISSUE-031 and Threat-Model.md): exploiting
+# this needs an adversary capability none of this project's six threat
+# actors grant -- independent write access to the onboard partition
+# slot's bytes, timed to the exact window between health-check and
+# confirm. Fixed anyway as defense-in-depth, mirroring the re-hash
+# revert_to_other() already does before trusting the recovery slot.
+
+
+def test_finding_p4t_confirm_active_rehashes_before_confirming():
+    """Happy path: bytes unchanged since write -- confirm succeeds and
+    returns (True, None), same as before this fix."""
+    partitions.write_to_inactive(REPO_ROOT / "README.md", version=1)
+    partitions.tentative_activate("A")
+
+    confirmed, reason = partitions.confirm_active()
+    assert confirmed is True
+    assert reason is None
+
+    state = partitions._load_state()
+    assert state["A"]["confirmed"] is True
+
+
+def test_finding_p4t_confirm_active_fails_closed_on_byte_swap():
+    """The core repro: swap the active slot's bytes to something else
+    AFTER write_and_verify + tentative_activate (simulating a change in
+    the confirm-time-vs-verify-time window), then attempt to confirm.
+    Must fail closed -- refuse to confirm what's actually on disk now,
+    not what was verified earlier -- and must NOT set confirmed=True."""
+    partitions.write_to_inactive(REPO_ROOT / "README.md", version=2)
+    partitions.tentative_activate("A")
+
+    slot_path = partitions._slot_path("A")
+    original_bytes = slot_path.read_bytes()
+    slot_path.write_bytes(original_bytes + b"\x00tampered-after-verify")
+
+    confirmed, reason = partitions.confirm_active()
+    assert confirmed is False
+    assert reason is not None
+
+    state = partitions._load_state()
+    assert state["A"]["confirmed"] is False, (
+        "confirmed must not be set to True when the slot's bytes no "
+        "longer match the hash recorded at write time"
+    )
+
+
+def test_finding_p4t_rollback_resolve_falls_through_on_confirm_failure():
+    """rollback.resolve() must not treat a confirm-time integrity
+    failure as a silent "confirmed" -- it must fall through to the same
+    recovery path a failed health check would take."""
+    import rollback.rollback as rollback_mod
+
+    partitions.write_to_inactive(REPO_ROOT / "README.md", version=3)
+    partitions.tentative_activate("A")
+    partitions.confirm_active()  # slot A is now the confirmed baseline
+
+    partitions.write_to_inactive(REPO_ROOT / "LICENSE", version=4)
+    partitions.tentative_activate("B")
+
+    slot_b_path = partitions._slot_path("B")
+    slot_b_path.write_bytes(slot_b_path.read_bytes() + b"\x00tampered")
+
+    outcome, reason = rollback_mod.resolve(health_ok=True, attestation_ok=True)
+    assert outcome in ("rolled_back", "recovery_failed"), (
+        f"expected a fall-through to recovery, got outcome={outcome!r} "
+        f"-- a confirm-time integrity failure must never report 'confirmed'"
+    )
+    assert reason is not None

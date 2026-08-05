@@ -1303,6 +1303,93 @@ diversity than repeating the same reviewer, though it is still AI, not
 the human colleague review that remains the honest gold-standard
 comparison and is still pending separately.
 
+## Phase 8 fourth independent (blind, AI) red-team review (2026-08-06)
+
+**Motivation.** With ISSUE-030 (third pass) fixed, committed, and pushed,
+a fourth pass — a different model/tool than all three prior ones — was
+run specifically to check whether that fix actually holds under further
+adversarial testing, not just against its own regression tests, and to
+look for anything new. This directly tests the fix-verify loop's own
+honesty: a fix whose only evidence of correctness is its own
+author-written tests is exactly the "self-review reviewing itself"
+concern objection 7 names.
+
+**Process notes worth recording honestly, same practice as prior
+passes.** (1) The reviewer correctly re-verified the exact repo path and
+required structure before starting — the safeguard added after the third
+pass's accidental wrong-repo run worked. (2) It hit a genuine
+infrastructure outage in its own tool-approval backend for the entire
+session (a 404 on every escalated/networked command) and handled it
+honestly: rather than fabricating a baseline or silently skipping it, it
+found a pre-installed Python interpreter with the needed dependencies
+already available and used that instead, then explicitly flagged the
+outage and asked before assuming it was resolved. This is the kind of
+failure-handling this project wants to see modeled, and is recorded here
+for the same reason the RevokedKeyError reversion and the
+StateIntegrityError regression were recorded in earlier sections: it's
+evidence the process is not glossing over its own friction.
+
+**Findings — five re-defeats of ISSUE-030's fix, plus two more
+findings, all independently re-verified against the real source before
+any fix was written:**
+
+1. **P4-K/P4-C/P4-N/P4-U/P4-V — ISSUE-030's fix was too narrow.** The
+   third pass fixed the literal reported case-variant (`.lower()` on a
+   single collapsed dict); this pass showed that missed whitespace,
+   Unicode width variants, key collisions (fail-open, not fail-closed),
+   non-string keys (crashed rather than denied), and container-wrapped
+   values. Each was proven end-to-end: `check_configuration` returned
+   `(True, None)` with an evidence record claiming `result: "pass"` for
+   a config meaning exactly the same thing as the one prohibited
+   pattern. See ISSUES-AND-FIXES-LOG.md ISSUE-031 for the full writeup
+   and fix (a proper rewrite this time — NFKC-normalize-and-casefold key
+   comparison checked against *every* colliding key rather than a single
+   collapsed dict, and a Python-truthiness fallback for container
+   values, rather than another narrow patch).
+
+2. **P4-T — `confirm_active()` had no re-hash immediately before
+   confirming.** Real code pattern (verify-then-trust with no re-check at
+   the trust boundary), but reachability is precise and limited: it
+   needs an adversary capability none of this project's six threat
+   actors (§ 2 above) grant — independent write access to the onboard
+   partition slot's bytes, timed to the exact window between health-
+   check and confirm. Same category as ISSUE-018 (SBOM binding "masked
+   in the normal flow"). Fixed anyway as cheap defense-in-depth,
+   mirroring the re-hash `revert_to_other()` already does for the
+   recovery slot — see ISSUE-031.
+
+3. **P4-I — onboard's config check is not independent of ground's on
+   the config axis.** Both delegate to the same `policy.check_configuration`,
+   so any matcher bypass defeats both simultaneously. Correctly
+   distinguished from what the onboard check *was* added to defend
+   against (ground/spacecraft desync on which config was actually
+   deployed) — that defense is real and unaffected; the "two independent
+   checks" framing just needs the caveat that they share one
+   implementation. Documented, no separate fix (fixing the shared
+   matcher closes both).
+
+4. **P4-L — `condition.yaml` is unprotected.** Correctly self-downgraded
+   by the reviewer: no production path (`pipeline.run()`, `authorize()`,
+   `verify_received_bundle()`) ever reads it — all build `Condition` via
+   `preset()`/`custom()` from a hardcoded string. A latent documentation
+   anomaly, not an exploitable gap.
+
+**What this adds to the paper's answer to objection 7.** This is the
+sharpest evidence yet that the iterative fix-verify process is doing real
+work rather than converging on a false sense of completeness: a fix
+written and verified by one AI pass, with its own passing regression
+tests, was defeated on five separate axes by a different AI pass
+specifically tasked with not trusting it. The honest framing for the
+paper: this also means the *third* pass's fix should not be cited as
+"resolved" without this fourth pass's correction — the real, citable
+claim is the fix as it stands *after* ISSUE-031, verified by both the
+narrower ISSUE-030 regression tests and the five new adversarial ones,
+plus the reachability discipline that correctly separated the two
+policy-axis findings (reachable, fixed) from the confirm-time finding
+(not reachable under the stated threat model, fixed anyway) from the
+two documentation-only observations (correctly not "fixed" at all,
+because there was nothing exploitable to fix).
+
 ## Phase 8 real-baseline comparison: python-tuf (2026-08-04)
 
 **Motivation.** Reviewer objection 6 in Research-Paper-Outline.md § 4
