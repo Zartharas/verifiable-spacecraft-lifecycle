@@ -279,10 +279,87 @@ with it.
 
 ## 3. Threat Model
 
-*[Not yet drafted. Pulls from `docs/Threat-Model.md` §§1–2: the S0–S5
-ladder and the six threat actors, with the explicit out-of-scope list
-(RF-layer attacks, physical tampering, insider root access to the signing
-HSM) stated plainly rather than left implicit.]*
+### 3.1 Threat actors
+
+This project's threat model considers six actors, chosen to span both
+adversarial and non-adversarial causes of an untrustworthy update reaching
+a spacecraft (`docs/Threat-Model.md` §2):
+
+1. **An external attacker with network access** to the ground segment or
+   the uplink channel — tampering with an update in transit, replaying a
+   prior update, or attempting a downgrade to a previously superseded
+   version.
+2. **Compromised build infrastructure** — an unauthorized or malicious
+   build runner, or a poisoned upstream dependency, producing an artifact
+   that does not match its claimed source.
+3. **An insider with legitimate but excessive access** — someone who can
+   validly sign a release but approves a configuration that is
+   technically authenticated yet policy-prohibited (for example, a debug
+   flag that should never reach a flight build).
+4. **A compromised or leaked signing key** — where the specific failure
+   mode of interest is not the initial compromise but whether the system
+   continues to accept updates signed with that key after it should have
+   been revoked.
+5. **Onboard software fault** — a failed health check or an installation
+   interrupted partway through. This actor is not adversarial, but it is
+   included deliberately: assurance mechanisms built to catch adversarial
+   tampering (such as a rollback path) need to degrade gracefully under
+   ordinary hardware/software failure too, and a design that only handles
+   the adversarial case is incomplete for an operational spacecraft.
+6. **Ground/space state divergence** — a disagreement between what the
+   ground segment believes is installed and what is actually running
+   onboard, covering both deliberate deception (falsified telemetry) and
+   honest desynchronization (a missed or delayed status update).
+
+**Explicitly out of scope**, and stated here rather than left for a
+reviewer to infer: RF-layer jamming or spoofing, physical tampering with
+ground-segment hardware, and an insider threat with root access to the
+signing HSM itself. These are real and significant spacecraft security
+concerns, but they sit outside this project's scope — which is
+supply-chain and lifecycle assurance for the software itself, not RF
+security or physical/personnel security. A design that claimed to address
+these without evaluating them would be a stronger claim than this paper's
+evidence supports.
+
+### 3.2 The S0–S5 assurance ladder
+
+Rather than treat "supply-chain security" as a single property a pipeline
+either has or lacks, this project decomposes it into six strictly
+additive conditions, S0 through S5, where each condition includes every
+mechanism present at the prior level plus exactly one new one. This
+additive structure is the paper's central methodological device: because
+every condition above S0 is "S0 plus one more thing," any difference in
+detection rate, timing, or overhead observed between two adjacent
+conditions can be attributed to that one added mechanism specifically,
+rather than to an uncontrolled bundle of simultaneous changes.
+
+| Condition | Mechanisms present | New mechanism vs. prior | Primarily addresses (§3.1 actor) |
+|---|---|---|---|
+| S0 | Signature only | — (baseline) | Partial: signature verification alone, no revocation awareness |
+| S1 | S0 + SBOM | Software Bill of Materials | Compromised build infrastructure (undisclosed/vulnerable dependencies) |
+| S2 | S1 + build provenance | SLSA/in-toto-style provenance attestation | Compromised build infrastructure (source-to-binary correspondence); downgrade attempts |
+| S3 | S2 + onboard attestation | Runtime/boot attestation on the spacecraft side | Ground/space state divergence (verifying what is actually running, not just what was sent) |
+| S4 | S3 + trusted rollback | Verified A/B partition rollback on failure | Onboard software fault; interrupted installation |
+| S5 | S4 + machine-readable authorization evidence | OSCAL-informed structured evidence for ground/auditor consumption | Insider with legitimate-but-excessive access (policy-prohibited but technically signed configurations) |
+
+The pipeline implementation enforces a hard architectural requirement
+behind this table: the same underlying artifact and pipeline code must be
+able to run under any of the six conditions purely through configuration,
+with no per-condition code fork (`docs/Technical-Design-Document.md`
+"Condition switching"). This is what makes the comparison controlled
+rather than incidental — every condition is the identical pipeline with a
+strictly larger or smaller set of mechanisms switched on, not six
+differently-implemented pipelines being compared after the fact.
+
+It is worth being explicit about what this ladder does not claim. It is
+not a claim that these six mechanisms are the only ones worth measuring,
+nor that this specific ordering is the only defensible one (SBOM before
+provenance, for instance, is a design choice, not a logical necessity).
+It is a claim that *this* additive structure, evaluated end-to-end against
+a standardized attack matrix (Section [Evaluation Methodology]), produces
+measurable, attributable evidence about the marginal value of each
+mechanism — which is the specific gap Section 1 identifies in existing
+practice.
 
 ## 4. System Design
 
