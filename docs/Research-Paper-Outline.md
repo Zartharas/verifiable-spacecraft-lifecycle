@@ -101,6 +101,51 @@ TDSC/TSE/TOSEM stretch targets for a revision after this round, ideally
 once either the colleague's review does land or the development venue's
 own reviewers have served as the first real independent human check.
 
+**2026-08-07 (later same day) — superseded by a hard constraint: the
+author cannot travel.** This rules out the conference-track route above on
+different grounds than originally analyzed, and the user has chosen the
+journal-only path instead, specifically **Computers & Security** and
+**Journal of Space Safety Engineering (JSSE)** (options 2 and 4 of the
+four primary targets listed below) as the venues to start with, over
+AeroConf/SpaceSec or a fresh AIAA JAIS-first sequencing.
+
+Two things worth flagging plainly before treating this as settled, not to
+relitigate the decision but because both change how "start with two"
+should actually be executed:
+
+1. **Fact-check on the travel premise, AeroConf specifically:** § 5's
+   AeroConf entry (development venues) already notes IEEE's no-show policy
+   allows presentation *either* in person *or* via their Electronic
+   Presentation Hall — i.e., AeroConf itself doesn't strictly require
+   travel. NDSS SpaceSec's remote-presentation policy wasn't verified
+   either way. This doesn't change the decision (a journal-only path has
+   independent merit — no presentation-prep burden at all, and journal
+   publications generally weigh more in a research profile than a single
+   conference talk per the academic-publishing skill's guidance), but the
+   "cannot travel" framing specifically for AeroConf isn't quite accurate
+   and shouldn't be the stated reason if this ever needs explaining to a
+   collaborator or co-author later.
+2. **Simultaneous submission is not permitted at either venue** (standard
+   across virtually every journal, including both of these) — Computers &
+   Security and JSSE cannot both be submitted to *at the same time* with
+   the same manuscript. "Start with two" is being executed here as
+   **sequential, not parallel**: submit to Computers & Security first (the
+   higher-ceiling, Q1 target), and hold JSSE as the next attempt if that
+   submission doesn't succeed, not as a concurrent second track. If
+   simultaneous submission was actually intended (e.g., two differently
+   scoped papers rather than one manuscript to two venues), that needs to
+   be an explicit, separate decision — flag it back if that's the case.
+
+This also reopens the tension the prior note resolved: Computers & Security
+is the most reviewer-adversarial venue on this list, and it's now the
+*first* submission target with the no-human-review gap still disclosed as
+a live limitation, not softened by a development-venue outing first. That
+trade-off is being made consciously here per the user's explicit choice,
+not overlooked — worth revisiting only if this submission comes back with
+review comments specifically pressing on that gap, at which point JSSE's
+less-adversarial Q3 culture becomes the more informative next data point
+rather than just a fallback.
+
 **Primary targets:**
 - AIAA Journal of Aerospace Information Systems (strongest natural fit —
   aerospace software engineering, V&V, embedded systems, mission
@@ -540,8 +585,9 @@ marked **[UNVERIFIED — could not confirm]** need a direct check of the primary
 - **Preprint posting** — not checked venue-by-venue this pass; general Elsevier and
   IEEE norms usually permit arXiv-style preprints, but confirm per-venue before
   posting one, since it varies and this wasn't directly verified here.
-- **ORCID** — get one now (all authors) if not already held; IEEE journals require
-  it, and it's good practice for every venue on this list regardless.
+- **ORCID** — registered, 2026-08-07: https://orcid.org/0009-0008-9752-3743
+  (Zartharas). Closes this item for IEEE TAES and every other venue on this
+  list.
 
 ## 6. Literature review tracking
 
@@ -549,9 +595,53 @@ Use this section to log papers found during lit review (via arXiv/Semantic
 Scholar/Google Scholar tools) that are directly relevant, so citations
 aren't re-derived from memory. Update as research progresses.
 
-| Paper | Relevance | Status |
-|---|---|---|
-| *(none logged yet)* | | |
+**2026-08-07 — flag before treating the "peer-reviewed only, no conference
+proceedings" instruction as settled for the whole Related Work section:**
+taken literally, it excludes the seminal TUF paper (Samuel, Mathewson,
+Cappos & Dingledine, *ACM CCS* 2010), CHAINIAC (*USENIX Security* 2017),
+Macaron/Artemis (ACM workshops), and effectively all of in-toto/SLSA's own
+academic treatment — every foundational software-supply-chain-security
+paper found in this pass is a conference or workshop paper, not a journal
+article; SLSA itself is a specification, not a paper, at any venue. This
+matters because objection 1 (§4) specifically requires this paper to
+directly engage with SLSA/in-toto/TUF, not route around them. Recommended
+resolution, not yet acted on without confirming: cite TUF/in-toto/SLSA via
+their official specifications/documentation as the *systems being
+compared against* (the same way the python-tuf baseline section already
+treats TUF as a tool under test, not a citation needing venue vetting),
+and reserve the "peer-reviewed journal only" bar for citations that
+function as literature-review evidence (motivating claims, prior
+empirical findings, adjacent-domain comparisons) rather than for naming
+the tools this project's central comparison is built around. Flagging
+this rather than either silently including the excluded conference papers
+or silently dropping TUF/in-toto's academic grounding.
+
+**Verified peer-reviewed journal candidates found this pass** (verified via
+OpenAlex metadata — title/authors/DOI/abstract confirmed; full-text
+claim-to-citation matching per the academic-publishing skill's
+citation-integrity rule still needs to happen at actual drafting time in
+§4/task "Draft paper sections," not assumed from the abstract alone):
+
+| Paper | Venue (peer-reviewed journal) | Relevance | Status |
+|---|---|---|---|
+| Manulis, Bridges, Harrison, Sekar, Davis, "Cyber security in New Space" (2020), DOI 10.1007/s10207-020-00503-w | International Journal of Information Security (Springer) | Spacecraft threat landscape, real incident analysis — supports Introduction motivation and Threat-Model background | Shortlisted |
+| Ahmad et al., "Security of Satellite-Terrestrial Communications: Challenges and Potential Solutions" (2022), DOI 10.1109/access.2022.3205426 | IEEE Access | Satellite security survey — Related Work / Introduction | Shortlisted |
+| Kang, Park, Lee, "A Survey on Satellite Communication System Security" (2024), DOI 10.3390/s24092897 | Sensors (MDPI) | Covers real AcidRain/AcidPour spacecraft cyberattacks — directly useful for Introduction's "real incidents" motivation (§2 item 1) | Shortlisted |
+| Pan, Stakhanova, Ray, "Data Provenance in Security and Privacy" (2023), DOI 10.1145/3593294 | ACM Computing Surveys | Provenance concept background — supports S2 provenance mechanism discussion | Shortlisted |
+| Usman, Afzal, Asplund, "Bridging remote attestation and secure software updates in embedded systems" (RASUES, 2026), DOI 10.1007/s10207-026-01233-1 | International Journal of Information Security (Springer) | Combines remote attestation + secure software updates in embedded systems — closest direct analog to this project's S3 attestation + update-assurance angle found so far; recent (2026) | Shortlisted — strong candidate |
+| Qureshi, Marvi, Shamsi, Aijaz, "eUF: A framework for detecting over-the-air malicious updates in autonomous vehicles" (2021), DOI 10.1016/j.jksuci.2021.05.005 | Journal of King Saud University – CIS (Elsevier) | Adjacent OTA-update-security domain (autonomous vehicles) — comparative citation for no-human-in-loop update assurance | Shortlisted |
+| Sahlmann, Clemens, Nowak, Schnor, "MUP: Simplifying Secure Over-The-Air Update with MQTT for Constrained IoT Devices" (2021), DOI 10.3390/s21010010 | Sensors (MDPI) | Constrained-device secure update — adjacent-domain comparison | Shortlisted |
+| Ganesan, Lindvall, McComas et al., "An analysis of unit tests of a flight software product line" (2012), DOI 10.1016/j.scico.2012.02.006 | Science of Computer Programming (Elsevier) | cFS engineering-practice background — supports System Design section | Shortlisted |
+| Gonzalez, Rojas, Bergel, Díaz, "An Architecture-Tracking Approach to Evaluate a Modular and Extensible Flight Software for CubeSat Nanosatellites" (2019), DOI 10.1109/access.2019.2927931 | IEEE Access | Flight software architecture verification — adjacent citation for System Design/Related Work | Shortlisted |
+
+Not logged (found but excluded as conference/workshop proceedings or
+unpublished preprints per this pass's instruction): Samuel et al. (TUF,
+CCS 2010), Nikitin et al. (CHAINIAC, USENIX Security 2017), Okafor et al.
+(SoK supply-chain security, ACM SCORED 2022), Hassanshahi et al. (Macaron,
+ASE 2023), Moore et al. (Artemis, ACM workshop 2023), Halder et al. and
+Shoker et al. (OTA-update surveys, arXiv preprints not yet confirmed
+journal-published) — see the flag above for how the TUF/in-toto exclusion
+specifically should be handled.
 
 ## 7. AI-use disclosure statement (drafted 2026-08-07)
 
