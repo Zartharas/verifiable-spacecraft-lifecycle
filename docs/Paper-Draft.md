@@ -829,13 +829,105 @@ increasingly capable but internally undifferentiated system.
 
 ## 8. Limitations
 
-*[Not yet drafted. Must include, at minimum, verbatim or near-verbatim:
-the no-human-review disclosure drafted in
-`docs/Research-Paper-Outline.md` §4 objection 7 (2026-08-07); the
-simulated-uplink/CCSDS-realism scoping (objection 2); the Docker-timing
-confound (objection 10); the "same author designed the lock and the
-lockpick" recursion (objection 7's core point, distinct from the
-human-review sub-point).]*
+This section states plainly what this evaluation does not establish,
+rather than leaving those boundaries to be inferred from careful reading
+of Sections 4–7 alone.
+
+**Simulated uplink, not RF-accurate.** The uplink model (Section 4.2) is
+loosely, order-of-magnitude informed by CCSDS-class link budgets but has
+not been validated against any specific reference mission's actual
+telemetry, and this project does not attempt RF/physical-layer simulation
+(`docs/PRD.md` non-goals). Every result in Section 6 that touches the
+uplink stage should be read as evidence about a terrestrial-analog
+pipeline with spacecraft-motivated constraints (latency, loss, bandwidth
+ceilings modeled as configurable parameters), not as evidence about
+behavior over a real spacecraft communications link. This paper does not
+claim the latter, and results should not be cited as if it did.
+
+**Software-only attestation, not hardware-rooted.** As stated in Section
+4.2, onboard attestation in this implementation is a software-held
+Ed25519 signature over a measurement, not a TPM-backed hardware root of
+trust. Every S3+ result in Section 6 demonstrates that the *attestation
+concept* — proving what is actually running, not just what was sent —
+functions correctly in this pipeline; none of them demonstrate resistance
+to the specific threat a hardware root of trust exists to prevent
+(exfiltration of the attestation key itself). A production system making
+an attestation claim for a real mission would need real hardware backing
+this project's software stub only approximates.
+
+**Docker-launch overhead as a timing confound for the real-framework
+results specifically.** The real cFS and F´ binaries (Section 6.2) run
+inside Docker on the machine executing the pipeline; the persistent-process
+health-check strategy (Section 4.3) that makes S3+ evaluation possible
+against these binaries incurs container-launch overhead on the order of
+2.4–2.6 seconds per invocation, observed directly rather than assumed.
+This means the real-framework timing figures in Section 6 mix genuine
+pipeline-stage cost with this infrastructure overhead, and the two are not
+separated in the current results. The claim these results support is that
+detection and recovery *work correctly* against real, unmodified flight
+software frameworks; the claim they do not support is that the observed
+timings approximate native flight-computer execution — that would require
+running outside Docker, on representative hardware, which this evaluation
+does not do. More of this paper's evidence base rests on this same
+infrastructure than a reader might assume from the stub-artifact results
+alone, since the real-framework results in Sections 6.2, 6.5, and 6.6 all
+share this confound.
+
+**Reproducibility is a claim about the stand-in stub artifacts primarily,
+with one real-framework data point in each direction.** Section 6.1's
+reproducibility figures are measured against the stand-in stubs. Section
+6.2 adds two real, measured data points — F´ fully bit-identical across
+independent builds, cFS differing in exactly 22 explained, non-functional
+bytes — but this is evidence about these two specific frameworks' current
+build tooling as of the versions pinned in this evaluation (cFS `v7.0.1`,
+F´ `v4.2.2`), not a general claim about flight-software build
+reproducibility as a property of the category.
+
+**Adaptive-attacker scenarios test whether the pipeline halts, not
+whether an attacker is genuinely evasive.** Restated from Section 6.6
+because it belongs here as well: the two adaptive scenarios (Section 5.1)
+confirm the pipeline halts before a second attack vector can be
+attempted; they do not model an attacker who varies timing, avoids the
+specific detection signatures this pipeline's mechanisms check for, or
+pursues the second vector independently rather than in the fixed sequence
+tested. A reader should not extend this paper's adaptive-attacker results
+to a claim of resistance against a genuinely adaptive or evasive
+adversary.
+
+**No completed independent human security review.** Independent
+verification of this project's threat model and mitigations to date
+consists of four independent, blind, AI-driven red-team review passes
+(Section 3; `docs/Threat-Model.md`) and a from-scratch comparison against
+an unmodified upstream `python-tuf` deployment (Section 6.4). A human
+domain-expert review was requested but had not been completed at the time
+of submission. This is treated as a limitation rather than a resolved
+concern: AI-driven review, however methodologically structured, is not a
+substitute for the judgment a human security practitioner brings,
+particularly regarding which findings matter operationally and which
+attacker capabilities are realistic for a spacecraft mission context. If
+a human review is completed prior to publication, its findings will be
+incorporated; if not, this remains an open direction for follow-on work.
+
+**The same process that designed the threat model also designed, and
+red-teamed, its own mitigations.** Distinct from the human-review gap
+above: the S0–S5 ladder, its implementation, and the four red-team review
+passes that pressure-tested it were all produced by the same
+author-plus-AI process. The red-team passes were designed specifically to
+create genuine independence within that constraint — each pass ran with a
+fresh context, without access to prior findings or the existing threat
+model, until after its own testing was complete — and the second, third,
+and fourth passes were each scoped in part at what earlier passes had
+missed, including at the fix code the process itself had produced. This
+is real, disclosable independence at the level of *execution*, and it
+found and led to fixes for 21 genuine defects (Section 1) that a
+purely self-reviewing process, by construction, cannot be assumed to find.
+It does not resolve the deeper point this objection names: no review
+pass, however wide or however many rounds, was conducted by a party
+outside the author-plus-AI process that built the system under review.
+The strongest accurate statement available from this paper's evidence is
+that this process found and fixed real, non-trivial gaps across multiple
+independent-context passes, including gaps in its own prior remedies —
+not that the underlying methodological concern has been resolved.
 
 ## 9. Conclusion
 
