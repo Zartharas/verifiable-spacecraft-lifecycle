@@ -732,7 +732,100 @@ this section believing more was tested than was.
 
 ## 7. Discussion
 
-*[Not yet drafted.]*
+### 7.1 What the marginal-cost results imply for mission design tradeoffs
+
+The central practical question this paper set out to answer was not
+whether stronger assurance mechanisms work — Section 6 shows each does,
+cleanly and individually — but what each one costs relative to what it
+buys. Read against Section 6.1's overhead figures, a mission designer
+choosing among conditions has a genuinely graduated set of options rather
+than a single "secure or not" decision: S1 and S2 (SBOM and provenance)
+add a few hundred bytes each and, per the stub-artifact happy-path timing
+in Section 6.1, roughly 10–25 milliseconds of cumulative timing overhead
+over the S0 baseline in this sandbox environment — closing the entire
+class of build-integrity
+and dependency-visibility gaps that both this paper's own attack matrix
+and Section 6.4's TUF comparison show a signature-only baseline has no
+visibility into at all. S5's authorization evidence is, by a wide margin,
+the most expensive single step in the ladder — more than triple any other
+mechanism's storage footprint — and correspondingly the one whose
+cost/benefit case rests most heavily on how much a mission actually values
+machine-readable, auditor-consumable evidence over the cheaper mechanisms
+already catching the same underlying attacks in this evaluation's specific
+attack matrix (case #8, prohibited-but-signed configuration, is the one
+case in this matrix S5's policy check is *uniquely* positioned to catch
+here; cases #13 and #15 route through S5 as well, but represent a
+different mechanism — inventory/telemetry reconciliation — bundled into
+the same condition). This suggests a real, if narrow, design lever: a
+mission with tight storage/link-budget constraints and low concern about
+insider-approved-but-prohibited configurations could reasonably stop at
+S4 without giving up detection coverage this specific attack matrix
+tests for; a mission where auditability to a third party (a regulator, a
+launch-services customer, a multi-stakeholder mission) is itself a
+requirement would find S5 worth its cost regardless of the marginal
+detection-rate argument, since machine-readable evidence is doing
+compliance work, not just detection work.
+
+### 7.2 What the TUF gap implies, and what it doesn't
+
+Section 6.4's finding — that 12 of 15 attack matrix cases have no
+corresponding concept in TUF's specification at all — is this paper's
+strongest evidence against the "just SLSA/in-toto/TUF in a new domain"
+framing (Section 1; `docs/Research-Paper-Outline.md` §4 objection 1), but
+it is worth being precise about what the finding does and does not show.
+It shows that TUF, specifically, does not natively address build
+provenance, SBOM/dependency visibility, installation-state management,
+runtime health/attestation, or ground/spacecraft state reconciliation —
+because TUF was never designed to. It does not show that no combination
+of existing terrestrial tools could cover the same ground: SLSA-format
+provenance generators, CycloneDX/SPDX SBOM tooling, and various runtime
+attestation frameworks each address a subset of what this paper's ladder
+covers, and a terrestrial system composing several of them (rather than
+using TUF alone) would close some of that 12-case gap. What no single
+existing framework or straightforward composition addresses, as far as
+this paper's evaluation goes, is the *spacecraft-specific* combination:
+autonomous rollback decisions with no live operator (S4), and structured
+evidence aggregation specifically shaped for a ground/auditor consumer
+who cannot inspect the artifact directly (S5). That narrower, more
+defensible claim — not "no terrestrial tool does any of this" — is the
+one this paper's evidence actually supports, and Section 1's framing
+should be read accordingly rather than as a claim of total novelty.
+
+### 7.3 What does and does not generalize beyond this evaluation
+
+Section 6.2's real-framework results are genuine evidence that this
+project's assurance mechanisms are not artifacts of the stand-in stubs'
+simplicity — the identical 100%/0% pattern against real cFS and F´
+binaries is the strongest single piece of evidence in this paper for that
+specific claim. It is not evidence that the same results would hold on
+flight-representative hardware, over a real CCSDS-conformant link, or
+under a genuinely adaptive adversary; each of those is a different claim
+requiring different evidence, and Section 8 (Limitations) states plainly
+which of them this evaluation does and does not license. The cFS-vs-F´
+reproducibility asymmetry found in Section 6.2 is a useful illustration of
+this boundary in miniature: it is a real result about two real build
+systems, discovered by direct measurement rather than assumed, and it
+would have been invisible to an evaluation that only ever used the
+stand-in stubs — but it is also a result specific to *these two
+frameworks' current build tooling*, not a general claim about
+reproducibility of spacecraft flight software as a category.
+
+### 7.4 The ablation study's implication: mechanisms are doing individual work, not incidental work
+
+A standing risk in any additive-ladder evaluation is that a
+higher-condition detection result is actually being carried by a
+lower-condition mechanism that happens to still be active, rather than by
+the specific mechanism nominally under test — for instance, S5's
+100% detection on case #8 could, in principle, be substantially explained
+by S2's provenance check catching something adjacent, with the S5 policy
+check itself contributing little. Section 6.5's ablation results directly
+rule this out for every mechanism tested: disabling one mechanism from an
+otherwise fully-active condition drops that mechanism's specific case from
+100% to 0%, not to some intermediate rate that would suggest a different
+mechanism was doing most of the real work. This is the paper's most
+direct evidence that the S0–S5 ladder's individual line items are
+meaningful units of assurance, not just cumulative labels on an
+increasingly capable but internally undifferentiated system.
 
 ## 8. Limitations
 
