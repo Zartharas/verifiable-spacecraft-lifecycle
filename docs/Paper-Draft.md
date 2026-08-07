@@ -1,11 +1,17 @@
 # Measuring Software Supply-Chain Assurance for Spacecraft Flight Software: A Controlled, Comparative Evaluation
 
-**Status:** Draft v0.1 — Introduction only. Remaining sections
-(Background/Related Work, Threat Model, System Design, Evaluation
-Methodology, Results, Discussion, Limitations, Conclusion) are stubbed
-below per `docs/Research-Paper-Outline.md` §2's structure; each gets
-drafted and reviewed section by section, not all at once, so citation and
-factual claims can be checked incrementally rather than in one large pass.
+**Status:** Draft v0.2 — full first draft, all nine sections plus both
+required disclosure statements, written section by section with an
+integrity/citation self-check after each one rather than in one pass (see
+STATUS.md's 2026-08-07 entries for what each check caught and fixed).
+**Not yet done:** a full-manuscript self-critique pass (methodology,
+novelty, reproducibility, ethics, clarity lenses — see
+`docs/Research-Paper-Outline.md` and the project's task list), the
+[TODOs and bracketed cross-references] still scattered through the text
+below need to be resolved before this is submission-ready, and several
+citations (marked inline) still need full-text verification rather than
+abstract-level confidence. Treat this as a complete draft to critique and
+tighten, not a finished manuscript.
 
 Target venue (current decision, see `docs/Research-Paper-Outline.md` §3,
 2026-08-07): Computers & Security, first attempt; Journal of Space Safety
@@ -931,7 +937,53 @@ not that the underlying methodological concern has been resolved.
 
 ## 9. Conclusion
 
-*[Not yet drafted.]*
+This paper set out to answer a narrower question than "does spacecraft
+software need better supply-chain security" — namely, how much
+additional assurance each of six additive mechanisms actually buys, and
+at what measured cost, under constraints that make spacecraft update
+failures harder to recover from than most terrestrial software failures.
+The six-level S0–S5 ladder and its reference implementation make that
+question answerable rather than argued: every mechanism, tested
+individually via ablation (Section 6.5) and cumulatively across a 15-case
+attack matrix (Section 6.1), detects what it is designed to detect at a
+100% rate across four independent target software stacks, including two
+real, unmodified NASA/JPL flight software frameworks (Section 6.2) — and
+a real, unmodified baseline comparison against TUF (Section 6.4) shows
+that 12 of those 15 cases have no corresponding concept in an
+already-mature terrestrial update-security framework's specification at
+all, which is measured evidence, not assertion, for this paper's central
+claim that spacecraft-specific constraints change the engineering problem
+rather than merely relocating it.
+
+That claim is deliberately narrower than "no existing tool addresses
+spacecraft supply-chain security" (Section 7.2) — what this paper's
+evidence actually supports is that the *specific combination* this ladder
+tests, autonomous recovery with no live operator plus structured evidence
+for a ground/auditor consumer who cannot inspect the artifact directly,
+sits outside what TUF alone, and plausibly any straightforward
+composition of existing terrestrial tools, was designed to cover. Section
+8 states, without qualification, what this evaluation does not license:
+claims about flight-representative hardware timing, RF-accurate uplink
+behavior, resistance to a genuinely adaptive adversary, or a resolved
+answer to the question of whether a process can adequately audit its own
+security design. Two of those boundaries — flight-hardware timing and
+independent human review — are the most direct next steps for this work,
+not incidental gaps; the rest (RF realism, adversarial adaptivity) mark
+where this paper's contribution ends and a different, complementary study
+would need to begin.
+
+The practical upshot for a mission designer, per Section 7.1, is that the
+S0–S5 ladder is not an all-or-nothing decision: the cheapest mechanisms
+close an entire class of build-integrity and dependency-visibility gaps
+this project's evidence shows a signature-only baseline has no visibility
+into at all, while the most expensive step is worth its cost specifically
+when third-party auditability is itself a mission requirement, not merely
+when marginal detection rate is the only consideration. Making that
+tradeoff visible and measurable — rather than leaving "how much security
+is enough" as a judgment call with no comparative basis — is this paper's
+contribution to a domain that has, to date, applied far less empirical
+scrutiny to its own software update assurance than the consequences of
+getting it wrong would seem to warrant.
 
 ---
 
