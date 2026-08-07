@@ -63,12 +63,42 @@ These are ground/terminal-segment incidents rather than attacks on an
 onboard flight computer directly, but they establish that the broader
 satellite-system software supply chain is an active, exploited attack
 surface, not a theoretical concern reserved for nation-state threat
-modeling exercises. [TODO: locate and verify, per the citation-integrity
-workflow, whether a comparable publicly documented incident exists
-specifically for an onboard flight-software supply chain (build/update
-compromise, as opposed to ground-segment/RF-layer compromise) —
-strengthens the motivation if one exists; if none is found, say so
-explicitly rather than imply one does.]
+modeling exercises.
+
+**Searched, 2026-08-07, and reporting the negative result rather than
+implying otherwise:** no publicly documented real-world incident of an
+onboard flight-software supply chain compromise specifically (a
+build-time or update-time compromise, as distinct from the ground/RF-
+segment attacks above) was found. A related but importantly distinct
+paper turned up during this search — Vanlyssel, Sobrados, Anwar, Roman, &
+Anwar, "SpyChain: Multi-Vector Supply Chain Attacks on Small Satellite
+Systems" (arXiv:2510.06535, 2025) — and an initial draft of this
+paragraph mischaracterized it before its actual abstract was read
+directly (fetched and checked 2026-08-07): SpyChain targets *auxiliary
+COTS hardware components* (its abstract explicitly contrasts this with
+flight software, which it describes as already benefiting from "strict
+security practices and oversight"), not a flight-software build or
+update-time compromise. It is evidence that the broader small-satellite
+hardware/component supply chain is an active research target, not
+evidence bearing on this paper's specific claim about flight-software
+update pipelines — citing it as if it were would overstate the
+motivation. It is an arXiv preprint, not a peer-reviewed publication, so
+it would not qualify for the journal-only bar in any case; it is
+mentioned here only as a search result worth being aware of, not as a
+citation this paper should rely on.
+
+The honest state of the evidence, then, is: no known documented incident,
+academic or otherwise, of a flight-software build/update-time supply
+chain compromise on an operational spacecraft. **This absence is itself
+part of the motivation, not a weakness to paper over:** a supply-chain
+compromise against a single, physically unreachable spacecraft is a
+low-frequency, high-consequence event by construction — the appropriate
+engineering response is not to wait for one to be publicly documented
+before building measurable defenses, any more than aviation safety
+engineering waits for a specific class of crash before addressing a
+known-feasible failure mode. State this reasoning explicitly in the final
+version rather than leave the absence of an incident unexplained or
+imply one exists.
 
 The central problem this paper addresses is not "spacecraft software
 lacks security" in the abstract, but something narrower and, we argue,
