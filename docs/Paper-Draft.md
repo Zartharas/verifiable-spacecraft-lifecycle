@@ -335,7 +335,7 @@ rather than to an uncontrolled bundle of simultaneous changes.
 
 | Condition | Mechanisms present | New mechanism vs. prior | Primarily addresses (§3.1 actor) |
 |---|---|---|---|
-| S0 | Signature only | — (baseline) | Partial: signature verification alone, no revocation awareness |
+| S0 | Signature only | — (baseline) | External attacker (in-transit tampering only — a *revoked* key is still accepted at S0, since revocation-aware verification is not part of the baseline) |
 | S1 | S0 + SBOM | Software Bill of Materials | Compromised build infrastructure (undisclosed/vulnerable dependencies) |
 | S2 | S1 + build provenance | SLSA/in-toto-style provenance attestation | Compromised build infrastructure (source-to-binary correspondence); downgrade attempts |
 | S3 | S2 + onboard attestation | Runtime/boot attestation on the spacecraft side | Ground/space state divergence (verifying what is actually running, not just what was sent) |
@@ -363,16 +363,234 @@ practice.
 
 ## 4. System Design
 
-*[Not yet drafted. Pulls from `docs/Technical-Design-Document.md` and
-`docs/Pipeline-Flow-Document.md`.]*
+### 4.1 Pipeline architecture
+
+The reference implementation moves an artifact through twelve stages —
+source, reproducible build, provenance generation, SBOM generation, signed
+release, ground authorization, simulated uplink, onboard signature and
+policy verification, installation, boot/runtime attestation, health
+validation, and A/B partition rollback-or-approval, closing with an
+updated authorization-evidence record that feeds the next lifecycle
+iteration (`docs/Pipeline-Flow-Document.md` §§1–3). Every stage that can
+plausibly produce forensic or audit value writes a structured record to a
+single append-only evidence store, even at assurance conditions where
+that evidence is not yet acted upon — this is a deliberate design
+principle (`docs/Technical-Design-Document.md` §1, principle 2), not an
+incidental logging choice, because it is what lets the evaluation
+distinguish "the evidence existed but nothing checked it" (below the
+condition where a mechanism activates) from "the evidence existed and was
+checked" (at or above it), rather than conflating absence-of-checking
+with absence-of-evidence.
+
+The architectural requirement stated in Section 3.2 — one codebase, six
+conditions, no per-condition code fork — is implemented as a single
+configuration file read by every stage at run time (`src/condition.py`),
+with one boolean flag per mechanism. Each stage checks its own flag
+before performing its check; an inactive mechanism is skipped outright,
+not stubbed with a fake-pass result, so the pipeline behaves as an honest
+S0–S5 system rather than one that implements every mechanism internally
+and merely suppresses reporting of some of them
+(`docs/Technical-Design-Document.md` §5). This distinction matters for
+the paper's evidentiary claims: a detection result at condition S(n) is
+evidence that mechanism *n* caught the case, not evidence that a
+more-capable, always-on system happened to have its result correctly
+filtered for display.
+
+### 4.2 Component implementation and stated fidelity
+
+Several components are implemented as deliberately reduced-fidelity
+stand-ins for real infrastructure, each chosen to test the *assurance
+property* a mechanism is meant to provide without requiring
+infrastructure unavailable in the original build environment. Each
+reduction is stated plainly here, not left for a reviewer to discover:
+
+- **Provenance and SBOM formats** (`src/provenance/provenance.py`,
+  `src/sbom/sbom.py`) are hand-rolled, SLSA v1/in-toto-statement-shaped
+  and CycloneDX-shaped JSON respectively, rather than full library
+  invocations of the corresponding standard tooling. This tests whether
+  the pipeline's *use* of provenance/SBOM data (binding it to an
+  artifact, checking it, rejecting on mismatch) works correctly; it is
+  not a claim of byte-level conformance to either specification.
+- **Onboard attestation** (`src/attestation/attestation.py`) is a
+  software-only construction: a measurement (installed binary hash,
+  partition identifier, timestamp) signed with a dedicated Ed25519 key,
+  not a hardware root of trust such as a TPM. This is a materially
+  weaker guarantee than real TPM-backed attestation — a software-held
+  key can be exfiltrated in ways a hardware-sealed key cannot — and this
+  paper does not claim otherwise; "attestation" throughout this paper
+  refers to this software construction unless stated otherwise
+  (`docs/Technical-Design-Document.md` §7c).
+- **The simulated uplink** (`src/uplink_sim/uplink.py`) offers three
+  fixed link profiles (ideal, LEO-typical, deep-space-typical) that are
+  loosely, order-of-magnitude informed by CCSDS-class link budgets but
+  not validated against any specific reference mission's actual
+  telemetry. This is the component most likely to draw scrutiny over
+  spacecraft-realism claims, and is treated accordingly in Section
+  [Limitations] rather than presented as RF-accurate.
+- **Ground-authorization policy** is a small, explicit Python deny-list
+  rather than a general-purpose policy engine (e.g., OPA/Rego). This
+  tests whether a correctly-signed release can still be correctly
+  rejected on policy grounds — the property under test — without
+  depending on unverified third-party policy infrastructure; the
+  deny-list's check-shape maps cleanly onto a Rego `deny` rule set should
+  a real ground-system migration ever be pursued
+  (`docs/Technical-Design-Document.md` §7d).
+- **Authorization evidence** (S5) is an OSCAL-*informed* JSON
+  aggregation — subject, findings, and overall-result fields modeled on
+  OSCAL's shape — rather than a conformant implementation of the OSCAL
+  schema itself. This paper makes no claim of OSCAL compatibility
+  specifically, only that machine-readable, structured evidence in this
+  general shape is what the S5 condition provides.
+
+Each of these choices trades specification conformance for testability of
+the specific mechanism-level question this paper asks (does this
+assurance layer detect what it is supposed to detect, and at what cost),
+and each is a place where a production system aimed at operational
+deployment, rather than controlled comparative measurement, would
+reasonably choose differently.
+
+### 4.3 Target software stacks
+
+The pipeline was evaluated against four independent target artifacts,
+added incrementally to address generalizability: two purpose-built
+stand-in stub applications (a C telemetry-output stub and an
+architecturally distinct C++ component-based stub, modeled respectively
+on cFS's message-bus architecture and F Prime's component/port
+architecture), and two real, unmodified NASA/JPL flight software
+frameworks built and run for the first time against this pipeline in
+Phase 7 — NASA's Core Flight System (cFS, tag `v7.0.1`) and NASA JPL's F
+Prime (F´, tag `v4.2.2`). The two real frameworks required no changes to
+the assurance-mechanism implementations themselves; generalizing from the
+stand-in stubs to the real frameworks required changes to exactly two
+adapter modules (`src/build/build.py`, `src/health/health_check.py`) that
+had accidentally hardcoded assumptions specific to the first stub's shape
+(`docs/Technical-Design-Document.md` §7f), plus one real correctness fix
+the generalization exercise itself surfaced (a version ledger that was a
+single global file rather than scoped per stack, which produced a false
+downgrade-detection result the first time a second stack was evaluated).
+Health checking against the two real frameworks required a further
+design change, since both are long-running processes rather than the
+stand-in stubs' run-to-completion model: `health_check.py` was extended
+with a persistent-process check that waits for a genuine, empirically
+determined boot-success log line from the binary's own stdout, rather
+than treating the mere absence of a crash as a health signal
+(`docs/Technical-Design-Document.md` §7g) — a design decision made
+deliberately to avoid fabricating a health result from the absence of
+evidence.
 
 ## 5. Evaluation Methodology
 
-*[Not yet drafted. Pulls from the 15-case attack matrix
-(`docs/Threat-Model.md` §3), the metric definitions and S0-as-baseline
-decision (`docs/PRD.md` §10), and `evaluation/experiment.py`'s actual
-implementation — every metric claim must trace to a specific measured
-quantity, not a described intention.]*
+### 5.1 Attack and failure injection matrix
+
+A standardized battery of 15 test cases is injected at the pipeline stage
+each is designed to target, and each is run against every assurance
+condition where the relevant mechanism could plausibly detect it
+(`docs/Threat-Model.md` §3). Each test case carries a stated *expected*
+first-detection condition — a hypothesis about which mechanism should
+catch it first, not a guaranteed or engineered outcome. This distinction
+matters methodologically: a case that is caught earlier or later than its
+stated expectation is itself a result worth reporting (Section [Results]
+states any such divergence explicitly, per `docs/Threat-Model.md` §3's
+own note that these hypotheses are "to validate, not guaranteed
+outcomes"), not evidence to be quietly reconciled after the fact.
+
+| # | Test case | Injected at | Expected first detection |
+|---|---|---|---|
+| 1 | Binary does not match source | Build → Provenance | S2 |
+| 2 | Missing or false provenance | Provenance | S2 |
+| 3 | Incomplete SBOM | SBOM generation | S1 |
+| 4 | Dependency with known test vulnerability | SBOM / dependency scan | S1 |
+| 5 | Unauthorized build runner | Build environment | S2 |
+| 6 | Modified update (in transit) | Uplink | S0 |
+| 7 | Revoked signing key | Signature verification | S0/S2 (revocation-aware verification) |
+| 8 | Correct signature but prohibited configuration | Ground authorization / policy | S5 |
+| 9 | Downgrade attempt | Ground authorization / onboard verification | S2/S4 |
+| 10 | Interrupted installation | Installation | S4 |
+| 11 | Failed health check | Post-install health validation | S3/S4 |
+| 12 | Stale attestation | Onboard attestation | S3 |
+| 13 | Ground/spacecraft inventory disagreement | Operational monitoring | S5 |
+| 14 | Invalid recovery image | Rollback | S4 |
+| 15 | False "successful installation" telemetry | Operational monitoring / attestation | S3/S5 |
+
+Beyond this matrix, two adaptive-attacker scenarios and a per-mechanism
+ablation study extend the evaluation to two questions the fixed matrix
+cannot answer on its own: whether an attacker adapting across attempts
+changes the outcome, and whether each individual mechanism's contribution
+holds when it alone is disabled from an otherwise-fully-active condition
+(rather than only observed cumulatively as conditions are added). [TODO,
+Section [Results]/[Discussion]: state plainly, per objection 5 in
+`docs/Research-Paper-Outline.md` §4, that the adaptive-attacker scenarios
+test whether detection halts the pipeline, not whether the attacker is
+genuinely evasive or time-adaptive — this scope boundary must not be
+implied away when the results are presented.]
+
+### 5.2 Metrics and the baseline decision
+
+Every metric is defined and its measurement method fixed *before* any
+results were generated, specifically to prevent the metric definitions
+themselves from being shaped retroactively by whatever the numbers
+happened to show (`docs/PRD.md` §8, "metric legitimacy" risk; §10,
+resolution). **The baseline for every overhead metric is S0 itself, not
+an external real-world reference process.** This project's central claim
+is comparative — S0 vs. S1 vs. ... vs. S5 — so S0's own cost is the
+correct zero-point; inventing a "real mission's manual process" baseline
+this project has no way to independently validate would substitute an
+unverifiable number for a measured one.
+
+- **Detection rate:** the fraction of attack trials at a given condition
+  where the pipeline correctly rejects the injected case, read directly
+  from `PipelineResult.rejected_at` / `rollback_outcome` fields, not
+  inferred from log inspection.
+- **Time to detection / time to trusted restoration:** wall-clock seconds
+  for the relevant pipeline call, measured with `time.perf_counter()`.
+  **This is a sandbox/local-hardware timing proxy, not a flight-hardware
+  or real-mission timing claim** and is stated as such wherever cited —
+  useful for relative comparison across conditions on the same hardware,
+  not as an absolute number meaningful outside this environment (see
+  Section [Limitations] on the related Docker-launch-overhead confound
+  for the real-framework stacks specifically).
+- **Manual evidence-processing effort:** the count of evidence-store
+  records generated per run, per condition — an explicit proxy for review
+  burden, not a measured human-hours figure. No human-factors study of
+  actual operator effort exists or is claimed.
+- **Traceability completeness:** for each condition, the fraction of
+  pipeline stages *expected to be active* at that condition that actually
+  produced at least one evidence record during a given run. The
+  denominator is condition-specific, so S0 is not penalized for lacking
+  evidence from stages it was never meant to exercise.
+- **Storage and link overhead:** the byte size of the additional
+  artifacts (SBOM, provenance, attestation, authorization evidence) a
+  condition produces beyond S0, measured directly from on-disk file
+  sizes.
+- **Reproducibility:** the fraction of build trials in which two
+  independent builds from the same source produced a bit-identical
+  binary hash.
+- **Update acceptance accuracy:** a confusion matrix per condition —
+  true positive (legitimate update correctly approved), true negative
+  (attack correctly rejected), false positive (attack wrongly approved),
+  false negative (legitimate update wrongly rejected).
+
+### 5.3 Experimental protocol
+
+Each condition/test-case combination is run as a repeated trial (30
+trials per case in the results reported in Section [Results], following
+an initial reduced-trial verification pass used only to confirm harness
+correctness before the full run) via `evaluation/experiment.py`, which
+implements one scenario function per attack-matrix test case returning an
+explicit outcome record for that trial, rather than inferring outcomes by
+re-scanning the shared evidence store after the fact — a design chosen
+specifically to avoid a double-counting failure mode an earlier internal
+version of the comparison tooling exhibited when a single test case
+produced evidence records at multiple pipeline stages
+(`docs/Technical-Design-Document.md` §7d–§7e). Aggregate statistics,
+including Wilson confidence intervals for proportions and closed-form
+confidence intervals for means, are computed by `evaluation/report.py`;
+both were independently cross-checked — the proportion-CI logic against
+a third-party implementation (`statsmodels.stats.proportion.
+proportion_confint`), the mean-CI logic against an independently derived
+closed-form computation — with 33 dedicated tests, not assumed correct
+because the formulas "look standard" (`docs/Research-Paper-Outline.md` §4
+objection 9).
 
 ## 6. Results
 
