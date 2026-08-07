@@ -1,17 +1,31 @@
 # Measuring Software Supply-Chain Assurance for Spacecraft Flight Software: A Controlled, Comparative Evaluation
 
-**Status:** Draft v0.2 — full first draft, all nine sections plus both
+**Status:** Draft v0.3 — full first draft, all nine sections plus both
 required disclosure statements, written section by section with an
 integrity/citation self-check after each one rather than in one pass (see
-STATUS.md's 2026-08-07 entries for what each check caught and fixed).
-**Not yet done:** a full-manuscript self-critique pass (methodology,
-novelty, reproducibility, ethics, clarity lenses — see
-`docs/Research-Paper-Outline.md` and the project's task list), the
-[TODOs and bracketed cross-references] still scattered through the text
-below need to be resolved before this is submission-ready, and several
-citations (marked inline) still need full-text verification rather than
-abstract-level confidence. Treat this as a complete draft to critique and
-tighten, not a finished manuscript.
+STATUS.md's 2026-08-07 entries for what each check caught and fixed), then
+run through a five-lens self-critique pass (methodology & statistics,
+novelty & contribution, reproducibility, research ethics, clarity &
+argument) with all seven findings addressed: the AI-use disclosure
+statement corrected to name the actual tools used per red-team pass; the
+ablation and adaptive-attacker citations extended to all four target
+stacks, not just two; a new explicit Limitations bullet on TUF being the
+only empirically baselined comparison framework; the promised evidence-
+count/traceability metrics from Section 5.2 actually reported in Section
+6.1; a deterministic-vs-stochastic framing paragraph added to Section 5.3
+so Wilson-CI detection rates aren't misread as characterizing outcome
+randomness; an honest multi-environment execution-environment disclosure
+added to Section 5.3 (results were not gathered on one controlled
+benchmark machine); and every bracketed cross-reference placeholder
+resolved to a real section number now that the structure is stable.
+**Not yet done:** several citations (marked inline) still need full-text
+verification rather than abstract-level confidence, the exact per-pass
+AI-tool identity for the four red-team reviews is still an approximate
+recollection pending the author's own records (flagged inline in the
+AI-use disclosure statement), and precise hardware specifications for the
+execution environments used are still unconfirmed. Treat this as a
+complete, self-critiqued draft to do a final verification pass on before
+submission, not yet a finished manuscript.
 
 Target venue (current decision, see `docs/Research-Paper-Outline.md` §3,
 2026-08-07): Computers & Security, first attempt; Journal of Space Safety
@@ -122,7 +136,7 @@ claim to have added a signature and a Software Bill of Materials (SBOM) to
 a piece of spacecraft software. We built a controlled, end-to-end software
 lifecycle pipeline for spacecraft flight software — instrumented with six
 discrete, strictly additive levels of supply-chain assurance (S0 through
-S5, Section [Threat Model reference]) — and measured what each additional
+S5, Section 3) — and measured what each additional
 mechanism actually buys, and at what cost, under spacecraft-relevant
 constraints: link latency and loss, autonomous recovery without a live
 operator, and no ability to simply redeploy a fixed binary to a
@@ -155,17 +169,16 @@ Concretely, this paper makes the following contributions:
    review passes that surfaced and led to fixes for 21 real security and
    correctness defects — reported with an explicit, honest accounting of
    what this methodology does and does not substitute for (Section
-   [Limitations reference]).
+   8).
 
-The remainder of this paper is organized as follows: Section [Background]
+The remainder of this paper is organized as follows: Section 2
 situates this work against SLSA/in-toto/TUF/Sigstore and prior spacecraft
-software security literature; Section [Threat Model] formalizes the
-threat actors and the S0–S5 ladder; Section [System Design] describes the
-pipeline implementation; Section [Evaluation Methodology] describes the
-attack matrix, metrics, and experimental protocol; Sections [Results] and
-[Discussion] present and interpret the findings; Section [Limitations]
+software security literature; Section 3 formalizes the
+threat actors and the S0–S5 ladder; Section 4 describes the
+pipeline implementation; Section 5 describes the
+attack matrix, metrics, and experimental protocol; Sections 6 and 7 present and interpret the findings; Section 8
 states plainly what this evaluation does not establish; Section
-[Conclusion] closes.
+9 closes.
 
 ---
 
@@ -176,7 +189,7 @@ states plainly what this evaluation does not establish; Section
 OSCAL are cited below via their own specifications/project sites, as the
 systems this project's design is built from and measured against — the
 same treatment already given to TUF in the real-baseline comparison
-(Section [Evaluation Methodology]; `docs/Threat-Model.md` "Phase 8
+(Section 5; `docs/Threat-Model.md` "Phase 8
 real-baseline comparison: python-tuf"). This project does not reimplement
 any of them, and pinning to a specification rather than a single academic
 paper about that specification is arguably more precise for a systems
@@ -209,8 +222,8 @@ attestation (S3) to the second, and machine-readable authorization
 evidence (S5) to a use of the third that mirrors OSCAL's design goal more
 than any of SLSA/in-toto/TUF's own scope. None of these frameworks was
 designed with spacecraft-specific operating constraints in view; Section
-[Threat Model] and the real-baseline comparison against an unmodified
-python-tuf deployment (Section [Evaluation Methodology]) make this gap
+3 and the real-baseline comparison against an unmodified
+python-tuf deployment (Section 6.4) make this gap
 measurable rather than asserted, addressing the most direct form of
 objection this framing invites — that this project is "just SLSA/in-toto/
 TUF applied to a new domain."
@@ -257,7 +270,7 @@ address secure over-the-air update assurance in, respectively, autonomous
 vehicles and constrained IoT devices — domains that share this project's
 concern with updating a device that cannot be physically retrieved on
 demand, but neither operates under the link-latency/intermittency
-constraints Section [Threat Model] treats as first-class, and neither
+constraints Section 3 treats as first-class, and neither
 targets a domain where a failed update can mean total, permanent loss of
 the asset the way an unrecoverable spacecraft update can. [TODO: confirm
 this last claim — permanence/unrecoverability of failure — against each
@@ -362,7 +375,7 @@ not a claim that these six mechanisms are the only ones worth measuring,
 nor that this specific ordering is the only defensible one (SBOM before
 provenance, for instance, is a design choice, not a logical necessity).
 It is a claim that *this* additive structure, evaluated end-to-end against
-a standardized attack matrix (Section [Evaluation Methodology]), produces
+a standardized attack matrix (Section 5), produces
 measurable, attributable evidence about the marginal value of each
 mechanism — which is the specific gap Section 1 identifies in existing
 practice.
@@ -432,7 +445,7 @@ reduction is stated plainly here, not left for a reviewer to discover:
   not validated against any specific reference mission's actual
   telemetry. This is the component most likely to draw scrutiny over
   spacecraft-realism claims, and is treated accordingly in Section
-  [Limitations] rather than presented as RF-accurate.
+  8 rather than presented as RF-accurate.
 - **Ground-authorization policy** is a small, explicit Python deny-list
   rather than a general-purpose policy engine (e.g., OPA/Rego). This
   tests whether a correctly-signed release can still be correctly
@@ -495,7 +508,7 @@ condition where the relevant mechanism could plausibly detect it
 first-detection condition — a hypothesis about which mechanism should
 catch it first, not a guaranteed or engineered outcome. This distinction
 matters methodologically: a case that is caught earlier or later than its
-stated expectation is itself a result worth reporting (Section [Results]
+stated expectation is itself a result worth reporting (Section 6
 states any such divergence explicitly, per `docs/Threat-Model.md` §3's
 own note that these hypotheses are "to validate, not guaranteed
 outcomes"), not evidence to be quietly reconciled after the fact.
@@ -524,7 +537,7 @@ cannot answer on its own: whether an attacker adapting across attempts
 changes the outcome, and whether each individual mechanism's contribution
 holds when it alone is disabled from an otherwise-fully-active condition
 (rather than only observed cumulatively as conditions are added). [TODO,
-Section [Results]/[Discussion]: state plainly, per objection 5 in
+Sections 6/7: state plainly, per objection 5 in
 `docs/Research-Paper-Outline.md` §4, that the adaptive-attacker scenarios
 test whether detection halts the pipeline, not whether the attacker is
 genuinely evasive or time-adaptive — this scope boundary must not be
@@ -553,7 +566,7 @@ unverifiable number for a measured one.
   or real-mission timing claim** and is stated as such wherever cited —
   useful for relative comparison across conditions on the same hardware,
   not as an absolute number meaningful outside this environment (see
-  Section [Limitations] on the related Docker-launch-overhead confound
+  Section 8 on the related Docker-launch-overhead confound
   for the real-framework stacks specifically).
 - **Manual evidence-processing effort:** the count of evidence-store
   records generated per run, per condition — an explicit proxy for review
@@ -579,7 +592,7 @@ unverifiable number for a measured one.
 ### 5.3 Experimental protocol
 
 Each condition/test-case combination is run as a repeated trial (30
-trials per case in the results reported in Section [Results], following
+trials per case in the results reported in Section 6, following
 an initial reduced-trial verification pass used only to confirm harness
 correctness before the full run) via `evaluation/experiment.py`, which
 implements one scenario function per attack-matrix test case returning an
@@ -598,6 +611,44 @@ closed-form computation — with 33 dedicated tests, not assumed correct
 because the formulas "look standard" (`docs/Research-Paper-Outline.md` §4
 objection 9).
 
+**What varies across the 30 trials, stated precisely.** Each trial
+injects the same fixed scenario input against a deterministic code path,
+so the detect/no-detect outcome itself is not a random variable in the
+way a Bernoulli-trial framing might suggest — it is a repeated execution
+of the same logic against the same input, not 30 independent draws from
+an uncertain process. What genuinely varies trial to trial is execution
+timing (observed directly in the raw per-trial data, e.g., elapsed times
+ranging roughly 0.80–1.07 seconds across ablation trials on identical
+inputs), reflecting real OS-scheduling and environment variance rather
+than a fixed, memorized value. The Wilson confidence intervals reported
+in Section 6 for detection/success rates are therefore best read as a
+formally correct treatment of a rate observed over repeated executions,
+not as evidence that detection *could* have gone the other way on any
+given trial absent a code change — whereas the timing confidence
+intervals are a meaningful characterization of genuine run-to-run
+variability. This distinction is stated here explicitly so the two kinds
+of interval in Section 6 are not read as epistemically equivalent.
+
+**Execution environment, stated honestly rather than omitted.** Results
+in this paper were not gathered on a single, controlled benchmarking
+machine with recorded hardware specifications. The stand-in stub-artifact
+results (Section 6.1) were produced in a cloud-based Linux development
+sandbox; the two real, unmodified NASA/JPL framework results (Section
+6.2 onward) required Docker and were produced on the author's own macOS
+machine, since the sandbox environment had no Docker available. Exact
+CPU, memory, and OS-version specifications were not captured at
+measurement time for either environment. [TODO before submission: capture
+and report at least the author's macOS machine's specifications
+retroactively if still accessible, and note the sandbox's general class
+of environment, rather than leave this unspecified — full precision may
+not be recoverable for the sandbox environment specifically.] The
+practical consequence is that this paper's timing comparisons should be
+read as meaningful *within* a given stack's own S0–S5 progression
+(measured on one environment), not as precise absolute comparisons
+*across* stub-artifact and real-framework results, which were measured on
+different machines with different baseline performance characteristics
+entirely independent of the assurance mechanisms under test.
+
 ## 6. Results
 
 All results below are drawn directly from `evaluation/results/` (30
@@ -615,8 +666,17 @@ Prime-modeled C++ stub), happy-path success and reproducibility were 100%
 matrix cases were detected at a 100% (89%–100% CI) rate at their tested
 condition, with zero false positives and zero false negatives in every
 condition's confusion matrix (`evaluation/results/phase5_report.md`,
-`phase6_report_fprime.md`). Storage overhead relative to S0 increases
-monotonically with condition — 0 bytes at S0, 613 bytes at S1 (SBOM),
+`phase6_report_fprime.md`). Traceability completeness — the fraction of
+stages expected active at a condition that actually produced evidence —
+was 100% at every condition, and mean evidence-record count per run
+(the manual-evidence-processing-effort proxy defined in Section 5.2)
+increases monotonically with condition: 7 records at S0, 9 at S1, 12 at
+S2, 15 at S3, 17 at S4, and 21 at S5 (`evaluation/results/
+phase5_summary.json`) — roughly triple the review burden at S5 relative
+to S0, the expected direction stated in Section 5.2, now with the actual
+measured figures rather than only the qualitative claim. Storage overhead
+relative to S0 increases monotonically with condition — 0 bytes at S0,
+613 bytes at S1 (SBOM),
 1264 bytes at S2 (+provenance), 1631 bytes at S3 (+attestation), 1624
 bytes at S4 (a 7-byte decrease from S3 — no formal significance test was
 run on this specific delta, but the magnitude is consistent with S4
@@ -708,9 +768,12 @@ two independent cases, #8 and #15) while leaving every other mechanism at
 its otherwise-active condition. In every case, the baseline (mechanism
 active) detection rate was 100% and the ablated (mechanism disabled) rate
 was 0%, with the effect explicitly attributed to the ablated mechanism
-specifically (`evaluation/results/phase8_ablation_cfs.json`, confirmed
-identically against the real cFS build in
-`phase8_ablation_cfs-real.json`). This clean isolation — full detection
+specifically, identically across all four target stacks
+(`evaluation/results/phase8_ablation_cfs.json`,
+`phase8_ablation_fprime.json`, `phase8_ablation_cfs-real.json`,
+`phase8_ablation_fprime-real.json`) — including both real, unmodified
+NASA/JPL frameworks, not only the stub artifact this result might
+otherwise be assumed to be limited to. This clean isolation — full detection
 on, zero detection off, for every mechanism tested independently — is
 the direct evidence for this paper's central comparative claim (Section
 1): each mechanism in the ladder is doing genuine, individually
@@ -724,9 +787,11 @@ an attacker adapting across attempts changes the outcome: (A) a rogue
 build runner combined with in-transit tampering, and (B) an interrupted
 installation combined with a stale attestation. Both were caught at a
 100% rate, and in both, the pipeline halted before the second vector could
-be exercised (`halted_before_second_vector_rate` = 1.0 in both
-`phase8_adaptive_cfs.json` and, confirmed identically, against the real
-cFS build in `phase8_adaptive_cfs-real.json`). **This result must be read
+be exercised (`halted_before_second_vector_rate` = 1.0), identically
+across all four target stacks (`phase8_adaptive_cfs.json`,
+`phase8_adaptive_fprime.json`, `phase8_adaptive_cfs-real.json`,
+`phase8_adaptive_fprime-real.json`) — again including both real,
+unmodified frameworks. **This result must be read
 against its actual scope, not an inflated one:** these scenarios test
 whether the pipeline halts on the *first* of two vectors it already has a
 mechanism to detect — they are not a test of a genuinely evasive or
@@ -899,6 +964,20 @@ pursues the second vector independently rather than in the fixed sequence
 tested. A reader should not extend this paper's adaptive-attacker results
 to a claim of resistance against a genuinely adaptive or evasive
 adversary.
+
+**Only TUF was empirically baselined; SLSA, in-toto, and Sigstore were
+not.** Section 6.4's measured comparison, and this paper's central claim
+that spacecraft-specific constraints are not addressed by "terrestrial
+frameworks applied to a new domain," rests on a real-baseline comparison
+against TUF specifically, not against SLSA, in-toto, or Sigstore. Section
+7.2 already scopes the paper's claim narrowly for this reason — the
+evidence supports "TUF specifically doesn't cover this," not "no
+terrestrial tool or composition of tools could" — but that scoping is
+stated here explicitly as its own limitation as well, since a reader
+scanning this section specifically for this gap should find it named
+plainly rather than only inferable from Discussion. A real baseline
+comparison against a SLSA-conformant provenance pipeline or an in-toto
+attestation chain would be a natural, concrete extension of this work.
 
 **No completed independent human security review.** Independent
 verification of this project's threat model and mitigations to date
