@@ -165,14 +165,117 @@ states plainly what this evaluation does not establish; Section
 
 ## 2. Background / Related Work
 
-*[Not yet drafted. Pulls from: TUF/in-toto/SLSA/Sigstore/OSCAL (cited per
-§6's flag above); spacecraft/CCSDS software security literature — see
-`docs/Research-Paper-Outline.md` §6's verified peer-reviewed shortlist
-(Manulis et al. 2020, Ahmad et al. 2022, Kang et al. 2024, Pan et al.
-2023, Usman et al. 2026, Qureshi et al. 2021, Sahlmann et al. 2021,
-Ganesan/McComas et al. 2012, Gonzalez et al. 2019); NASA cFS engineering
-literature. Each citation's specific claim needs to be checked against the
-actual paper text before use, not assumed from its abstract.]*
+**Note on citation treatment in this section, per the 2026-08-07 flag in
+`docs/Research-Paper-Outline.md` §6:** SLSA, in-toto, Sigstore, TUF, and
+OSCAL are cited below via their own specifications/project sites, as the
+systems this project's design is built from and measured against — the
+same treatment already given to TUF in the real-baseline comparison
+(Section [Evaluation Methodology]; `docs/Threat-Model.md` "Phase 8
+real-baseline comparison: python-tuf"). This project does not reimplement
+any of them, and pinning to a specification rather than a single academic
+paper about that specification is arguably more precise for a systems
+paper regardless of the venue's stance on conference proceedings. All
+other citations in this section are drawn from the peer-reviewed-journal
+shortlist verified in `docs/Research-Paper-Outline.md` §6
+(2026-08-07) and are limited to claims that abstract-level information
+can actually support — anything more specific is marked for full-text
+verification before submission, not asserted from the abstract alone.
+
+### 2.1 Terrestrial software supply-chain security
+
+Following SolarWinds-class incidents, terrestrial software supply-chain
+security has converged on a small number of complementary properties
+rather than a single tool: **provenance** (can the deployed artifact be
+traced to the source and build process that produced it — SLSA's graduated
+levels, in-toto's attestation layer), **transparency/attestation** (can a
+claim about an artifact's origin or state be independently verified —
+Sigstore's signing and transparency-log infrastructure), and **update
+resilience** (can the update mechanism itself survive compromise of one or
+more of its own signing keys — TUF's core contribution, and the specific
+property this project's S0 baseline deliberately does *not* provide,
+since S0 is signature-only with no revocation-aware verification layered
+on top). OSCAL, from NIST, addresses a related but distinct need:
+representing compliance and authorization evidence in a machine-readable
+form suitable for automated policy checking rather than only human audit
+review. This project's S1–S5 ladder maps loosely onto this same property
+space — SBOM (S1) and provenance (S2) to the first property, onboard
+attestation (S3) to the second, and machine-readable authorization
+evidence (S5) to a use of the third that mirrors OSCAL's design goal more
+than any of SLSA/in-toto/TUF's own scope. None of these frameworks was
+designed with spacecraft-specific operating constraints in view; Section
+[Threat Model] and the real-baseline comparison against an unmodified
+python-tuf deployment (Section [Evaluation Methodology]) make this gap
+measurable rather than asserted, addressing the most direct form of
+objection this framing invites — that this project is "just SLSA/in-toto/
+TUF applied to a new domain."
+
+### 2.2 Spacecraft and satellite software security
+
+The existing literature on spacecraft and satellite cybersecurity is
+weighted heavily toward the ground segment and the radio-frequency link,
+not the onboard software supply chain. Manulis, Bridges, Harrison, Sekar,
+& Davis (2020) analyze historical satellite security incidents and find
+that ground and RF communications, not the space segment itself, have
+been the most favored attack targets to date — a finding this paper's own
+literature search (Section 1) independently corroborates for the specific
+case of flight-software build/update compromise, where no documented
+incident was found at all. Ahmad et al. (2022) and Kang, Park, & Lee
+(2024) both survey satellite communication security more broadly,
+covering confidentiality/integrity/availability threats and countermeasures
+at the communications-protocol level; Kang et al. specifically discuss the
+AcidRain and AcidPour incidents referenced in Section 1. [TODO: verify
+before final drafting whether either survey discusses onboard
+software-update assurance as a category, or confirms — as the current
+draft asserts based on their abstracts and general scope — that this is
+outside their focus.] Taken together, this body of work establishes that
+satellite cybersecurity is an active and maturing research area, but one
+whose center of gravity has been the link and ground segment; the software
+lifecycle that produces and updates what runs onboard has received
+comparatively little direct empirical treatment, which is the specific gap
+this paper's contribution targets.
+
+### 2.3 Adjacent domains: attestation and update assurance in other
+constrained/autonomous systems
+
+Three areas of adjacent work bear directly on this project's specific
+combination of attestation and update assurance without a live human
+overseeing either. Usman, Afzal, & Asplund (2026) integrate remote
+attestation with secure software updates in embedded systems (RASUES,
+extending the IETF RATS architecture to explicitly cover the pre- and
+post-update device state) — the closest direct analog to this project's
+S3-plus-update-pipeline combination found in this literature search, and
+worth returning to for detailed comparison once this section is finalized
+against its full text rather than its abstract alone. Qureshi, Marvi,
+Shamsi, & Aijaz (2021) and Sahlmann, Clemens, Nowak, & Schnor (2021)
+address secure over-the-air update assurance in, respectively, autonomous
+vehicles and constrained IoT devices — domains that share this project's
+concern with updating a device that cannot be physically retrieved on
+demand, but neither operates under the link-latency/intermittency
+constraints Section [Threat Model] treats as first-class, and neither
+targets a domain where a failed update can mean total, permanent loss of
+the asset the way an unrecoverable spacecraft update can. [TODO: confirm
+this last claim — permanence/unrecoverability of failure — against each
+paper's actual treatment of failure modes, not just inferred from domain
+knowledge of vehicles/IoT generally.]
+
+### 2.4 NASA Core Flight System and flight-software engineering practice
+
+The target artifact used throughout this project's evaluation, NASA's
+Core Flight System (cFS), has its own body of engineering-practice
+literature independent of the security question this paper addresses.
+Ganesan, Lindvall, McComas et al. (2012) analyze unit-testing practice
+across a flight-software product line predating cFS's open-source release,
+and Gonzalez, Rojas, Bergel, & Díaz (2019) evaluate flight-software
+architecture verification methodology for CubeSat nanosatellites using a
+different framework (SUCHAI) but a directly comparable engineering
+concern — ensuring an evolving flight-software codebase continues to
+satisfy its architectural and non-functional requirements over the
+software's lifecycle. Neither addresses supply-chain assurance
+specifically, but both establish that flight-software engineering rigor
+and verification tooling is an active concern in this community
+independent of the security framing this paper adds to it — this project's
+contribution sits alongside this literature rather than in competition
+with it.
 
 ## 3. Threat Model
 
