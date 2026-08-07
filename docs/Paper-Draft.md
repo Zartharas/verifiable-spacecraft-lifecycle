@@ -1,31 +1,44 @@
 # Measuring Software Supply-Chain Assurance for Spacecraft Flight Software: A Controlled, Comparative Evaluation
 
-**Status:** Draft v0.3 — full first draft, all nine sections plus both
+**Status:** Draft v0.4 — full first draft, all nine sections plus both
 required disclosure statements, written section by section with an
 integrity/citation self-check after each one rather than in one pass (see
-STATUS.md's 2026-08-07 entries for what each check caught and fixed), then
-run through a five-lens self-critique pass (methodology & statistics,
-novelty & contribution, reproducibility, research ethics, clarity &
-argument) with all seven findings addressed: the AI-use disclosure
-statement corrected to name the actual tools used per red-team pass; the
-ablation and adaptive-attacker citations extended to all four target
-stacks, not just two; a new explicit Limitations bullet on TUF being the
-only empirically baselined comparison framework; the promised evidence-
-count/traceability metrics from Section 5.2 actually reported in Section
-6.1; a deterministic-vs-stochastic framing paragraph added to Section 5.3
-so Wilson-CI detection rates aren't misread as characterizing outcome
-randomness; an honest multi-environment execution-environment disclosure
-added to Section 5.3 (results were not gathered on one controlled
-benchmark machine); and every bracketed cross-reference placeholder
-resolved to a real section number now that the structure is stable.
-**Not yet done:** several citations (marked inline) still need full-text
-verification rather than abstract-level confidence, the exact per-pass
-AI-tool identity for the four red-team reviews is still an approximate
-recollection pending the author's own records (flagged inline in the
-AI-use disclosure statement), and precise hardware specifications for the
-execution environments used are still unconfirmed. Treat this as a
-complete, self-critiqued draft to do a final verification pass on before
-submission, not yet a finished manuscript.
+STATUS.md's 2026-08-07 entries for what each check caught and fixed),
+then run through a five-lens self-critique pass (methodology &
+statistics, novelty & contribution, reproducibility, research ethics,
+clarity & argument) with all seven findings addressed, then a full
+citation-verification pass against every inline TODO/full-text-needed
+flag. The citation-verification pass: confirmed Kang et al. (2024)
+against full text (does not discuss onboard update assurance; the
+AcidRain/AcidPour incident specifics now cited come from SentinelOne's
+own primary-source technical disclosures, not from Kang et al., which
+only discusses the incidents narratively); confirmed Manulis et al.
+(2020) and Ahmad et al. (2022) against full text (neither treats onboard
+software-update assurance as a developed category; Manulis et al. does
+name "supply chain attacks" and outdated COTS software as ground-segment
+threat categories in passing, now stated precisely); confirmed Usman et
+al.'s RASUES (2026) against full text (TPM-hardware-based, general
+IoT/embedded scope, not spacecraft-specific — a stronger attestation
+baseline than this project's own software-only S3 design, now stated
+precisely rather than left as an abstract-level assumption); confirmed
+Sahlmann et al.'s MUP (2021) against full text (failure handling is
+report-only, no described recovery mechanism); could not obtain full
+text for Qureshi et al. (2021) despite multiple access attempts — the
+citation is now scoped strictly to what its abstract supports (a
+CNN-based malicious-update classifier) rather than the broader "OTA
+update assurance" framing an earlier draft used, with an explicit
+in-text flag that its failure-mode treatment specifically is not
+verified either way; and finalized the TUF/in-toto/SLSA citation form
+(cited via their current official specifications, versions confirmed via
+live search, with their own conference-proceedings academic origins
+explicitly excluded from the literature-review list per the journal-only
+search scope). **Not yet done:** the exact per-pass AI-tool identity for
+the four red-team reviews is still an approximate recollection pending
+the author's own records (flagged inline in the AI-use disclosure
+statement), and precise hardware specifications for the execution
+environments used are still unconfirmed. Treat this as a complete,
+self-critiqued, citation-verified draft ready for a final read-through
+before submission, not yet a finished manuscript.
 
 Target venue (current decision, see `docs/Research-Paper-Outline.md` §3,
 2026-08-07): Computers & Security, first attempt; Journal of Space Safety
@@ -47,11 +60,18 @@ approved. Terrestrial software has spent the last several years building
 a substantial body of tooling and practice to close exactly this gap —
 SLSA, in-toto, Sigstore, and the Update Framework (TUF) each formalize a
 piece of it: build provenance, artifact attestation, and resilience to
-signing-key compromise, respectively [TODO: cite TUF/in-toto/SLSA — per
-`docs/Research-Paper-Outline.md` §6's 2026-08-07 flag, these are cited via
-their own specifications as the systems this paper measures against, not
-as literature-review citations subject to the peer-reviewed-journal bar
-used elsewhere in this section; final citation form to be confirmed].
+signing-key compromise, respectively (SLSA Specification v1.2, slsa.dev;
+in-toto Attestation Framework, in-toto.io/docs/specs; The Update
+Framework Specification v1.0.34, theupdateframework.io). These four are
+cited throughout this paper via their own current specifications, as the
+systems this project measures itself against (Section 6.4's baseline
+comparison is built directly on an unmodified TUF implementation), rather
+than as literature-review citations subject to the peer-reviewed-journal
+bar used elsewhere in this paper; their own foundational academic
+publications (e.g., the original TUF paper, Samuel et al., ACM CCS 2010)
+are conference proceedings and are accordingly not cited as literature
+review sources here, consistent with this paper's journal-only search
+scope.
 Spacecraft software has not seen an equivalent, empirically grounded
 treatment, despite operating under constraints that make supply-chain
 failures more consequential and harder to recover from than in most
@@ -62,28 +82,30 @@ cannot be patched by simply pushing another commit.
 
 This gap is not hypothetical. Real attacks against operational space
 systems have already demonstrated what an under-defended software/update
-layer costs in practice: the AcidRain wiper malware disabled satellite
-modems in the Viasat KA-SAT network in 2022, and a later variant,
-AcidPour, extended the same attack pattern to a broader set of embedded
-Linux devices (Kang, Park, & Lee, 2024, cite for the fact that these
-incidents are discussed in that survey). **Flag — not yet
-citation-verified:** the specific figures often quoted for this incident
-(affected-device counts, exact date) are widely reported in press
-coverage of the Viasat hack but have **not** been checked against Kang et
-al.'s actual paper text (only their abstract, which names AcidRain/
-AcidPour, has been seen so far) — this draft deliberately omits specific
-numbers until that check happens, rather than repeat a figure from
-general knowledge and attach it to a citation that may not actually state
-it. Before this section is finalized: (1) read Kang et al.'s full text to
-confirm exactly what it claims about these incidents, and (2) if
-specific figures are wanted, find and verify a primary source (e.g., the
-original SentinelOne/Viasat incident disclosures) rather than cite them
-through a survey paper that may only mention the incidents in passing.
-These are ground/terminal-segment incidents rather than attacks on an
-onboard flight computer directly, but they establish that the broader
-satellite-system software supply chain is an active, exploited attack
-surface, not a theoretical concern reserved for nation-state threat
-modeling exercises.
+layer costs in practice. On February 24, 2022, the AcidRain wiper
+malware was pushed en masse through the KA-SAT management segment onto
+Viasat satellite-broadband modems, overwriting the modems' flash memory
+and rendering them inoperable across Ukraine and the wider European
+service area; a documented downstream effect was the loss of remote
+monitoring and control for roughly 5,800 Enercon wind turbines in
+Germany, whose communications relied on the same network (SentinelOne
+threat intelligence, 2022; corroborated as part of the broader satellite
+cyberattack landscape by Kang, Park, & Lee, 2024). Two years later, in
+March 2024, a related wiper variant, AcidPour, was found to extend the
+same destructive-wipe approach with logic specifically targeting
+embedded Linux devices — networking equipment, IoT devices, large
+storage arrays, and potentially industrial-control-system devices —
+consistent with a shift toward broader embedded-device targeting beyond
+the original modem-specific AcidRain (SentinelOne threat intelligence,
+2024). These are ground/terminal-segment incidents rather than attacks
+on an onboard flight computer directly, and their technical specifics
+are drawn from SentinelOne's own incident analyses rather than from Kang
+et al., whose survey discusses these incidents at the level of the
+broader satellite-communication threat landscape rather than providing
+this level of incident-specific detail itself. Together, they establish
+that the broader satellite-system software/firmware supply chain is an
+active, exploited attack surface, not a theoretical concern reserved for
+nation-state threat modeling exercises.
 
 **Searched, 2026-08-07, and reporting the negative result rather than
 implying otherwise:** no publicly documented real-world incident of an
@@ -235,18 +257,33 @@ weighted heavily toward the ground segment and the radio-frequency link,
 not the onboard software supply chain. Manulis, Bridges, Harrison, Sekar,
 & Davis (2020) analyze historical satellite security incidents and find
 that ground and RF communications, not the space segment itself, have
-been the most favored attack targets to date — a finding this paper's own
-literature search (Section 1) independently corroborates for the specific
-case of flight-software build/update compromise, where no documented
-incident was found at all. Ahmad et al. (2022) and Kang, Park, & Lee
-(2024) both survey satellite communication security more broadly,
-covering confidentiality/integrity/availability threats and countermeasures
-at the communications-protocol level; Kang et al. specifically discuss the
-AcidRain and AcidPour incidents referenced in Section 1. [TODO: verify
-before final drafting whether either survey discusses onboard
-software-update assurance as a category, or confirms — as the current
-draft asserts based on their abstracts and general scope — that this is
-outside their focus.] Taken together, this body of work establishes that
+been the most favored attack targets to date — confirmed against their
+full text, which reports the ground segment as the most-targeted sector
+in their own incident dataset, followed by RF data communications — a
+finding this paper's own literature search (Section 1) independently
+corroborates for the specific case of flight-software build/update
+compromise, where no documented incident was found at all. Manulis et
+al.'s full text does name "supply chain attacks" and "unpatched/
+outdated/legacy COTS software" as distinct ground-segment threat
+categories, but treats each in a single descriptive paragraph without
+proposing or surveying any verification, attestation, or update-integrity
+mechanism — a gap this paper's contribution directly addresses. Ahmad et
+al. (2022) and Kang, Park, & Lee (2024) both survey satellite
+communication security more broadly, covering confidentiality/integrity/
+availability threats and countermeasures at the communications-protocol
+level; Kang et al. specifically discuss the AcidRain and AcidPour
+incidents referenced in Section 1, though (confirmed against its full
+text) at the level of the broader threat landscape rather than the
+incident-specific detail cited in Section 1, which is instead drawn from
+SentinelOne's own technical disclosures. Confirmed against full text for
+both: neither Ahmad et al. nor Kang et al. discusses onboard
+software-update assurance as a developed category. Ahmad et al.'s only
+proximate mention is a single passing observation that satellites moving
+toward software-defined, on-orbit-patchable payloads introduces
+vulnerability "due to immaturity of on-orbit reprogramming technologies,"
+without further development into any assurance mechanism; Kang et al.
+does not mention software updates, patching, firmware, or supply-chain
+security at all. Taken together, this body of work establishes that
 satellite cybersecurity is an active and maturing research area, but one
 whose center of gravity has been the link and ground segment; the software
 lifecycle that produces and updates what runs onboard has received
@@ -260,22 +297,50 @@ Three areas of adjacent work bear directly on this project's specific
 combination of attestation and update assurance without a live human
 overseeing either. Usman, Afzal, & Asplund (2026) integrate remote
 attestation with secure software updates in embedded systems (RASUES,
-extending the IETF RATS architecture to explicitly cover the pre- and
-post-update device state) — the closest direct analog to this project's
-S3-plus-update-pipeline combination found in this literature search, and
-worth returning to for detailed comparison once this section is finalized
-against its full text rather than its abstract alone. Qureshi, Marvi,
-Shamsi, & Aijaz (2021) and Sahlmann, Clemens, Nowak, & Schnor (2021)
-address secure over-the-air update assurance in, respectively, autonomous
-vehicles and constrained IoT devices — domains that share this project's
-concern with updating a device that cannot be physically retrieved on
-demand, but neither operates under the link-latency/intermittency
-constraints Section 3 treats as first-class, and neither
-targets a domain where a failed update can mean total, permanent loss of
-the asset the way an unrecoverable spacecraft update can. [TODO: confirm
-this last claim — permanence/unrecoverability of failure — against each
-paper's actual treatment of failure modes, not just inferred from domain
-knowledge of vehicles/IoT generally.]
+extending the IETF RATS RFC 9334 architecture with a watchdog-timer-backed
+update procedure that tracks the device's expected state both before and
+after an update) — the closest direct analog to this project's
+S3-plus-update-pipeline combination found in this literature search.
+Confirmed against RASUES's full text: it targets general IoT/embedded
+systems rather than spacecraft specifically, and — unlike this project's
+explicitly disclosed software-only attestation (Section 4.2) — is built
+on a TPM 2.0 hardware root of trust, prototyped on a Raspberry Pi. This
+makes RASUES a stronger baseline for the attestation mechanism itself
+than this project's own S3 implementation, while leaving the
+spacecraft-specific constraints this paper's threat model treats as
+first-class (link intermittency, no human in the loop, physically
+unrecoverable failure) entirely outside its scope, and RASUES does not
+address the pre-attestation supply-chain stages (build provenance, SBOM
+completeness, ground-side authorization policy) this project's S0-S2
+conditions cover. Sahlmann, Clemens, Nowak, & Schnor (2021) address
+secure over-the-air update assurance for constrained IoT devices via
+MQTT (MUP), a domain that shares this project's concern with updating a
+device that cannot be physically retrieved on demand. Confirmed against
+its full text: MUP's failure handling is limited to detection and
+reporting rather than recovery — if the post-update reboot fails, "the
+Update Server will get a timeout and reports the error," with no
+described mechanism for the device to recover or roll back on its own —
+thinner than this project's own S4 automated-rollback design, though the
+paper does not itself frame this gap in terms of permanent or
+unrecoverable asset loss, which is this paper's own framing rather than a
+claim drawn from MUP. Qureshi, Marvi, Shamsi, & Aijaz (2021), initially
+characterized in an earlier draft as addressing general secure
+over-the-air update assurance in autonomous vehicles, is on closer
+reading (confirmed against its abstract; the full text sits behind a
+paywall this literature search could not get past) a narrower
+contribution than that framing suggested: a CNN-based classifier for
+distinguishing malicious from benign OTA update executables, layered on
+the existing Uptane framework and trained/evaluated on general Windows/
+Linux executable datasets rather than vehicle-specific failure scenarios.
+**Flag — not fully citation-verified:** because the full text could not
+be obtained, this paper's specific treatment of update-failure
+permanence or recoverability is not confirmed either way and is not
+asserted here; the comparison this section draws is limited to what its
+abstract actually supports (malicious-update detection via machine
+learning), not to a claim about failure-mode design it does not appear,
+from the abstract, to focus on. Neither Sahlmann et al. nor (as far as
+its abstract indicates) Qureshi et al. operates under the link-latency/
+intermittency constraints Section 3 treats as first-class.
 
 ### 2.4 NASA Core Flight System and flight-software engineering practice
 
@@ -536,12 +601,12 @@ ablation study extend the evaluation to two questions the fixed matrix
 cannot answer on its own: whether an attacker adapting across attempts
 changes the outcome, and whether each individual mechanism's contribution
 holds when it alone is disabled from an otherwise-fully-active condition
-(rather than only observed cumulatively as conditions are added). [TODO,
-Sections 6/7: state plainly, per objection 5 in
-`docs/Research-Paper-Outline.md` §4, that the adaptive-attacker scenarios
-test whether detection halts the pipeline, not whether the attacker is
-genuinely evasive or time-adaptive — this scope boundary must not be
-implied away when the results are presented.]
+(rather than only observed cumulatively as conditions are added). As
+stated plainly in Sections 6.6 and 8 rather than left implicit, the
+adaptive-attacker scenarios test whether detection halts the pipeline on
+the first of two attempted attack vectors, not whether the attacker is
+genuinely evasive or time-adaptive; this scope boundary is not implied
+away when the results are presented.
 
 ### 5.2 Metrics and the baseline decision
 

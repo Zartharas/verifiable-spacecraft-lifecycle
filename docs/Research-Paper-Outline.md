@@ -616,6 +616,19 @@ the tools this project's central comparison is built around. Flagging
 this rather than either silently including the excluded conference papers
 or silently dropping TUF/in-toto's academic grounding.
 
+**Resolved, 2026-08-07 (citation-verification pass):** confirmed as
+final rather than pending. TUF/in-toto/SLSA/Sigstore are cited in the
+paper draft via their current official specifications — SLSA
+Specification v1.2 (slsa.dev/spec/v1.2/), in-toto Attestation Framework
+(in-toto.io/docs/specs, GitHub tag v1.0.2), The Update Framework
+Specification v1.0.34 (theupdateframework.io/spec/, updated 2026-01-22) —
+verified current via live search rather than assumed from training-data
+knowledge. Their own academic origin papers (Samuel et al., ACM CCS 2010
+for TUF; the in-toto/SLSA workshop and industry-report lineage) remain
+excluded from the literature-review citation list per the journal-only
+search scope, with the draft now stating this explicitly rather than
+leaving it as an open TODO.
+
 **Verified peer-reviewed journal candidates found this pass** (verified via
 OpenAlex metadata — title/authors/DOI/abstract confirmed; full-text
 claim-to-citation matching per the academic-publishing skill's
@@ -633,6 +646,26 @@ citation-integrity rule still needs to happen at actual drafting time in
 | Sahlmann, Clemens, Nowak, Schnor, "MUP: Simplifying Secure Over-The-Air Update with MQTT for Constrained IoT Devices" (2021), DOI 10.3390/s21010010 | Sensors (MDPI) | Constrained-device secure update — adjacent-domain comparison | Shortlisted |
 | Ganesan, Lindvall, McComas et al., "An analysis of unit tests of a flight software product line" (2012), DOI 10.1016/j.scico.2012.02.006 | Science of Computer Programming (Elsevier) | cFS engineering-practice background — supports System Design section | Shortlisted |
 | Gonzalez, Rojas, Bergel, Díaz, "An Architecture-Tracking Approach to Evaluate a Modular and Extensible Flight Software for CubeSat Nanosatellites" (2019), DOI 10.1109/access.2019.2927931 | IEEE Access | Flight software architecture verification — adjacent citation for System Design/Related Work | Shortlisted |
+
+**Primary-source incident reports (2026-08-07, not subject to the
+peer-reviewed-journal bar — these are the vendor technical disclosures the
+Introduction's AcidRain/AcidPour paragraph is actually built on, verified
+directly rather than cited through Kang et al.'s survey-level mention):**
+SentinelOne/SentinelLabs, "AcidRain | A Modem Wiper Rains Down on Europe"
+(2022) — confirms the February 24, 2022 date, the KA-SAT
+management-segment delivery mechanism, and the ~5,800 Enercon wind
+turbine downstream-communications-loss figure; SentinelOne/SentinelLabs,
+"AcidPour | New Embedded Wiper Variant of AcidRain Appears in Ukraine"
+(2024) — confirms the March 2024 discovery date and the
+embedded-device/IoT/ICS targeting scope. Kang et al. (2024) is retained
+in the Introduction as corroborating that these incidents sit within the
+broader satellite-communication threat landscape the survey covers, but
+the specific figures now cited come from these primary sources, not from
+Kang et al.'s text (confirmed via full-text fetch: Kang et al. mentions
+both incidents narratively, without the modem/wind-turbine/embedded-
+device specifics now cited, and does not discuss onboard software-update
+assurance as a category anywhere in the paper — resolves the §2.2 TODO
+for Kang et al. specifically).
 
 Not logged (found but excluded as conference/workshop proceedings or
 unpublished preprints per this pass's instruction): Samuel et al. (TUF,
@@ -655,24 +688,34 @@ naming the system and which sections used it; Elsevier wants a dedicated
 process" section immediately above the references) — the substance below
 is the venue-agnostic master version.
 
-> This project made substantive use of Claude (Anthropic), an AI system,
-> across system design, implementation, testing, security review, and the
-> preparation of this manuscript, under continuous human direction and
-> review. Specifically: Claude wrote the majority of the pipeline's source
-> code, test suite, and documentation to the author's specifications;
-> independently diagnosed the root cause of several environment-dependent
-> defects during real-hardware validation (e.g., a Docker-exec-format
-> failure and a container `mqueue` sysctl limit, logged as ISSUE-007 and
-> ISSUE-008); designed the mechanism-ablation study and adaptive-attacker
-> test scenarios used in the evaluation methodology; and performed four
-> independent, blind red-team review passes against the codebase, each
-> using a fresh context without access to prior findings, that surfaced
-> and led to fixes for 21 real security and correctness defects (logged
-> as ISSUE-011 through ISSUE-031 in ISSUES-AND-FIXES-LOG.md; a further 10
-> defects, ISSUE-001 through ISSUE-010, were found during real-hardware
-> build/validation work rather than red-team review, also with Claude's
-> involvement in root-cause diagnosis and fixes). Claude also assisted in
-> researching target venues and drafting this manuscript.
+> This project made substantive use of multiple AI systems across system
+> design, implementation, testing, security review, and the preparation of
+> this manuscript, under continuous human direction and review. Claude
+> (Anthropic) performed the majority of the work: it wrote the majority of
+> the pipeline's source code, test suite, and documentation to the
+> author's specifications; independently diagnosed the root cause of
+> several environment-dependent defects during real-hardware validation
+> (e.g., a Docker-exec-format failure and a container `mqueue` sysctl
+> limit, logged as ISSUE-007 and ISSUE-008); designed the mechanism-
+> ablation study and adaptive-attacker test scenarios used in the
+> evaluation methodology; and assisted in researching target venues and
+> drafting this manuscript. Separately, four independent, blind red-team
+> review passes against the codebase were performed using distinct AI
+> systems other than Claude specifically to obtain review independent of
+> the system that built and previously reviewed the code — across the
+> four passes, the author used tools including OpenAI's models, Zhipu
+> AI's GLM, and DeepSeek, each given a fresh context without access to
+> prior findings or the existing threat model. [TODO before submission:
+> confirm the precise tool/model used for each of the four passes
+> individually with the author's own records, rather than the
+> approximate recollection this statement currently reflects — venue
+> disclosure policies generally expect this level of specificity where
+> available.] These four passes collectively surfaced and led to fixes
+> for 21 real security and correctness defects (logged as ISSUE-011
+> through ISSUE-031 in ISSUES-AND-FIXES-LOG.md; a further 10 defects,
+> ISSUE-001 through ISSUE-010, were found during real-hardware
+> build/validation work rather than red-team review, with Claude's
+> involvement in root-cause diagnosis and fixes for those).
 >
 > All AI-generated code, diagnoses, and findings were independently
 > verified before being accepted: root-cause claims were confirmed via
