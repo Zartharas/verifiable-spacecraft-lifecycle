@@ -73,6 +73,34 @@ your judgment, not a decision made here — a development-venue outing still
 has real value (cheap, fast feedback before an archival submission) even
 when not strictly required to clear the generalizability objection.
 
+**2026-08-07 note — decision made, informed by item 7 no longer having a
+human-review component before submission.** With the colleague review no
+longer gating submission (see item 7's update below and STATUS.md), the
+open question above is resolved in favor of the development-venue outing
+first, not skipping to a primary archival target. Reasoning: the paper's
+strongest remaining answer to "who verified this besides the people who
+built it" is currently two AI-driven red-team passes plus a from-scratch
+python-tuf baseline — real, disclosable evidence, but weaker than a human
+domain-expert review, and a security-adversarial primary venue (Computers
+& Security, TDSC-tier stretch targets) is exactly where a reviewer is most
+likely to press on that specific gap. A development venue's own peer
+review then becomes the first real independent human check on this work,
+which is a more organic fix than either waiting indefinitely on the
+colleague or submitting to a top venue with a disclosed gap in the
+weakest-defended part of the methodology. **Revised sequence for this
+round:** submit to IEEE Aerospace Conference (AeroConf) or NDSS SpaceSec
+first — SpaceSec is arguably the better scope match (supply-chain-security
+topics named explicitly) but its 2027 CFP isn't published yet (expected
+~Sept–Oct 2026, per § 5); AeroConf's Oct 2 deadline is the more concrete
+near-term option if timing matters. AIAA JAIS remains a reasonable direct
+primary-target alternative if a development-venue round is skipped for
+timing reasons — its Q2/less-adversarial reviewer culture is a materially
+softer landing for a disclosed no-human-review limitation than Computers &
+Security or the stretch targets. Hold Computers & Security and the
+TDSC/TSE/TOSEM stretch targets for a revision after this round, ideally
+once either the colleague's review does land or the development venue's
+own reviewers have served as the first real independent human check.
+
 **Primary targets:**
 - AIAA Journal of Aerospace Information Systems (strongest natural fit —
   aerospace software engineering, V&V, embedded systems, mission
@@ -247,6 +275,37 @@ just Discussion/Limitations)
    achievable without a human domain-expert audit, and should be stated
    as exactly that: a strong mitigation, not a resolution of the
    underlying methodological point.
+   **A third and fourth independent (blind, AI) red-team pass followed,
+   2026-08-06** (different models/tools than the first two — see
+   Threat-Model.md's third/fourth-pass sections and ISSUE-030/031),
+   finding one further genuinely novel bypass plus five ways the third
+   pass's own fix was incomplete — further evidence the multi-pass
+   process finds real, non-trivial gaps, including gaps in its own prior
+   remedies. **Human-review status decided, 2026-08-07:** a colleague
+   (security engineer) review was requested 2026-08-05 and remains
+   informally open, but the paper does not wait on it — its timeline is
+   outside the author's control, so the gap is disclosed rather than
+   worked around. Exact Limitations-section language:
+
+   > Independent verification of this project's threat model and
+   > mitigations to date consists of four independent, blind, AI-driven
+   > red-team review passes (Section [Threat-Model reference]) and a
+   > from-scratch comparison against an unmodified upstream `python-tuf`
+   > deployment (Section [baseline-comparison reference]). A human
+   > domain-expert review was requested but had not been completed at
+   > the time of submission. We treat this as a limitation rather than a
+   > resolved concern: AI-driven review, however methodologically
+   > structured, is not a substitute for the judgment a human security
+   > practitioner brings, particularly regarding which findings matter
+   > operationally and which attacker capabilities are realistic for a
+   > spacecraft mission context. If a human review is completed prior to
+   > publication, its findings will be incorporated; if not, this remains
+   > an open direction for follow-on work.
+
+   This names the gap plainly rather than implying human verification
+   happened, and leaves room to strengthen the claim later without
+   having overclaimed now. See § 3's 2026-08-07 venue-strategy update for
+   how this factors into venue choice for this submission round.
 8. **"Is this code actually available, or just described?"** (New,
    2026-08-04.) The GitHub repo is currently private. Computers &
    Security and JSSE (per § 5 below) both expect data/code availability
