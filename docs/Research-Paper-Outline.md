@@ -552,3 +552,81 @@ aren't re-derived from memory. Update as research progresses.
 | Paper | Relevance | Status |
 |---|---|---|
 | *(none logged yet)* | | |
+
+## 7. AI-use disclosure statement (drafted 2026-08-07)
+
+Objection 11 (§4) requires this to say plainly what AI actually did, not
+undersell it as "editing assistance." Every claim below is traceable to a
+specific STATUS.md/ISSUES-AND-FIXES-LOG.md entry — nothing here is
+summarized from memory of the project, it's pulled from the log itself.
+Adapt the wrapper/heading per venue (IEEE wants this in Acknowledgments,
+naming the system and which sections used it; Elsevier wants a dedicated
+"Declaration of generative AI and AI-assisted technologies in the writing
+process" section immediately above the references) — the substance below
+is the venue-agnostic master version.
+
+> This project made substantive use of Claude (Anthropic), an AI system,
+> across system design, implementation, testing, security review, and the
+> preparation of this manuscript, under continuous human direction and
+> review. Specifically: Claude wrote the majority of the pipeline's source
+> code, test suite, and documentation to the author's specifications;
+> independently diagnosed the root cause of several environment-dependent
+> defects during real-hardware validation (e.g., a Docker-exec-format
+> failure and a container `mqueue` sysctl limit, logged as ISSUE-007 and
+> ISSUE-008); designed the mechanism-ablation study and adaptive-attacker
+> test scenarios used in the evaluation methodology; and performed four
+> independent, blind red-team review passes against the codebase, each
+> using a fresh context without access to prior findings, that surfaced
+> and led to fixes for 21 real security and correctness defects (logged
+> as ISSUE-011 through ISSUE-031 in ISSUES-AND-FIXES-LOG.md; a further 10
+> defects, ISSUE-001 through ISSUE-010, were found during real-hardware
+> build/validation work rather than red-team review, also with Claude's
+> involvement in root-cause diagnosis and fixes). Claude also assisted in
+> researching target venues and drafting this manuscript.
+>
+> All AI-generated code, diagnoses, and findings were independently
+> verified before being accepted: root-cause claims were confirmed via
+> direct interactive testing rather than trusted from Claude's own report
+> (for example, a Unicode-normalization claim in ISSUE-031 was verified by
+> directly testing `casefold()` behavior against fullwidth Latin
+> characters before the fix was written); every fix was checked against
+> the full regression suite and, where applicable, against real target
+> hardware; and all git operations, test executions on physical hardware,
+> and final acceptance decisions were performed by the human author. AI
+> is not listed as an author, consistent with the principle that
+> authorship requires responsibilities only a human can hold. The
+> author takes full responsibility for the accuracy and integrity of the
+> content of this manuscript and the underlying codebase.
+>
+> We note, as a limitation rather than a strength, that the mitigations
+> described above were designed by substantially the same human-plus-AI
+> process being described — see the Limitations section (§4 objection 7)
+> for the honest treatment of this recursion.
+
+## 8. Data / code availability statement (drafted 2026-08-07)
+
+Reflects the decided repo-visibility plan (STATUS.md, 2026-08-06/07: stays
+private through the research/writing phase, made public at the point of
+publication). Computers & Security and JSSE both expect this at
+submission; phrase it as a firm commitment, not a vague "on request":
+
+> The source code, test suite, evaluation harness, and full issue/fix
+> history for this project are maintained in a version-controlled
+> repository. The repository is currently private during the research and
+> writing phase and will be made public no later than the date of
+> publication, at which point it will be citable at
+> https://github.com/Zartharas/verifiable-spacecraft-lifecycle. Reviewers
+> requiring earlier access may request it from the corresponding author.
+
+That last sentence matters — it gives reviewers a path to actually check
+the code during review rather than only at publication, which is closer
+to what these journals' screening actually wants than a pure "available
+upon acceptance" line.
+
+**Caveat — drop that last sentence for double-blind venues.** NDSS
+SpaceSec requires anonymized submissions; naming "the corresponding
+author" as a contact point would deanonymize the paper on sight. For any
+double-blind submission, cut that sentence entirely and rely on the
+public-at-publication commitment alone, or route requests through the
+venue's own anonymous communication channel if one exists — check the
+specific CFP once SpaceSec 2027's is published (§5).
