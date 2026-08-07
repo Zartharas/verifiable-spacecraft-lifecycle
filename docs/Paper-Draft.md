@@ -594,11 +594,141 @@ objection 9).
 
 ## 6. Results
 
-*[Not yet drafted. Pulls from `evaluation/results/` — the four-stack
-100%/0% detection results, the TUF baseline comparison, and the ablation
-study. State any case where detection happened earlier/later than
-hypothesized explicitly, per the outline's structure guidance, rather
-than only reporting confirmations.]*
+All results below are drawn directly from `evaluation/results/` (30
+trials per condition/test-case combination unless noted) and are reported
+per the caveats fixed in Section 5.2 — detection/success rates are 95%
+Wilson score intervals, timing means are 95% normal-approximation
+intervals, and every timing figure is a sandbox/local-hardware proxy, not
+a flight-hardware claim.
+
+### 6.1 Happy-path and attack-matrix detection, stand-in stub artifacts
+
+Against both stand-in stub artifacts (the cFS-modeled C stub and the F
+Prime-modeled C++ stub), happy-path success and reproducibility were 100%
+(89%–100% Wilson CI, n=30) at every condition S0–S5, and all 15 attack
+matrix cases were detected at a 100% (89%–100% CI) rate at their tested
+condition, with zero false positives and zero false negatives in every
+condition's confusion matrix (`evaluation/results/phase5_report.md`,
+`phase6_report_fprime.md`). Storage overhead relative to S0 increases
+monotonically with condition — 0 bytes at S0, 613 bytes at S1 (SBOM),
+1264 bytes at S2 (+provenance), 1631 bytes at S3 (+attestation), 1624
+bytes at S4 (a 7-byte decrease from S3 — no formal significance test was
+run on this specific delta, but the magnitude is consistent with S4
+adding a rollback *mechanism* rather than new per-run evidence volume,
+not with a meaningfully larger artifact), and 5747
+bytes at S5 (+machine-readable authorization evidence, the single largest
+jump in the ladder) — identical byte counts across both stub stacks,
+since this metric depends on evidence-record shape, not the stub
+artifact's own content.
+
+### 6.2 Generalization to real, unmodified NASA/JPL frameworks
+
+The same 100%/0% pattern holds against both real, unmodified flight
+software frameworks (cFS `v7.0.1`, F´ `v4.2.2`): happy-path success,
+reproducibility of the ablation/adaptive mechanisms under test, and
+attack-matrix detection are structurally identical to the stub-artifact
+results (`evaluation/results/phase6_report_cfs-real.md`,
+`phase6_report_fprime-real.md`). One real, measured asymmetry emerged in
+build reproducibility specifically, not in any assurance-mechanism
+result: two independent from-scratch builds of the real F´ binary were
+byte-for-byte identical, while two independent builds of the real cFS
+binary differed in exactly 22 of approximately 915,000 bytes — isolated
+precisely (via `cmp -l` and a `strings` diff, not assumed) to a build
+timestamp string embedded by cFS's own build system at two byte offsets,
+plus a downstream 20-byte ELF build-ID hash that changes as a consequence
+of that timestamp. Every other byte of the cFS binary, including all
+flight-software logic, was identical across both builds. This is reported
+as a genuine finding about the two real frameworks' own build systems, not
+a defect in this project's pipeline, and it means the "reproducibility"
+metric's claim differs slightly by framework: fully bit-identical for F´,
+identical-modulo-a-known-and-explained-non-functional-difference for cFS.
+
+### 6.3 A hypothesis-vs-implementation divergence worth reporting explicitly
+
+Test case #12 ("stale attestation") was hypothesized in the threat model
+(Section 3.2; `docs/Threat-Model.md` §3) to be first detected at S3, the
+condition where onboard attestation itself activates. The actual
+evaluation harness tests this case at condition S4 instead, measuring
+`time_to_trusted_restoration` rather than a pure S3-level detection time
+(`evaluation/experiment.py::scenario_12`). This is a deliberate
+implementation choice, not a bug or a failed hypothesis: `scenario_12`
+establishes a confirmed S4 baseline, then injects a backdated attestation
+timestamp and measures whether the system not merely *flags* the stale
+attestation but actually completes a rollback in response
+(`rollback_outcome == "rolled_back"`). In other words, the implemented
+test is a strictly stronger claim than the original hypothesis — it
+measures recovery, not just detection — but it means the "S3" entry in
+the attack matrix table (Section 5.1) should be read as "the mechanism
+that makes detection possible activates at S3," not as "this specific
+trial was measured at S3." This distinction is stated here explicitly
+rather than left as a quiet inconsistency between Sections 3, 5, and 6,
+consistent with this paper's stated intent (Section 3.2) to report
+hypothesis divergences rather than reconcile them silently.
+
+### 6.4 Real-baseline comparison against unmodified TUF
+
+Of the 15 attack matrix cases, an unmodified, real upstream `python-tuf`
+deployment (Section 5; `evaluation/baselines/tuf_baseline.py`) has a
+plausible native detection mechanism for exactly 3: case #6 (in-transit
+tampering, via TUF's target hash/length verification), case #7 (revoked
+signing key, via TUF's key-revocation/rotation mechanism), and case #9
+(downgrade attempt, via TUF's version-monotonicity protection). All three
+were caught at 30/30 (100%) trials
+(`evaluation/results/phase8_tuf_baseline.json`) — a result that confirms
+TUF works correctly for the guarantees it actually makes, and is reported
+as exactly that, not as evidence that TUF is "weak." The remaining 12
+cases, including 9 that are load-bearing parts of this project's own
+S1–S5 ladder (SBOM, build provenance, dependency-vulnerability scanning,
+authorized-builder identity, policy/configuration evaluation,
+installation-state management, runtime health checking, onboard
+attestation, ground/spacecraft state reconciliation, and rollback/recovery
+management — case #12's metadata-expiration mechanism is noted as a
+related but non-equivalent partial overlap, not scored as coverage), have
+no corresponding concept anywhere in TUF's specification. This is the
+paper's primary measured evidence for the claim that spacecraft-relevant
+supply-chain assurance is not simply "TUF applied to a new domain": the
+majority of what this project's ladder measures sits entirely outside an
+already-mature terrestrial framework's stated scope, not inside it and
+merely unimplemented.
+
+### 6.5 Ablation study: per-mechanism isolation
+
+To test whether each mechanism's contribution holds when it alone is
+disabled from an otherwise fully-active condition — rather than only
+observed cumulatively as conditions are added — six ablation cases each
+disable exactly one mechanism (SBOM, provenance, onboard attestation,
+trusted rollback, and machine-readable authorization, the last tested via
+two independent cases, #8 and #15) while leaving every other mechanism at
+its otherwise-active condition. In every case, the baseline (mechanism
+active) detection rate was 100% and the ablated (mechanism disabled) rate
+was 0%, with the effect explicitly attributed to the ablated mechanism
+specifically (`evaluation/results/phase8_ablation_cfs.json`, confirmed
+identically against the real cFS build in
+`phase8_ablation_cfs-real.json`). This clean isolation — full detection
+on, zero detection off, for every mechanism tested independently — is
+the direct evidence for this paper's central comparative claim (Section
+1): each mechanism in the ladder is doing genuine, individually
+attributable work, not contributing to a detection rate that would hold
+regardless of its presence.
+
+### 6.6 Adaptive-attacker scenarios
+
+Two scenarios combine multiple attack vectors in sequence to test whether
+an attacker adapting across attempts changes the outcome: (A) a rogue
+build runner combined with in-transit tampering, and (B) an interrupted
+installation combined with a stale attestation. Both were caught at a
+100% rate, and in both, the pipeline halted before the second vector could
+be exercised (`halted_before_second_vector_rate` = 1.0 in both
+`phase8_adaptive_cfs.json` and, confirmed identically, against the real
+cFS build in `phase8_adaptive_cfs-real.json`). **This result must be read
+against its actual scope, not an inflated one:** these scenarios test
+whether the pipeline halts on the *first* of two vectors it already has a
+mechanism to detect — they are not a test of a genuinely evasive or
+time-adaptive attacker who might, for instance, attempt the second vector
+independently of the first, or attempt to time an attack around a
+detection window. Stating this boundary here, in Results, rather than
+only in Limitations, is deliberate: a reader should not come away from
+this section believing more was tested than was.
 
 ## 7. Discussion
 
