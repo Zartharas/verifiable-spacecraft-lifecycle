@@ -118,15 +118,14 @@ embedded Linux devices — networking equipment, IoT devices, large
 storage arrays, and potentially industrial-control-system devices —
 consistent with a shift toward broader embedded-device targeting beyond
 the original modem-specific AcidRain (SentinelOne threat intelligence,
-2024). These are ground/terminal-segment incidents rather than attacks
-on an onboard flight computer directly, and their technical specifics
-are drawn from SentinelOne's own incident analyses rather than from Kang
-et al., whose survey discusses these incidents at the level of the
-broader satellite-communication threat landscape rather than providing
-this level of incident-specific detail itself. Together, they establish
-that the broader satellite-system software/firmware supply chain is an
-active, exploited attack surface, not a theoretical concern reserved for
-nation-state threat modeling exercises.
+2024). Both are ground/terminal-segment incidents, not attacks on an
+onboard flight computer directly. Their technical specifics come from
+SentinelOne's own incident analyses; Kang et al.'s survey discusses them
+only at the level of the broader satellite-communication threat
+landscape, without this degree of incident-specific detail. Together they
+establish that the broader satellite-system software and firmware supply
+chain is an active, exploited attack surface, not a theoretical concern
+reserved for nation-state threat modeling exercises.
 
 **Searched, 2026-08-07, and reporting the negative result rather than
 implying otherwise:** no publicly documented real-world incident of an
@@ -159,9 +158,7 @@ low-frequency, high-consequence event by construction — the appropriate
 engineering response is not to wait for one to be publicly documented
 before building measurable defenses, any more than aviation safety
 engineering waits for a specific class of crash before addressing a
-known-feasible failure mode. State this reasoning explicitly in the final
-version rather than leave the absence of an incident unexplained or
-imply one exists.
+known-feasible failure mode.
 
 The central problem this paper addresses is not "spacecraft software
 lacks security" in the abstract, but something narrower and, we argue,
@@ -222,6 +219,14 @@ pipeline implementation; Section 5 describes the
 attack matrix, metrics, and experimental protocol; Sections 6 and 7 present and interpret the findings; Section 8
 states plainly what this evaluation does not establish; Section
 9 closes.
+
+A note on supplementary citations used throughout this paper: parenthetical
+references such as `docs/Threat-Model.md` or `docs/PRD.md` point to
+supporting engineering documentation in this project's code repository,
+made available per the Data/Code Availability Statement. They are
+included so a reader who wants a specific implementation or design detail
+beyond what fits in the main text can locate it; the paper's own argument
+and evidence are self-contained without them.
 
 ---
 
@@ -987,84 +992,82 @@ increasingly capable but internally undifferentiated system.
 
 ## 8. Limitations
 
-This section states plainly what this evaluation does not establish,
-rather than leaving those boundaries to be inferred from careful reading
-of Sections 4–7 alone.
+Six boundaries below mark what this evaluation does not establish. They
+are listed explicitly here so a reader does not have to infer them from a
+close reading of Sections 4 through 7.
 
-**Simulated uplink, not RF-accurate.** The uplink model (Section 4.2) is
-loosely, order-of-magnitude informed by CCSDS-class link budgets but has
-not been validated against any specific reference mission's actual
-telemetry, and this project does not attempt RF/physical-layer simulation
-(`docs/PRD.md` non-goals). Every result in Section 6 that touches the
-uplink stage should be read as evidence about a terrestrial-analog
-pipeline with spacecraft-motivated constraints (latency, loss, bandwidth
-ceilings modeled as configurable parameters), not as evidence about
-behavior over a real spacecraft communications link. This paper does not
-claim the latter, and results should not be cited as if it did.
+1. **Uplink realism.** The uplink model in Section 4.2 is only loosely,
+   order-of-magnitude informed by CCSDS-class link budgets; it has not
+   been validated against any specific mission's actual telemetry, and
+   this project does not attempt RF or physical-layer simulation
+   (`docs/PRD.md` non-goals). Uplink-stage results in Section 6 should
+   therefore be read as evidence about a terrestrial-analog pipeline
+   under spacecraft-motivated constraints (latency, loss, and bandwidth
+   ceilings modeled as configurable parameters), not as evidence about
+   behavior over an actual spacecraft communications link.
 
-**Software-only attestation, not hardware-rooted.** As stated in Section
-4.2, onboard attestation in this implementation is a software-held
-Ed25519 signature over a measurement, not a TPM-backed hardware root of
-trust. Every S3+ result in Section 6 demonstrates that the *attestation
-concept* — proving what is actually running, not just what was sent —
-functions correctly in this pipeline; none of them demonstrate resistance
-to the specific threat a hardware root of trust exists to prevent
-(exfiltration of the attestation key itself). A production system making
-an attestation claim for a real mission would need real hardware backing
-this project's software stub only approximates.
+2. **Attestation has no hardware root of trust.** Onboard attestation in
+   this implementation is a software-held Ed25519 signature over a
+   measurement, not a TPM-backed hardware root of trust (Section 4.2).
+   The S3-and-above results in Section 6 show that the attestation
+   *concept* works in this pipeline: proving what is actually running,
+   not just what was sent. They do not show resistance to the specific
+   threat a hardware root exists to prevent, namely exfiltration of the
+   attestation key itself. A mission-grade system making this same claim
+   would need hardware backing that this project's software stub only
+   approximates.
 
-**Docker-launch overhead as a timing confound for the real-framework
-results specifically.** The real cFS and F´ binaries (Section 6.2) run
-inside Docker on the machine executing the pipeline; the persistent-process
-health-check strategy (Section 4.3) that makes S3+ evaluation possible
-against these binaries incurs container-launch overhead on the order of
-2.4–2.6 seconds per invocation, observed directly rather than assumed.
-This means the real-framework timing figures in Section 6 mix genuine
-pipeline-stage cost with this infrastructure overhead, and the two are not
-separated in the current results. The claim these results support is that
-detection and recovery *work correctly* against real, unmodified flight
-software frameworks; the claim they do not support is that the observed
-timings approximate native flight-computer execution — that would require
-running outside Docker, on representative hardware, which this evaluation
-does not do. More of this paper's evidence base rests on this same
-infrastructure than a reader might assume from the stub-artifact results
-alone, since the real-framework results in Sections 6.2, 6.5, and 6.6 all
-share this confound.
+3. **Container overhead confounds the real-framework timings.** The real
+   cFS and F´ binaries in Section 6.2 run inside Docker on the pipeline's
+   host machine. The persistent-process health-check strategy that makes
+   S3-and-above evaluation possible against these binaries (Section 4.3)
+   adds container-launch overhead of roughly 2.4 to 2.6 seconds per
+   invocation, a figure observed directly during testing. Real-framework
+   timing figures in Section 6 therefore mix genuine pipeline-stage cost
+   with this infrastructure overhead, and the two have not been
+   separated. What these results support is that detection and recovery
+   work correctly against real, unmodified flight-software frameworks.
+   What they do not support is that the observed timings approximate
+   native flight-computer execution; confirming that would mean running
+   outside a container on representative hardware, which this evaluation
+   does not do. The real-framework results in Sections 6.2, 6.5, and 6.6
+   all share this confound.
 
-**Reproducibility is a claim about the stand-in stub artifacts primarily,
-with one real-framework data point in each direction.** Section 6.1's
-reproducibility figures are measured against the stand-in stubs. Section
-6.2 adds two real, measured data points — F´ fully bit-identical across
-independent builds, cFS differing in exactly 22 explained, non-functional
-bytes — but this is evidence about these two specific frameworks' current
-build tooling as of the versions pinned in this evaluation (cFS `v7.0.1`,
-F´ `v4.2.2`), not a general claim about flight-software build
-reproducibility as a property of the category.
+4. **Reproducibility is mainly a stub-artifact finding.** Section 6.1's
+   reproducibility figures come from the stand-in stubs. Section 6.2 adds
+   two real, measured data points: F´ is fully bit-identical across
+   independent builds, while cFS differs in exactly 22 explained,
+   non-functional bytes. Both are evidence about these two frameworks'
+   current build tooling at the pinned versions (cFS `v7.0.1`, F´
+   `v4.2.2`), not a general claim about build reproducibility as a
+   property of flight software as a category.
 
-**Adaptive-attacker scenarios test whether the pipeline halts, not
-whether an attacker is genuinely evasive.** Restated from Section 6.6
-because it belongs here as well: the two adaptive scenarios (Section 5.1)
-confirm the pipeline halts before a second attack vector can be
-attempted; they do not model an attacker who varies timing, avoids the
-specific detection signatures this pipeline's mechanisms check for, or
-pursues the second vector independently rather than in the fixed sequence
-tested. A reader should not extend this paper's adaptive-attacker results
-to a claim of resistance against a genuinely adaptive or evasive
-adversary.
+5. **The adaptive-attacker scenarios measure whether the pipeline halts,
+   not whether an attacker is evasive.** As already noted in Section 6.6,
+   the two adaptive scenarios in Section 5.1 confirm that the pipeline
+   halts before a second attack vector is attempted. They do not model an
+   attacker who varies timing, avoids the specific signatures this
+   pipeline's mechanisms check for, or pursues the second vector on an
+   independent path instead of the fixed sequence tested here. Extending
+   these results to a general claim of resistance against a truly
+   adaptive or evasive adversary would overreach what was measured.
 
-**Only TUF was empirically baselined; SLSA, in-toto, and Sigstore were
-not.** Section 6.4's measured comparison, and this paper's central claim
-that spacecraft-specific constraints are not addressed by "terrestrial
-frameworks applied to a new domain," rests on a real-baseline comparison
-against TUF specifically, not against SLSA, in-toto, or Sigstore. Section
-7.2 already scopes the paper's claim narrowly for this reason — the
-evidence supports "TUF specifically doesn't cover this," not "no
-terrestrial tool or composition of tools could" — but that scoping is
-stated here explicitly as its own limitation as well, since a reader
-scanning this section specifically for this gap should find it named
-plainly rather than only inferable from Discussion. A real baseline
-comparison against a SLSA-conformant provenance pipeline or an in-toto
-attestation chain would be a natural, concrete extension of this work.
+6. **Only TUF was empirically baselined.** SLSA, in-toto, and Sigstore
+   were not. Section 6.4's measured comparison, and this paper's central
+   claim that spacecraft-specific constraints go unaddressed by
+   "terrestrial frameworks applied to a new domain," rest on a real
+   baseline comparison against TUF specifically. Section 7.2 already
+   narrows the claim for this reason: the evidence supports "TUF
+   specifically does not cover this," not "no terrestrial tool or
+   combination of tools could." That narrowing is repeated here as its
+   own limitation so a reader scanning specifically for this gap finds it
+   named plainly, not only inferable from the Discussion. A real baseline
+   comparison against a SLSA-conformant provenance pipeline or an in-toto
+   attestation chain would be a natural next extension of this work.
+
+A seventh item concerns independent review rather than technical scope,
+and is discussed separately below because it bears on how much weight the
+paper's own self-assessment should carry.
 
 **No completed independent human security review.** Independent
 verification of this project's threat model and mitigations to date
@@ -1072,47 +1075,41 @@ consists of four independent, blind, AI-driven red-team review passes
 (Section 3; `docs/Threat-Model.md`) and a from-scratch comparison against
 an unmodified upstream `python-tuf` deployment (Section 6.4). A human
 domain-expert review was requested but had not been completed at the time
-of submission. This is treated as a limitation rather than a resolved
-concern: AI-driven review, however methodologically structured, is not a
-substitute for the judgment a human security practitioner brings,
+of submission. AI-driven review, however methodically structured, is not
+a substitute for the judgment a human security practitioner brings,
 particularly regarding which findings matter operationally and which
-attacker capabilities are realistic for a spacecraft mission context. If
-a human review is completed prior to publication, its findings will be
-incorporated; if not, this remains an open direction for follow-on work.
+attacker capabilities are realistic for a spacecraft mission. This is
+treated here as an open limitation, not a resolved concern. If a human
+review is completed prior to publication its findings will be
+incorporated; otherwise it remains a direction for follow-on work.
 
-**The same process that designed the threat model also designed, and
-red-teamed, its own mitigations — and one of the four review passes used
-the same underlying AI system as the rest of the project.** Distinct from
-the human-review gap above: the S0–S5 ladder, its implementation, and the
-four red-team review passes that pressure-tested it were all produced by
-the same author-plus-AI process. The red-team passes were designed
-specifically to create genuine independence within that constraint — each
-pass ran with a fresh context, without access to prior findings or the
-existing threat model, until after its own testing was complete — and the
-second, third, and fourth passes were each scoped in part at what earlier
-passes had missed, including at the fix code the process itself had
-produced. Stated precisely rather than left to blend into the general
-"fresh context" framing: three of the four passes (the second, third, and
-fourth) used AI systems other than the one that performed the majority of
-this project's design and implementation work, giving those three
-genuine system-level independence in addition to context-level
-independence; the first pass used the same underlying AI system as the
-rest of the project, in a separate session with no access to prior
-context, giving it context-level independence only. This is real,
-disclosable independence — strongest for the second through fourth
-passes, weaker but not absent for the first — and it found and led to
-fixes for 21 genuine defects (Section 1) that a purely self-reviewing
-process, by construction, cannot be assumed to find. It does not resolve
-the deeper point this objection names: no review pass, however wide or
-however many rounds, was conducted by a party outside the author-plus-AI
-process that built the system under review, and even the passes with
-system-level independence remain within a process the same author
-directed throughout. The strongest accurate statement available from
-this paper's evidence is that this process found and fixed real,
-non-trivial gaps across multiple independent-context passes, most of them
-also independent at the AI-system level, including gaps in its own prior
-remedies — not that the underlying methodological concern has been
-resolved.
+**A second, related gap: the same process that designed the threat model
+also designed and red-teamed its own mitigations.** The S0–S5 ladder, its
+implementation, and the four red-team review passes that pressure-tested
+it were all produced by one author-plus-AI process. Each red-team pass
+ran in a fresh context with no access to prior findings or the existing
+threat model until after its own testing was complete, and the second,
+third, and fourth passes were each scoped in part at what earlier passes
+had missed, including the fix code the process itself had produced. The
+degree of independence achieved varied by pass, and is stated exactly
+rather than folded into a blanket "fresh context" claim: the second,
+third, and fourth passes used AI systems other than the one that
+performed the majority of this project's design and implementation work,
+so they carry both system-level and context-level independence; the
+first pass used that same underlying AI system in a separate session with
+no access to prior context, so it carries context-level independence
+only. This combination of independence found and led to fixes for 21
+defects (Section 1) that a purely self-reviewing process cannot be
+assumed to find by construction. It does not, however, resolve the
+deeper point this limitation names. No review pass was conducted by a
+party outside the author-plus-AI process that built the system under
+review, and even the three system-independent passes remain within a
+process one author directed throughout. The accurate summary this
+evidence supports is narrower than "independently verified": this process
+found and fixed real, non-trivial gaps across several independent-context
+passes, most of them also independent at the AI-system level, including
+gaps in its own earlier fixes. That is not the same claim as having
+resolved the underlying methodological concern.
 
 ## 9. Conclusion
 
