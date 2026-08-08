@@ -914,6 +914,17 @@ same reasoning chain that built the ladder) but not blind in the strict
 review in the paper — don't oversell it as a naive/uninformed attacker
 simulation.
 
+**Tool used, confirmed with the author 2026-08-07 (not identified at the
+time this section was first written):** this pass used Claude — the same
+underlying AI system that performed the majority of this project's
+design and implementation work, run in a separate session with no access
+to prior project context. This makes it independent at the level of
+context but not of AI system, unlike the second, third, and fourth passes
+below, which each used a genuinely different AI system. State this
+distinction precisely in the paper's AI-use disclosure and Limitations
+sections rather than grouping all four passes under a single "distinct
+systems" framing.
+
 **Findings, ranked by the reviewer as most severe/concrete first. All
 seven were independently spot-verified against the actual source in this
 session (not just trusted from the sub-agent's report) — every one holds
@@ -1081,6 +1092,10 @@ real gaps, and they were fixed and re-verified the same day," not merely
 
 ## Phase 8 second independent (blind, AI) red-team review (2026-08-05)
 
+**Tool used, confirmed with the author 2026-08-07:** OpenAI's models —
+the first pass to use an AI system genuinely distinct from the one that
+performed the majority of this project's design and implementation work.
+
 **Motivation.** After the first red-team review (above) and its fixes,
 a follow-up discussion surfaced a previously-undocumented meta-objection:
 the fix/verification work for the first review's own findings, plus the
@@ -1206,6 +1221,8 @@ be, and demonstrate the fix-verification loop catching its own mistake
 
 ## Phase 8 third independent (blind, AI) red-team review (2026-08-06)
 
+**Tool used, confirmed with the author 2026-08-07:** Zhipu AI's GLM.
+
 **Motivation.** With the human-colleague review still pending on the
 colleague's own schedule, a third independent pass was run in the
 interim using a different model/tool than the first two passes — a
@@ -1304,6 +1321,8 @@ the human colleague review that remains the honest gold-standard
 comparison and is still pending separately.
 
 ## Phase 8 fourth independent (blind, AI) red-team review (2026-08-06)
+
+**Tool used, confirmed with the author 2026-08-07:** DeepSeek.
 
 **Motivation.** With ISSUE-030 (third pass) fixed, committed, and pushed,
 a fourth pass — a different model/tool than all three prior ones — was

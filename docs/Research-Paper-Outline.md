@@ -700,22 +700,24 @@ is the venue-agnostic master version.
 > ablation study and adaptive-attacker test scenarios used in the
 > evaluation methodology; and assisted in researching target venues and
 > drafting this manuscript. Separately, four independent, blind red-team
-> review passes against the codebase were performed using distinct AI
-> systems other than Claude specifically to obtain review independent of
-> the system that built and previously reviewed the code — across the
-> four passes, the author used tools including OpenAI's models, Zhipu
-> AI's GLM, and DeepSeek, each given a fresh context without access to
-> prior findings or the existing threat model. [TODO before submission:
-> confirm the precise tool/model used for each of the four passes
-> individually with the author's own records, rather than the
-> approximate recollection this statement currently reflects — venue
-> disclosure policies generally expect this level of specificity where
-> available.] These four passes collectively surfaced and led to fixes
-> for 21 real security and correctness defects (logged as ISSUE-011
-> through ISSUE-031 in ISSUES-AND-FIXES-LOG.md; a further 10 defects,
-> ISSUE-001 through ISSUE-010, were found during real-hardware
-> build/validation work rather than red-team review, with Claude's
-> involvement in root-cause diagnosis and fixes for those).
+> review passes against the codebase were performed, three of them (the
+> second, third, and fourth) using AI systems other than Claude
+> specifically to obtain review independent of the system that built and
+> previously reviewed the code: the second pass used OpenAI's models, the
+> third used Zhipu AI's GLM, and the fourth used DeepSeek. The first pass
+> used Claude itself, in a separate session with no access to prior
+> project context or findings — genuinely independent at the level of
+> context, but not at the level of the underlying AI system, a distinction
+> stated explicitly here rather than left implicit in the "distinct AI
+> systems" framing that would otherwise overstate the first pass's
+> independence. Each of the four passes was given a fresh context without
+> access to prior findings or the existing threat model. These four passes
+> collectively surfaced and led to fixes for 21 real security and
+> correctness defects (logged as ISSUE-011 through ISSUE-031 in
+> ISSUES-AND-FIXES-LOG.md; a further 10 defects, ISSUE-001 through
+> ISSUE-010, were found during real-hardware build/validation work rather
+> than red-team review, with Claude's involvement in root-cause diagnosis
+> and fixes for those).
 >
 > All AI-generated code, diagnoses, and findings were independently
 > verified before being accepted: root-cause claims were confirmed via

@@ -32,13 +32,34 @@ verified either way; and finalized the TUF/in-toto/SLSA citation form
 (cited via their current official specifications, versions confirmed via
 live search, with their own conference-proceedings academic origins
 explicitly excluded from the literature-review list per the journal-only
-search scope). **Not yet done:** the exact per-pass AI-tool identity for
-the four red-team reviews is still an approximate recollection pending
-the author's own records (flagged inline in the AI-use disclosure
-statement), and precise hardware specifications for the execution
-environments used are still unconfirmed. Treat this as a complete,
-self-critiqued, citation-verified draft ready for a final read-through
-before submission, not yet a finished manuscript.
+search scope). Separately, confirmed the exact AI tool used for each of
+the four red-team review passes directly with the author (previously an
+approximate, hedged recollection): the first pass used Claude — the same
+underlying system as the majority of this project's work, in a separate
+session with no prior context, giving it context-level but not
+system-level independence; the second used OpenAI's models; the third
+used Zhipu AI's GLM; the fourth used DeepSeek — the second through fourth
+achieving both context-level and system-level independence. This is a
+materially more precise (and less flattering to the first pass's
+independence) statement than the draft previously carried, and the
+AI-use disclosure statement (`docs/Research-Paper-Outline.md` §7) and
+Section 8's process-independence limitation have both been rewritten to
+state it exactly rather than group all four passes under one "distinct
+systems" description. Finally, confirmed the exact execution-environment
+specifications for Section 5.3 directly with the author, which corrected
+a real error in the previous draft: every result cited in Section 6 —
+including the stand-in stub-artifact figures, not only the real-framework
+ones — was produced on the author's own Mac (Intel Core i9-9980HK, 64 GB
+RAM, macOS 26.5.2, Docker 29.6.2, Python 3.11.7), confirmed against
+`STATUS.md`'s own 2026-08-04 entry rather than assumed; the previous
+draft incorrectly stated the stub-artifact results came from a cloud
+sandbox, when in fact the sandbox was only used for an earlier,
+superseded, reduced-trial verification pass whose numbers are not cited
+anywhere in this paper. Section 5.3 now states both environments and
+their actual roles precisely. Treat this as a complete, self-critiqued,
+citation-verified draft ready
+for a final read-through before submission, not yet a finished
+manuscript.
 
 Target venue (current decision, see `docs/Research-Paper-Outline.md` §3,
 2026-08-07): Computers & Security, first attempt; Journal of Space Safety
@@ -694,25 +715,26 @@ intervals are a meaningful characterization of genuine run-to-run
 variability. This distinction is stated here explicitly so the two kinds
 of interval in Section 6 are not read as epistemically equivalent.
 
-**Execution environment, stated honestly rather than omitted.** Results
-in this paper were not gathered on a single, controlled benchmarking
-machine with recorded hardware specifications. The stand-in stub-artifact
-results (Section 6.1) were produced in a cloud-based Linux development
-sandbox; the two real, unmodified NASA/JPL framework results (Section
-6.2 onward) required Docker and were produced on the author's own macOS
-machine, since the sandbox environment had no Docker available. Exact
-CPU, memory, and OS-version specifications were not captured at
-measurement time for either environment. [TODO before submission: capture
-and report at least the author's macOS machine's specifications
-retroactively if still accessible, and note the sandbox's general class
-of environment, rather than leave this unspecified — full precision may
-not be recoverable for the sandbox environment specifically.] The
-practical consequence is that this paper's timing comparisons should be
-read as meaningful *within* a given stack's own S0–S5 progression
-(measured on one environment), not as precise absolute comparisons
-*across* stub-artifact and real-framework results, which were measured on
-different machines with different baseline performance characteristics
-entirely independent of the assurance mechanisms under test.
+**Execution environment, confirmed rather than assumed.** All of this
+paper's cited results — the 30-trial happy-path and attack-matrix runs
+for all four target stacks (Section 6.1, 6.2), the mechanism-ablation
+study (Section 6.5), and the adaptive-attacker scenarios (Section 6.6) —
+were produced on a single machine: the author's own Mac (Intel Core
+i9-9980HK CPU, 64 GB RAM, macOS 26.5.2, Docker 29.6.2, Python 3.11.7). An
+earlier development-time verification pass at reduced trial counts (n=5
+or n=10, to fit within a single command's time budget) was run in a
+separate cloud-based Linux development sandbox (Intel Core i9-9980HK CPU,
+4 vCPUs, 3.8 GB RAM, Ubuntu 22.04.5, Python 3.10.12) purely to confirm
+harness correctness before the full-scale runs; none of the numbers cited
+in Section 6 come from that environment, and it lacked Docker entirely,
+making it unable to run the real-framework stacks at all. Because every
+cited result shares one machine, this paper's within-stack S0–S5 timing
+progressions and its cross-stack (stub-vs-real-framework) timing
+comparisons are both measured under consistent hardware conditions;
+however, none of these figures should be read as approximating
+flight-hardware timing (Section 4.2, Section 8), and the real-framework
+results specifically carry the additional Docker-launch-overhead confound
+discussed in Section 8.
 
 ## 6. Results
 
@@ -1059,25 +1081,38 @@ a human review is completed prior to publication, its findings will be
 incorporated; if not, this remains an open direction for follow-on work.
 
 **The same process that designed the threat model also designed, and
-red-teamed, its own mitigations.** Distinct from the human-review gap
-above: the S0–S5 ladder, its implementation, and the four red-team review
-passes that pressure-tested it were all produced by the same
-author-plus-AI process. The red-team passes were designed specifically to
-create genuine independence within that constraint — each pass ran with a
-fresh context, without access to prior findings or the existing threat
-model, until after its own testing was complete — and the second, third,
-and fourth passes were each scoped in part at what earlier passes had
-missed, including at the fix code the process itself had produced. This
-is real, disclosable independence at the level of *execution*, and it
-found and led to fixes for 21 genuine defects (Section 1) that a
-purely self-reviewing process, by construction, cannot be assumed to find.
-It does not resolve the deeper point this objection names: no review
-pass, however wide or however many rounds, was conducted by a party
-outside the author-plus-AI process that built the system under review.
-The strongest accurate statement available from this paper's evidence is
-that this process found and fixed real, non-trivial gaps across multiple
-independent-context passes, including gaps in its own prior remedies —
-not that the underlying methodological concern has been resolved.
+red-teamed, its own mitigations — and one of the four review passes used
+the same underlying AI system as the rest of the project.** Distinct from
+the human-review gap above: the S0–S5 ladder, its implementation, and the
+four red-team review passes that pressure-tested it were all produced by
+the same author-plus-AI process. The red-team passes were designed
+specifically to create genuine independence within that constraint — each
+pass ran with a fresh context, without access to prior findings or the
+existing threat model, until after its own testing was complete — and the
+second, third, and fourth passes were each scoped in part at what earlier
+passes had missed, including at the fix code the process itself had
+produced. Stated precisely rather than left to blend into the general
+"fresh context" framing: three of the four passes (the second, third, and
+fourth) used AI systems other than the one that performed the majority of
+this project's design and implementation work, giving those three
+genuine system-level independence in addition to context-level
+independence; the first pass used the same underlying AI system as the
+rest of the project, in a separate session with no access to prior
+context, giving it context-level independence only. This is real,
+disclosable independence — strongest for the second through fourth
+passes, weaker but not absent for the first — and it found and led to
+fixes for 21 genuine defects (Section 1) that a purely self-reviewing
+process, by construction, cannot be assumed to find. It does not resolve
+the deeper point this objection names: no review pass, however wide or
+however many rounds, was conducted by a party outside the author-plus-AI
+process that built the system under review, and even the passes with
+system-level independence remain within a process the same author
+directed throughout. The strongest accurate statement available from
+this paper's evidence is that this process found and fixed real,
+non-trivial gaps across multiple independent-context passes, most of them
+also independent at the AI-system level, including gaps in its own prior
+remedies — not that the underlying methodological concern has been
+resolved.
 
 ## 9. Conclusion
 
