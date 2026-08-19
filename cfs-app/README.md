@@ -18,7 +18,7 @@ Smoke-tested through the full S0-S2 lifecycle (build → provenance → SBOM
 installation) successfully — see STATUS.md "Claims status" for exactly
 what is and isn't citable from this yet.
 
-**Two things this does NOT mean**, stated plainly so results aren't
+**One thing this does NOT mean**, stated plainly so results aren't
 overclaimed:
 
 1. **Reproducibility has not been verified.** `src/build/build.py` no
@@ -28,14 +28,19 @@ overclaimed:
    The pipeline's own `reproducible=True` flag for this stack is a
    trivial copy-integrity check, not a real two-independent-builds
    comparison. See `confirmed-build.json`'s `reproducibility_note`.
-2. **S3+ conditions (attestation, health check, rollback) don't work yet
-   against this real binary.** `core-cpu1` is a long-running flight
-   software process — it reaches `OPERATIONAL` state and loops forever,
-   it doesn't exit with a fixed, checkable stdout pattern the way the
-   stub does. `src/health/health_check.py` raises `NotImplementedError`
-   for this stack rather than silently mislabeling a healthy process as
-   broken. See Threat-Model.md "Phase 7 findings" for the design
-   question this raises.
+
+**Update (ISSUE-003, resolved):** an earlier version of this document
+stated that S3+ conditions (attestation, health check, rollback) did not
+work against this real binary, because `core-cpu1` is a long-running
+process with no fixed, checkable stdout exit pattern the way the stub
+has. That limitation was resolved by extending `src/health/health_check.py`
+with a persistent-process check mode that waits for a genuine,
+empirically determined boot-success log line from the binary's own
+stdout rather than treating the absence of a crash as a health signal.
+S3-S5 now run against `cfs-real` and are exercised in the full 30-trial
+evaluation (`evaluation/results/phase6_report_cfs-real.md`). See
+`ISSUES-AND-FIXES-LOG.md` ISSUE-003 and Threat-Model.md "Phase 7
+findings" for the full history.
 
 ## Background (Phase 1, sandbox-constrained)
 
@@ -84,3 +89,7 @@ against `"cfs-real"` are a step closer but still capped at
   tag, binary hash, build date, known limitations)
 - `build-output/` — gitignored; created locally by running the Docker
   build above
+- `build-output-verify/` — gitignored; a second, independent rebuild used
+  only for the Phase 7 reproducibility-verification pass (see
+  Implementation-Plan.md Phase 7), never the artifact the pipeline itself
+  points at

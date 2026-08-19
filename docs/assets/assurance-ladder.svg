@@ -1,0 +1,90 @@
+<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <style>
+      .lvl-label { fill: #ffffff; font-weight: 700; font-size: 20px; }
+      .lvl-sub   { fill: #e8e8e8; font-size: 11px; }
+      .caption   { fill: #cfd8dc; font-size: 13px; }
+      .arrow     { stroke: #90a4ae; stroke-width: 2; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#90a4ae" />
+    </marker>
+  </defs>
+
+  <rect width="900" height="320" fill="#0f1115"/>
+  <text x="450" y="30" text-anchor="middle" class="caption" font-size="16" fill="#ffffff">
+    S0 &#8594; S5: the assurance ladder builds up, one mechanism at a time
+  </text>
+
+  <!-- Connecting arrows -->
+  <line class="arrow" x1="130" y1="170" x2="168" y2="170"/>
+  <line class="arrow" x1="268" y1="170" x2="306" y2="170"/>
+  <line class="arrow" x1="406" y1="170" x2="444" y2="170"/>
+  <line class="arrow" x1="544" y1="170" x2="582" y2="170"/>
+  <line class="arrow" x1="682" y1="170" x2="720" y2="170"/>
+
+  <!-- S0 -->
+  <g>
+    <rect x="10" y="120" width="120" height="100" rx="10" fill="#590d22"/>
+    <text x="70" y="165" text-anchor="middle" class="lvl-label">S0</text>
+    <text x="70" y="185" text-anchor="middle" class="lvl-sub">Signature</text>
+    <text x="70" y="198" text-anchor="middle" class="lvl-sub">only</text>
+    <animate attributeName="opacity" values="0.35;1;1;1;1;1;1" keyTimes="0;0.02;1" dur="9s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- S1 -->
+  <g opacity="0.35">
+    <rect x="170" y="120" width="120" height="100" rx="10" fill="#800f2f"/>
+    <text x="230" y="165" text-anchor="middle" class="lvl-label">S1</text>
+    <text x="230" y="185" text-anchor="middle" class="lvl-sub">+ SBOM</text>
+    <text x="230" y="198" text-anchor="middle" class="lvl-sub">component list</text>
+    <animate attributeName="opacity" values="0.35;0.35;1;1;1;1;1" keyTimes="0;0.14;0.16;1" dur="9s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- S2 -->
+  <g opacity="0.35">
+    <rect x="310" y="120" width="120" height="100" rx="10" fill="#a4133c"/>
+    <text x="370" y="165" text-anchor="middle" class="lvl-label">S2</text>
+    <text x="370" y="185" text-anchor="middle" class="lvl-sub">+ Provenance</text>
+    <text x="370" y="198" text-anchor="middle" class="lvl-sub">SLSA / in-toto</text>
+    <animate attributeName="opacity" values="0.35;0.35;0.35;1;1;1;1" keyTimes="0;0.30;0.32;1" dur="9s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- S3 -->
+  <g opacity="0.35">
+    <rect x="450" y="120" width="120" height="100" rx="10" fill="#c9184a"/>
+    <text x="510" y="165" text-anchor="middle" class="lvl-label">S3</text>
+    <text x="510" y="185" text-anchor="middle" class="lvl-sub">+ Attestation</text>
+    <text x="510" y="198" text-anchor="middle" class="lvl-sub">boot/runtime proof</text>
+    <animate attributeName="opacity" values="0.35;0.35;0.35;0.35;1;1;1" keyTimes="0;0.46;0.48;1" dur="9s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- S4 -->
+  <g opacity="0.35">
+    <rect x="590" y="120" width="120" height="100" rx="10" fill="#ff4d6d"/>
+    <text x="650" y="165" text-anchor="middle" class="lvl-label">S4</text>
+    <text x="650" y="185" text-anchor="middle" class="lvl-sub">+ Trusted Rollback</text>
+    <text x="650" y="198" text-anchor="middle" class="lvl-sub">verified A/B partition</text>
+    <animate attributeName="opacity" values="0.35;0.35;0.35;0.35;0.35;1;1" keyTimes="0;0.62;0.64;1" dur="9s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- S5 -->
+  <g opacity="0.35">
+    <rect x="730" y="120" width="160" height="100" rx="10" fill="#3a0ca3"/>
+    <text x="810" y="158" text-anchor="middle" class="lvl-label">S5</text>
+    <text x="810" y="178" text-anchor="middle" class="lvl-sub">+ Machine-Readable</text>
+    <text x="810" y="191" text-anchor="middle" class="lvl-sub">Authorization Evidence</text>
+    <text x="810" y="204" text-anchor="middle" class="lvl-sub">OSCAL-style, auditor-ready</text>
+    <animate attributeName="opacity" values="0.35;0.35;0.35;0.35;0.35;0.35;1" keyTimes="0;0.78;0.80;1" dur="9s" repeatCount="indefinite"/>
+  </g>
+
+  <text x="450" y="260" text-anchor="middle" class="caption">
+    Each level is strictly additive: every mechanism from the level below stays active.
+  </text>
+  <text x="450" y="280" text-anchor="middle" class="caption">
+    15 injected attack cases are run against every level to measure which level first catches each one.
+  </text>
+  <text x="450" y="300" text-anchor="middle" class="caption" fill="#78909c">
+    See docs/Threat-Model.md for the full attack matrix.
+  </text>
+</svg>

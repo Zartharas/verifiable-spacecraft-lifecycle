@@ -51,3 +51,11 @@ secrets/
 *.hmac
 keys/revoked_keys.txt
 keys/attestation_revoked_keys.txt
+
+# Submission deliverables (2026-08-18): generated binary artifacts
+# (.docx/.pdf/.tiff) derived from docs/Paper-Draft.md, not project
+# source — regeneratable from the draft plus the docx/pdf skills.
+# Also contains the author's full postal address on the manuscript
+# title page, which should not land in a repo that goes public at
+# paper-publication time (see README.md "Status").
+/Academic Paper Submission/

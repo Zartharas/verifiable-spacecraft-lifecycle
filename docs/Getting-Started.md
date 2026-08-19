@@ -102,7 +102,7 @@ rm -rf work/ keys/*.pem keys/*.hmac keys/revoked_keys.txt keys/attestation_revok
 python3 -m pytest -q
 ```
 
-This runs the full attack-matrix and regression suite — 140 tests as of
+This runs the full attack-matrix and regression suite — 155 tests as of
 this writing, covering every one of the 15 injected-attack test cases at
 every assurance level, plus every bug/security fix logged in
 `ISSUES-AND-FIXES-LOG.md`. Expect a couple of minutes, not seconds — some
@@ -173,11 +173,16 @@ and F´ (F Prime) frameworks — this is a heavier, optional step:
 - Once built, `tests/test_phase7_real_builds.py`'s skipped tests will run
   automatically, and `cfs-real` / `fprime-real` become available as
   `--stack` arguments to the evaluation/ablation scripts above.
-- Known limitation, stated plainly: attestation/rollback (S3+) currently
-  only works against `cfs-real` (F´'s real binary doesn't yet have an
-  equivalent health-check strategy wired in) — see `docs/Threat-Model.md`
-  for the exact scope of what is and isn't currently verified against the
-  real frameworks.
+- **Update (ISSUE-003, resolved):** attestation/rollback (S3+) now works
+  against both `cfs-real` and `fprime-real`. The real cFS/F´ binaries are
+  long-running processes, not run-to-completion stand-ins, so the original
+  health-check model didn't apply to them directly; this was fixed with a
+  persistent-process health-check mode that waits for an
+  empirically-confirmed boot-success marker on stdout. See
+  `evaluation/results/phase6_report_cfs-real.md` and
+  `evaluation/results/phase6_report_fprime-real.md` for verification, and
+  `docs/Threat-Model.md` for the exact scope of what is currently verified
+  against the real frameworks.
 
 ## If something doesn't work
 
@@ -200,6 +205,6 @@ and F´ (F Prime) frameworks — this is a heavier, optional step:
 - `docs/Technical-Design-Document.md` — architecture and component
   details.
 - `ISSUES-AND-FIXES-LOG.md` — every bug and security finding found during
-  development, including three rounds of independent (blind, AI)
+  development, including four rounds of independent (blind, AI)
   red-team review, with root cause, fix, and verification for each.
 - `SECURITY.md` — how to responsibly report a security issue.

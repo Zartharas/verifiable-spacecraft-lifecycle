@@ -42,7 +42,7 @@ run's `build-output/`, gitignored) is wired into the pipeline as the
 original stand-in (`"fprime"`). Smoke-tested through the full S0-S2
 lifecycle successfully.
 
-**Two things this does NOT mean**, stated plainly:
+**One thing this does NOT mean**, stated plainly:
 
 1. **Reproducibility has not been verified** — `build.py` copies this
    one confirmed binary rather than recompiling F´ from scratch on every
@@ -51,11 +51,19 @@ lifecycle successfully.
    pipeline's `reproducible=True` for this stack is a trivial copy-
    integrity check, not a real two-independent-builds comparison. See
    `confirmed-build.json`'s `reproducibility_note`.
-2. **S3+ conditions don't work yet against this real binary** — the
-   `Ref` binary is a network server that waits for a GDS connection
-   (`-a`/`-p` flags), not a short-lived deterministic CLI program.
-   `health_check.py` raises `NotImplementedError` for this stack rather
-   than silently mislabeling it. See Threat-Model.md "Phase 7 findings."
+
+**Update (ISSUE-003, resolved):** an earlier version of this document
+stated that S3+ conditions did not work against this real binary, since
+the `Ref` binary is a network server that waits for a GDS connection
+(`-a`/`-p` flags) rather than a short-lived deterministic CLI program.
+That limitation was resolved by extending `src/health/health_check.py`
+with a persistent-process check mode that waits for a genuine,
+empirically determined boot-success log line rather than treating the
+absence of a crash as a health signal. S3-S5 now run against
+`fprime-real` and are exercised in the full 30-trial evaluation
+(`evaluation/results/phase6_report_fprime-real.md`). See
+`ISSUES-AND-FIXES-LOG.md` ISSUE-003 and Threat-Model.md "Phase 7
+findings" for the full history.
 
 ## Background (Phase 6, sandbox-constrained — same limitation as cfs-app/ originally had)
 
@@ -118,3 +126,7 @@ by `src/target_stack.py`'s registry. See Technical-Design-Document.md
   tag, binary hash, build date, known limitations)
 - `build-output/` — gitignored; created locally by running the Docker
   build above
+- `build-output-verify/` — gitignored; a second, independent rebuild used
+  only for the Phase 7 reproducibility-verification pass (see
+  Implementation-Plan.md Phase 7), never the artifact the pipeline itself
+  points at
