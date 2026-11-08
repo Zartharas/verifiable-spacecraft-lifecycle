@@ -471,7 +471,7 @@ This research did not receive any specific grant from funding agencies in the pu
 
 ## Data and code availability statement
 
-The source code, test suite, evaluation harness, raw results, and figure scripts are archived as a versioned release at Zenodo (DOI: [ZENODO-DOI]). Development continues at https://github.com/Zartharas/verifiable-spacecraft-lifecycle.
+The source code, test suite, evaluation harness, raw results, and figure scripts are archived as a versioned release at Zenodo (DOI: 10.5281/zenodo.24046930). Development continues at https://github.com/Zartharas/verifiable-spacecraft-lifecycle.
 
 ## Declaration of generative AI and AI-assisted technologies in the manuscript preparation process
 
