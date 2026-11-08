@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software or its evaluation data, please cite it as below."
+title: "Verifiable Spacecraft Lifecycle: reference implementation and evaluation harness for software supply-chain assurance of spacecraft flight software"
+type: software
+authors:
+  - family-names: Singh
+    given-names: Aman
+    orcid: "https://orcid.org/0009-0008-9752-3743"
+license: Apache-2.0
+repository-code: "https://github.com/Zartharas/verifiable-spacecraft-lifecycle"
+keywords:
+  - software supply chain security
+  - spacecraft flight software
+  - attestation
+  - SBOM
+  - provenance
+  - secure software update

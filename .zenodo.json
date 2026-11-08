@@ -1,0 +1,18 @@
+{
+  "title": "Verifiable Spacecraft Lifecycle: reference implementation and evaluation harness for software supply-chain assurance of spacecraft flight software",
+  "upload_type": "software",
+  "description": "Source code, test suite, evaluation harness, raw results, and figure scripts for a six-level additive assurance ladder (S0 to S5) for spacecraft flight software updates, evaluated on two stand-in applications and the unmodified NASA cFS and JPL F Prime frameworks. Includes the 15-case attack matrix, ablation study, hash-only and TUF baselines, a specification-based Uptane coverage analysis, and a mutation experiment.",
+  "creators": [
+    {"name": "Singh, Aman", "orcid": "0009-0008-9752-3743"}
+  ],
+  "license": "Apache-2.0",
+  "keywords": [
+    "software supply chain security",
+    "spacecraft flight software",
+    "attestation",
+    "SBOM",
+    "provenance",
+    "secure software update"
+  ],
+  "access_right": "open"
+}
