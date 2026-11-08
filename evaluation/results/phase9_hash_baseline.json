@@ -1,0 +1,106 @@
+{
+  "1": {
+    "applicable": true,
+    "sensitivity_variant": false,
+    "n_trials": 30,
+    "caught_count": 0,
+    "detection_rate": 0.0,
+    "sample_reason": "digest is computed over the malicious binary after the fact; it records no link to source"
+  },
+  "2": {
+    "applicable": true,
+    "sensitivity_variant": false,
+    "n_trials": 30,
+    "caught_count": 0,
+    "detection_rate": 0.0,
+    "sample_reason": "a hash check carries no provenance claim, true or false"
+  },
+  "3": {
+    "applicable": true,
+    "sensitivity_variant": false,
+    "n_trials": 30,
+    "caught_count": 0,
+    "detection_rate": 0.0,
+    "sample_reason": "a hash check carries no component inventory"
+  },
+  "4": {
+    "applicable": true,
+    "sensitivity_variant": false,
+    "n_trials": 30,
+    "caught_count": 0,
+    "detection_rate": 0.0,
+    "sample_reason": "a hash check says nothing about vulnerable dependencies inside the artifact"
+  },
+  "5": {
+    "applicable": true,
+    "sensitivity_variant": false,
+    "n_trials": 30,
+    "caught_count": 0,
+    "detection_rate": 0.0,
+    "sample_reason": "a hash check does not identify who built the artifact"
+  },
+  "6": {
+    "applicable": true,
+    "sensitivity_variant": false,
+    "n_trials": 30,
+    "caught_count": 30,
+    "detection_rate": 1.0,
+    "sample_reason": "SHA-256 mismatch between received bytes and published digest"
+  },
+  "7": {
+    "applicable": true,
+    "sensitivity_variant": false,
+    "n_trials": 30,
+    "caught_count": 0,
+    "detection_rate": 0.0,
+    "sample_reason": "no signing keys exist in a hash-only deployment; a holder of any formerly trusted upload credential publishes artifact and digest together"
+  },
+  "8": {
+    "applicable": true,
+    "sensitivity_variant": false,
+    "n_trials": 30,
+    "caught_count": 0,
+    "detection_rate": 0.0,
+    "sample_reason": "a hash check does not evaluate configuration content against policy"
+  },
+  "9": {
+    "applicable": true,
+    "sensitivity_variant": false,
+    "n_trials": 30,
+    "caught_count": 0,
+    "detection_rate": 0.0,
+    "sample_reason": "an old release has a valid digest; version order is not checked"
+  },
+  "6b": {
+    "applicable": true,
+    "sensitivity_variant": true,
+    "n_trials": 30,
+    "caught_count": 0,
+    "detection_rate": 0.0,
+    "sample_reason": "digest and artifact are replaced together, so the check passes"
+  },
+  "10": {
+    "applicable": false,
+    "reason": "Installation state is outside a pre-install integrity check."
+  },
+  "11": {
+    "applicable": false,
+    "reason": "A hash check has no runtime health concept."
+  },
+  "12": {
+    "applicable": false,
+    "reason": "A hash check has no attestation of running software."
+  },
+  "13": {
+    "applicable": false,
+    "reason": "A hash check has no ground/spacecraft state reconciliation."
+  },
+  "14": {
+    "applicable": false,
+    "reason": "A hash check has no recovery-image or rollback concept."
+  },
+  "15": {
+    "applicable": false,
+    "reason": "A hash check has no operational-telemetry consistency concept."
+  }
+}

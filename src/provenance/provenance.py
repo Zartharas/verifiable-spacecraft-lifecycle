@@ -135,7 +135,7 @@ def generate_provenance(
     return prov_path
 
 
-def verify_provenance(
+def _verify_provenance_inner(
     binary_path: Path, prov_path: Path, condition_name: str = "S2", require_clean_tree: bool = False
 ) -> tuple[bool, Optional[str], Optional[dict]]:
     """
@@ -256,3 +256,26 @@ def verify_provenance(
         detail={"builder_id": builder_id},
     )
     return True, None, provenance
+
+
+def verify_provenance(
+    binary_path: Path, prov_path: Path, condition_name: str = "S2", require_clean_tree: bool = False
+) -> tuple[bool, Optional[str], Optional[dict]]:
+    """Public entry point; see `_verify_provenance_inner` for the checks.
+    Any parse or structure error becomes a clean rejection with an
+    evidence record (added in revision 1 after the mutation experiment)."""
+    try:
+        return _verify_provenance_inner(
+            binary_path, prov_path, condition_name=condition_name, require_clean_tree=require_clean_tree
+        )
+    except (ValueError, TypeError, KeyError, IndexError, AttributeError, UnicodeDecodeError) as exc:
+        EvidenceStore().record(
+            pipeline_stage="provenance_verification",
+            condition=condition_name,
+            artifact_ref="unknown",
+            actor="ground_authorization_service",
+            result="fail",
+            detail={"reason": "provenance malformed", "error": type(exc).__name__},
+            test_case_injected="2",
+        )
+        return False, "provenance malformed", None

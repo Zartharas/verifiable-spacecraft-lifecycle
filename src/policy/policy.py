@@ -44,39 +44,46 @@ PROHIBITED_CONFIGURATIONS = [
 # JSON-decoded (real bool), a raw string, or a loosely-typed int, and a
 # deny-rule that only catches one of those representations is trivially
 # bypassed by using a different one for the exact same intent.
-_TRUTHY_STRINGS = {"true", "1", "yes", "on"}
+_TRUTHY_STRINGS = {"true", "1", "yes", "on", "y", "t", "enabled", "enable"}
+# Recognized "off" spellings. Revision 1: a string that is neither truthy nor
+# falsy is treated as truthy for a deny-rule (fail closed), since an
+# unrecognized spelling of a prohibited flag should not pass.
+_FALSY_STRINGS = {"false", "0", "no", "off", "n", "f", "disabled", "disable", "none", "null", ""}
+
+
+def _truthy(value) -> bool:
+    """Intent of a caller-supplied value for a boolean flag. Containers are
+    truthy if any member is; unrecognized strings are truthy (fail closed)."""
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        v = value.strip().lower()
+        if v in _TRUTHY_STRINGS:
+            return True
+        return v not in _FALSY_STRINGS
+    if isinstance(value, dict):
+        return any(_truthy(v) for v in value.values())
+    if isinstance(value, (list, tuple, set)):
+        return any(_truthy(v) for v in value)
+    return True
 
 
 def _values_match(config_value, pattern_value) -> bool:
-    """Equality check for one field, deliberately more permissive than
-    `==` when the pattern's value is a bool — `{"debug_mode": True}` must
-    also match `{"debug_mode": "true"}` / `1` / `"1"`, not just the
-    exact Python `True` singleton. Python's `"true" == True` is `False`,
-    so a bare `==` on the pattern above lets a config that means the same
-    thing but is spelled differently sail past the only rule in the
-    deny-list. Non-bool pattern values keep exact-equality semantics —
-    this coercion is specifically about the boolean-flag case, not a
-    general fuzzy-match policy engine.
-
-    Fourth independent (blind, AI) red-team pass, finding P4-V
-    (2026-08-06): a boolean intent wrapped in a container —
-    `{"debug_mode": [True]}` or `{"debug_mode": {"enabled": True}}` —
-    fell through every branch above to the `return False` catch-all,
-    meaning "wrap the same true value in a list or dict" was an
-    unlimited bypass class of its own. Rather than hand-enumerate every
-    container shape, fall back to Python's own truthiness: `bool(x)` is
-    `False` only for the conventionally-empty/falsy values (`None`, `[]`,
-    `{}`, `()`, `""`, `0`, `False`) and `True` for everything else,
-    which matches the intent of a caller who nests the same flag one
-    level deep. This is still scoped to boolean pattern values only."""
+    """Equality check for one field. For a boolean pattern value, the
+    config value is interpreted by `_truthy` (see above), so
+    `{"debug_mode": "true"}`, `1`, `"enabled"`, `[True]` and
+    `{"enabled": True}` all match `{"debug_mode": True}`, while `[False]`
+    and `{"enabled": False}` do not. History: findings #10 (third pass) and
+    P4-V (fourth pass) added string and container handling; revision 1
+    (mutation experiment) extended the vocabulary and made containers
+    recursive so that a container holding only false values is not
+    rejected. Non-bool pattern values keep exact equality."""
     if isinstance(pattern_value, bool):
-        if isinstance(config_value, bool):
-            return config_value == pattern_value
-        if isinstance(config_value, str):
-            return (config_value.strip().lower() in _TRUTHY_STRINGS) == pattern_value
-        if isinstance(config_value, (int, float)):
-            return bool(config_value) == pattern_value
-        return bool(config_value) == pattern_value
+        return _truthy(config_value) == pattern_value
     return config_value == pattern_value
 
 

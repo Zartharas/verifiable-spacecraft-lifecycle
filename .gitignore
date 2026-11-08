@@ -59,3 +59,9 @@ keys/attestation_revoked_keys.txt
 # title page, which should not land in a repo that goes public at
 # paper-publication time (see README.md "Status").
 /Academic Paper Submission/
+
+# Peer-review correspondence and the superseded submitted draft (2026-11-08):
+# reviewer comments are confidential until the paper is accepted, and the
+# submitted v1 is superseded. Kept locally only.
+/docs/Revision-1-Response.md
+/docs/Paper-Draft-v1-submitted.md

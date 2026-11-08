@@ -1,0 +1,73 @@
+{
+  "source": "Uptane Standard 2.1.0",
+  "executed": false,
+  "basis": "specification text only",
+  "counts": {
+    "stated_out_of_scope": 3,
+    "not_addressed": 5,
+    "native": 3,
+    "partial_analogue": 4
+  },
+  "cases": {
+    "1": {
+      "status": "stated_out_of_scope",
+      "basis": "S3.4 excludes compromise of the supply chain, including the build system; a binary built from other source and then signed is consistent with signed Targets metadata."
+    },
+    "2": {
+      "status": "stated_out_of_scope",
+      "basis": "S3.4 excludes the supply chain and points to in-toto and Scudo as complements; the standard has no provenance structure."
+    },
+    "3": {
+      "status": "not_addressed",
+      "basis": "No SBOM or component inventory appears in the standard."
+    },
+    "4": {
+      "status": "not_addressed",
+      "basis": "No dependency or vulnerability data appears; S3.4 excludes malware embedded in a trusted package."
+    },
+    "5": {
+      "status": "stated_out_of_scope",
+      "basis": "Delegations (S5.1.2.1) authorize which key signs which images, not which build system produced them; build systems are excluded by S3.4."
+    },
+    "6": {
+      "status": "native",
+      "basis": "S5.4.3.4 step 7: all hashes and the length in the Targets metadata must match the image; arbitrary-software attack listed in S4.3.4."
+    },
+    "7": {
+      "status": "native",
+      "basis": "Root role distributes and revokes keys (S2.2, S5.2.2)."
+    },
+    "8": {
+      "status": "not_addressed",
+      "basis": "No policy language. S5.4.3.4 step 3 checks a hardware identifier, which does not evaluate configuration content."
+    },
+    "9": {
+      "status": "native",
+      "basis": "Rollback attack (S4.3.3); release counter check (S5.4.3.4 step 5); version checks on Timestamp, Snapshot and Targets (S5.4.4.4 to S5.4.4.6)."
+    },
+    "10": {
+      "status": "partial_analogue",
+      "basis": "S5.4.3.5 says installation SHOULD occur with a backup of the current image and metadata in case it fails; no detection or recovery procedure is specified."
+    },
+    "11": {
+      "status": "not_addressed",
+      "basis": "No post-install health check or health concept appears."
+    },
+    "12": {
+      "status": "partial_analogue",
+      "basis": "ECU version report carries the latest verifiable time and a nonce (S5.4.2.1.2); the Director checks time and nonce reuse (S5.3.2.1 steps 3 and 4). Staleness of an installed-state quote is not specified."
+    },
+    "13": {
+      "status": "partial_analogue",
+      "basis": "Director compares the manifest with its inventory database (S5.3.2.1 step 3), but the required checks cover ECU presence, signatures and time; the database records identity and keys, not installed images or policy (S5.3.2.2)."
+    },
+    "14": {
+      "status": "not_addressed",
+      "basis": "The backup image mentioned in S5.4.3.5 is a precondition; no verification of a recovery image is specified."
+    },
+    "15": {
+      "status": "partial_analogue",
+      "basis": "The ECU-signed version report includes the hash of the installed image (S5.4.2.1.2). It is self-reported, and the threat model (S4.2) assumes at most one compromised ECU per vehicle."
+    }
+  }
+}

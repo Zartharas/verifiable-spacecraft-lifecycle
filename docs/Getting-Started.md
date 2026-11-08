@@ -102,7 +102,7 @@ rm -rf work/ keys/*.pem keys/*.hmac keys/revoked_keys.txt keys/attestation_revok
 python3 -m pytest -q
 ```
 
-This runs the full attack-matrix and regression suite — 155 tests as of
+This runs the full attack-matrix and regression suite — 197 tests as of
 this writing, covering every one of the 15 injected-attack test cases at
 every assurance level, plus every bug/security fix logged in
 `ISSUES-AND-FIXES-LOG.md`. Expect a couple of minutes, not seconds — some

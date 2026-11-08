@@ -25,7 +25,7 @@ pip install -r requirements-dev.txt
 # 1. Run the demo pipeline (five end-to-end calls, incl. a caught tamper attack)
 python3 src/pipeline.py
 
-# 2. Run the full test suite (155 tests: every attack case x every assurance level)
+# 2. Run the full test suite (197 tests: every attack case x every assurance level, plus regression and mutation tests)
 python3 -m pytest -q
 
 # 3. Run the statistical evaluation that produces the paper's numbers
@@ -190,7 +190,7 @@ verifiable-spacecraft-lifecycle/       # repo root
 ## Status
 
 See `STATUS.md` for the current phase and detailed session log. In short:
-the full S0–S5 pipeline is built and tested (155+ tests passing), evaluated
+the full S0–S5 pipeline is built and tested (197 tests passing), evaluated
 against two target stacks (NASA cFS and F´, both stand-in and real Docker
 builds) with a full statistical evaluation and mechanism-isolation ablation
 study, and has been through four rounds of independent, blind, AI-driven

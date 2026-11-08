@@ -217,7 +217,7 @@ def generate_attestation(
     return attestation_path
 
 
-def verify_attestation(
+def _verify_attestation_inner(
     attestation_path: Path,
     expected_binary_path: Path,
     condition_name: str = "S3",
@@ -334,3 +334,31 @@ def verify_attestation(
         detail={"age_seconds": age_seconds},
     )
     return True, None
+
+
+def verify_attestation(
+    attestation_path: Path,
+    expected_binary_path: Path,
+    condition_name: str = "S3",
+    max_age_seconds: int = DEFAULT_FRESHNESS_SECONDS,
+) -> tuple[bool, Optional[str]]:
+    """Public entry point; see `_verify_attestation_inner`. Any parse or
+    structure error becomes a clean rejection with an evidence record
+    (added in revision 1 after the mutation experiment)."""
+    try:
+        return _verify_attestation_inner(
+            attestation_path,
+            expected_binary_path,
+            condition_name=condition_name,
+            max_age_seconds=max_age_seconds,
+        )
+    except (ValueError, TypeError, KeyError, IndexError, AttributeError, UnicodeDecodeError) as exc:
+        EvidenceStore().record(
+            pipeline_stage="attestation_verification",
+            condition=condition_name,
+            artifact_ref="unknown",
+            actor="health_monitor",
+            result="fail",
+            detail={"reason": "attestation malformed", "error": type(exc).__name__},
+        )
+        return False, "attestation malformed"

@@ -361,9 +361,11 @@ APPLICABLE_CASES = {
 # ---------------------------------------------------------------------------
 
 NOT_APPLICABLE = {
-    "1": "Same underlying mechanism as case #6 (target hash/length "
-    "verification) — not run as a separate scenario to avoid double- "
-    "counting one TUF guarantee as two 'wins.'",
+    "1": "TUF verifies that a target matches the hash/length its signer "
+    "declared (the case #6 mechanism). A binary that was built from "
+    "different source and then signed is consistent with its own signed "
+    "metadata, so TUF has no concept of source-to-binary correspondence. "
+    "Not scored, to avoid counting the case #6 guarantee twice.",
     "2": "Build provenance (binary->source->build-environment->builder "
     "chain, SLSA/in-toto-style) is entirely outside TUF's specification. "
     "TUF verifies that a target's hash/length matches what a trusted "

@@ -1,1177 +1,524 @@
 # Measuring Software Supply-Chain Assurance for Spacecraft Flight Software: A Controlled, Comparative Evaluation
 
-**Status:** Draft v0.4 — full first draft, all nine sections plus both
-required disclosure statements, written section by section with an
-integrity/citation self-check after each one rather than in one pass (see
-STATUS.md's 2026-08-07 entries for what each check caught and fixed),
-then run through a five-lens self-critique pass (methodology &
-statistics, novelty & contribution, reproducibility, research ethics,
-clarity & argument) with all seven findings addressed, then a full
-citation-verification pass against every inline TODO/full-text-needed
-flag. The citation-verification pass: confirmed Kang et al. (2024)
-against full text (does not discuss onboard update assurance; the
-AcidRain/AcidPour incident specifics now cited come from SentinelOne's
-own primary-source technical disclosures, not from Kang et al., which
-only discusses the incidents narratively); confirmed Manulis et al.
-(2020) and Ahmad et al. (2022) against full text (neither treats onboard
-software-update assurance as a developed category; Manulis et al. does
-name "supply chain attacks" and outdated COTS software as ground-segment
-threat categories in passing, now stated precisely); confirmed Usman et
-al.'s RASUES (2026) against full text (TPM-hardware-based, general
-IoT/embedded scope, not spacecraft-specific — a stronger attestation
-baseline than this project's own software-only S3 design, now stated
-precisely rather than left as an abstract-level assumption); confirmed
-Sahlmann et al.'s MUP (2021) against full text (failure handling is
-report-only, no described recovery mechanism); could not obtain full
-text for Qureshi et al. (2021) despite multiple access attempts — the
-citation is now scoped strictly to what its abstract supports (a
-CNN-based malicious-update classifier) rather than the broader "OTA
-update assurance" framing an earlier draft used, with an explicit
-in-text flag that its failure-mode treatment specifically is not
-verified either way; and finalized the TUF/in-toto/SLSA citation form
-(cited via their current official specifications, versions confirmed via
-live search, with their own conference-proceedings academic origins
-explicitly excluded from the literature-review list per the journal-only
-search scope). Separately, confirmed the exact AI tool used for each of
-the four red-team review passes directly with the author (previously an
-approximate, hedged recollection): the first pass used Claude — the same
-underlying system as the majority of this project's work, in a separate
-session with no prior context, giving it context-level but not
-system-level independence; the second used OpenAI's models; the third
-used Zhipu AI's GLM; the fourth used DeepSeek — the second through fourth
-achieving both context-level and system-level independence. This is a
-materially more precise (and less flattering to the first pass's
-independence) statement than the draft previously carried, and the
-AI-use disclosure statement (`docs/Research-Paper-Outline.md` §7) and
-Section 8's process-independence limitation have both been rewritten to
-state it exactly rather than group all four passes under one "distinct
-systems" description. Finally, confirmed the exact execution-environment
-specifications for Section 5.3 directly with the author, which corrected
-a real error in the previous draft: every result cited in Section 6 —
-including the stand-in stub-artifact figures, not only the real-framework
-ones — was produced on the author's own Mac (Intel Core i9-9980HK, 64 GB
-RAM, macOS 26.5.2, Docker 29.6.2, Python 3.11.7), confirmed against
-`STATUS.md`'s own 2026-08-04 entry rather than assumed; the previous
-draft incorrectly stated the stub-artifact results came from a cloud
-sandbox, when in fact the sandbox was only used for an earlier,
-superseded, reduced-trial verification pass whose numbers are not cited
-anywhere in this paper. Section 5.3 now states both environments and
-their actual roles precisely. Treat this as a complete, self-critiqued,
-citation-verified draft ready
-for a final read-through before submission, not yet a finished
-manuscript.
-
-Target venue (current decision, see `docs/Research-Paper-Outline.md` §3,
-2026-08-07): Computers & Security, first attempt; Journal of Space Safety
-Engineering as the next attempt if that submission does not succeed.
+**Status:** Revision 1 (major revision requested by JSSE, manuscript JSSE-D-26-00171, due 2026-11-22).
+The text below the `MANUSCRIPT-START` marker is the submittable manuscript. The version
+originally submitted on 2026-08-18 is preserved in `docs/Paper-Draft-v1-submitted.md`.
+Revision notes and the point-by-point response are in `docs/Revision-1-Response.md`.
 
 ---
+
+<!-- MANUSCRIPT-START -->
+
+# Measuring Software Supply-Chain Assurance for Spacecraft Flight Software: A Controlled, Comparative Evaluation
+
+**Aman Singh**
+
+Independent Researcher
+
+The Woodlands, Texas, USA
+
+ORCID: 0009-0008-9752-3743
+
+Corresponding author. E-mail: aman.singh2406@live.com
+
+## Abstract
+
+Flight software updates for spacecraft are commonly accepted on the basis of a digital signature alone. A signature does not establish that the software was built from the intended source, that its configuration was authorized, or that the installed software matches the approved release. This study evaluates a six-level additive assurance ladder (S0 to S5) in which S0 verifies a signature and each subsequent level adds one mechanism: a software bill of materials (SBOM), build provenance, onboard attestation, trusted A/B rollback, and machine-readable authorization evidence. Fifteen attack and failure cases, a per-mechanism ablation, and two multi-vector scenarios were executed in 30 trials on each of four targets, including the unmodified NASA cFS and JPL F Prime frameworks. Each mechanism detected its assigned failure class, and its removal eliminated that detection. Because the injected attacks and the detectors were specified by the same author, these results verify implementation correctness and do not estimate detection of unanticipated attacks. A supplementary mutation experiment, which applied systematic perturbations to the verifier inputs, identified two implementation defects that were subsequently corrected. The complete ladder increased mean pipeline time by 44% to 80% on the two stand-in applications and added 5.7 kB of storage. A hash-comparison baseline addressed 1 of the 15 cases and TUF addressed 3; a reading of the Uptane specification indicated 3 native mechanisms and 4 partial analogues. All results derive from simulation, without flight hardware or hardware-rooted attestation.
+
+**Keywords:** Software supply chain security; Satellite and spacecraft cybersecurity; Cryptographic attestation; Trusted software rollback; Cyber-physical systems assurance
 
 ## 1. Introduction
 
-Spacecraft flight software updates are typically deployed with minimal
-verifiable assurance beyond a digital signature, if that. When a signature
-is the only check performed, an update is trusted the moment it can be
-shown to have come from the right key — nothing in that check says
-whether the *build* that produced the signed artifact was itself
-trustworthy, whether the configuration it carries is one an operator
-actually authorized, or whether the spacecraft can prove, after
-installation, that the update it is now running is the one that was
-approved. Terrestrial software has spent the last several years building
-a substantial body of tooling and practice to close exactly this gap —
-SLSA, in-toto, Sigstore, and the Update Framework (TUF) each formalize a
-piece of it: build provenance, artifact attestation, and resilience to
-signing-key compromise, respectively (SLSA Specification v1.2, slsa.dev;
-in-toto Attestation Framework, in-toto.io/docs/specs; The Update
-Framework Specification v1.0.34, theupdateframework.io). These four are
-cited throughout this paper via their own current specifications, as the
-systems this project measures itself against (Section 6.4's baseline
-comparison is built directly on an unmodified TUF implementation), rather
-than as literature-review citations subject to the peer-reviewed-journal
-bar used elsewhere in this paper; their own foundational academic
-publications (e.g., the original TUF paper, Samuel et al., ACM CCS 2010)
-are conference proceedings and are accordingly not cited as literature
-review sources here, consistent with this paper's journal-only search
-scope.
-Spacecraft software has not seen an equivalent, empirically grounded
-treatment, despite operating under constraints that make supply-chain
-failures more consequential and harder to recover from than in most
-terrestrial systems: links are often high-latency or intermittent, there
-is frequently no human in the loop at the moment an anomaly must be
-handled, and a bad update to a single, physically unreachable asset
-cannot be patched by simply pushing another commit.
+A spacecraft that accepts a flight software update on the strength of a signature trusts the holder of the signing key and nothing else. The signature does not show that the binary was built from the intended source, that the configuration it carries was authorized by an operator, that the update is newer than the one it replaces, or that the spacecraft is running the update that was approved once installation is complete. These properties matter more in orbit than on the ground. Links are intermittent and high-latency, an operator is often not present when an anomaly occurs, and a faulty update to a single asset that cannot be reached cannot be corrected by shipping a new commit.
 
-This gap is not hypothetical. Real attacks against operational space
-systems have already demonstrated what an under-defended software/update
-layer costs in practice. On February 24, 2022, the AcidRain wiper
-malware was pushed en masse through the KA-SAT management segment onto
-Viasat satellite-broadband modems, overwriting the modems' flash memory
-and rendering them inoperable across Ukraine and the wider European
-service area; a documented downstream effect was the loss of remote
-monitoring and control for roughly 5,800 Enercon wind turbines in
-Germany, whose communications relied on the same network (SentinelOne
-threat intelligence, 2022; corroborated as part of the broader satellite
-cyberattack landscape by Kang, Park, & Lee, 2024). Two years later, in
-March 2024, a related wiper variant, AcidPour, was found to extend the
-same destructive-wipe approach with logic specifically targeting
-embedded Linux devices — networking equipment, IoT devices, large
-storage arrays, and potentially industrial-control-system devices —
-consistent with a shift toward broader embedded-device targeting beyond
-the original modem-specific AcidRain (SentinelOne threat intelligence,
-2024). Both are ground/terminal-segment incidents, not attacks on an
-onboard flight computer directly. Their technical specifics come from
-SentinelOne's own incident analyses; Kang et al.'s survey discusses them
-only at the level of the broader satellite-communication threat
-landscape, without this degree of incident-specific detail. Together they
-establish that the broader satellite-system software and firmware supply
-chain is an active, exploited attack surface, not a theoretical concern
-reserved for nation-state threat modeling exercises.
+Operational space systems have already suffered attacks on their update and management paths. On 24 February 2022, the AcidRain wiper was delivered through the KA-SAT management segment to Viasat modems and overwrote their flash memory; a documented downstream effect was the loss of remote monitoring for roughly 5,800 Enercon wind turbines in Germany [1]; see also [2]. In March 2024 the AcidPour variant extended the same approach to embedded Linux and industrial-control devices [3]. Both are ground and terminal-segment incidents. No publicly documented compromise of an onboard flight-software build or update was identified in the sources reviewed, and this paper does not treat one as established. These incidents are cited to motivate update-path integrity; Section 3 specifies which parts of an AcidRain-class compromise the evaluated mechanisms address and which they do not.
 
-**Searched, 2026-08-07, and reporting the negative result rather than
-implying otherwise:** no publicly documented real-world incident of an
-onboard flight-software supply chain compromise specifically (a
-build-time or update-time compromise, as distinct from the ground/RF-
-segment attacks above) was found. A related but importantly distinct
-paper turned up during this search — Vanlyssel, Sobrados, Anwar, Roman, &
-Anwar, "SpyChain: Multi-Vector Supply Chain Attacks on Small Satellite
-Systems" (arXiv:2510.06535, 2025) — and an initial draft of this
-paragraph mischaracterized it before its actual abstract was read
-directly (fetched and checked 2026-08-07): SpyChain targets *auxiliary
-COTS hardware components* (its abstract explicitly contrasts this with
-flight software, which it describes as already benefiting from "strict
-security practices and oversight"), not a flight-software build or
-update-time compromise. It is evidence that the broader small-satellite
-hardware/component supply chain is an active research target, not
-evidence bearing on this paper's specific claim about flight-software
-update pipelines — citing it as if it were would overstate the
-motivation. It is an arXiv preprint, not a peer-reviewed publication, so
-it would not qualify for the journal-only bar in any case; it is
-mentioned here only as a search result worth being aware of, not as a
-citation this paper should rely on.
+It may be objected that a published hash already resolves the integrity problem. GitHub now publishes a SHA-256 digest for each release asset, computed at upload time [4]. If the bytes on the device match that digest, the device holds the bytes that were uploaded. This is the only property the comparison establishes. It does not show how the bytes were produced, because the digest is computed over whatever was uploaded, including output from a compromised build. It does not show who was authorized to publish, because whoever can upload an asset also produces its digest. It says nothing about the component inventory, the configuration, whether the release is older than the installed one, or the state of the spacecraft after installation. Section 6.8 tests this by executing a hash-comparison deployment against the same attack matrix. The deficiency is therefore not the absence of integrity checks: an integrity check binds bytes to a digest and nothing else on which a mission depends.
 
-The honest state of the evidence, then, is: no known documented incident,
-academic or otherwise, of a flight-software build/update-time supply
-chain compromise on an operational spacecraft. **This absence is itself
-part of the motivation, not a weakness to paper over:** a supply-chain
-compromise against a single, physically unreachable spacecraft is a
-low-frequency, high-consequence event by construction — the appropriate
-engineering response is not to wait for one to be publicly documented
-before building measurable defenses, any more than aviation safety
-engineering waits for a specific class of crash before addressing a
-known-feasible failure mode.
+Terrestrial practice has addressed parts of this gap. SLSA and in-toto describe build provenance and attestations, Sigstore provides signing and transparency infrastructure, and TUF protects update metadata against key and repository compromise [5-8]. Uptane adapts TUF to vehicles [9]. None was designed around spacecraft constraints, and no study known to the author measures what each additional assurance mechanism provides for spacecraft flight software, or what it costs.
 
-The central problem this paper addresses is not "spacecraft software
-lacks security" in the abstract, but something narrower and, we argue,
-more useful: there is no standard, measurable way to compare *how much*
-security assurance a given update pipeline actually provides, or to
-quantify the cost — in time, storage, or manual review effort — of adding
-a stronger assurance mechanism. This makes it hard for mission designers
-to make informed tradeoffs (is a given mechanism worth its overhead for
-this mission's risk profile?), and hard for researchers proposing new
-supply-chain security schemes to compare their approach against prior work
-on common ground.
+This paper has four objectives, stated as research questions.
 
-**This paper's contribution is comparative, not descriptive.** We do not
-claim to have added a signature and a Software Bill of Materials (SBOM) to
-a piece of spacecraft software. We built a controlled, end-to-end software
-lifecycle pipeline for spacecraft flight software — instrumented with six
-discrete, strictly additive levels of supply-chain assurance (S0 through
-S5, Section 3) — and measured what each additional
-mechanism actually buys, and at what cost, under spacecraft-relevant
-constraints: link latency and loss, autonomous recovery without a live
-operator, and no ability to simply redeploy a fixed binary to a
-unit already in orbit. We evaluate this pipeline against a standardized
-battery of 15 attack and failure scenarios, across four independent
-target software stacks — two purpose-built stand-in artifacts and two
-real, unmodified NASA/JPL flight software frameworks (Core Flight System
-and F Prime) — and against a real, unmodified baseline deployment of TUF,
-to ground the paper's central claim (that spacecraft-specific constraints
-change the engineering problem, not just the deployment target) in
-measurement rather than assertion.
+- **RQ1 (attribution).** When each of five mechanisms is added to a signed pipeline, does it detect the failure class assigned to it, and is that detection attributable to the mechanism itself and not to one beneath it?
+- **RQ2 (cost).** What does each added mechanism cost in pipeline time, storage, and evidence volume, and how does the cost compare across four target stacks, including two real NASA/JPL frameworks?
+- **RQ3 (coverage).** Which of the 15 failure classes fall outside the scope of a hash comparison, TUF, and Uptane?
+- **RQ4 (robustness).** When the verifiers are given systematically mutated artifacts and configurations, which changes do they reject, which do they accept, and do they fail cleanly on malformed input?
 
-Concretely, this paper makes the following contributions:
+The paper makes four contributions.
 
-1. A six-level, strictly additive supply-chain assurance ladder (S0–S5)
-   for spacecraft flight software, with an open-source, reproducible
-   reference implementation spanning build, ground authorization,
-   simulated uplink, onboard verification, installation, attestation,
-   operational monitoring, and rollback.
-2. A standardized 15-case attack and failure injection matrix, run
-   against every assurance condition across four independent target
-   software stacks, including two real, unmodified NASA/JPL flight
-   software frameworks.
-3. A real, measured baseline comparison against an unmodified upstream
-   TUF deployment, quantifying which parts of this project's assurance
-   ladder have no equivalent in an existing, widely adopted terrestrial
-   software-update framework.
-4. A methodology for independently pressure-testing the resulting threat
-   model and mitigations — four independent, blind, AI-driven red-team
-   review passes that surfaced and led to fixes for 21 real security and
-   correctness defects — reported with an explicit, honest accounting of
-   what this methodology does and does not substitute for (Section
-   8).
+1. A six-level additive assurance ladder (S0 to S5) and an open reference implementation in which all levels share one codebase and differ only by configuration, so that any difference between adjacent levels is attributable to one added mechanism.
+2. A controlled evaluation of that ladder: a 15-case attack and failure matrix, a six-case ablation, and two multi-vector scenarios, with 30 trials each on four targets, reporting detection, time to detection and restoration, confusion matrices, overhead, evidence volume, traceability, and build reproducibility.
+3. A coverage comparison against a hash-only deployment and TUF, both executed, and against Uptane, read from its specification, showing which failure classes each can and cannot address by design.
+4. A mutation experiment that applies generic operators to the SBOM, provenance, attestation, binary, signature, and policy inputs. It reports which changes each verifier rejects and which it accepts, identified two implementation defects that the 15 manually specified cases had not exposed, and is repeated after their correction.
 
-The remainder of this paper is organized as follows: Section 2
-situates this work against SLSA/in-toto/TUF/Sigstore and prior spacecraft
-software security literature; Section 3 formalizes the
-threat actors and the S0–S5 ladder; Section 4 describes the
-pipeline implementation; Section 5 describes the
-attack matrix, metrics, and experimental protocol; Sections 6 and 7 present and interpret the findings; Section 8
-states plainly what this evaluation does not establish; Section
-9 closes.
+The evaluation has a defined scope. Each of the 15 failure cases is injected and detected by components implemented by the same author. A result of 100% therefore verifies that the implemented checks do what they are specified to do. It does not estimate how the mechanisms would perform against attacks that were not anticipated in the design. The mutation experiment reduces this dependence on manually specified cases for the document and configuration checks, but its operators were also chosen by the author, so the boundary remains. Section 5.1 states it and Section 7.1 discusses its consequences.
 
-A note on supplementary citations used throughout this paper: parenthetical
-references such as `docs/Threat-Model.md` or `docs/PRD.md` point to
-supporting engineering documentation in this project's code repository,
-made available per the Data/Code Availability Statement. They are
-included so a reader who wants a specific implementation or design detail
-beyond what fits in the main text can locate it; the paper's own argument
-and evidence are self-contained without them.
+The remainder of the paper is organized as follows. Section 2 reviews related work. Section 3 gives the threat model and the ladder. Section 4 describes the implementation. Section 5 describes the methodology and Section 6 the results. Section 7 discusses them, Section 8 states limitations, and Section 9 concludes.
 
----
+## 2. Related work
 
-## 2. Background / Related Work
+### 2.1 Terrestrial supply-chain security
 
-**Note on citation treatment in this section, per the 2026-08-07 flag in
-`docs/Research-Paper-Outline.md` §6:** SLSA, in-toto, Sigstore, TUF, and
-OSCAL are cited below via their own specifications/project sites, as the
-systems this project's design is built from and measured against — the
-same treatment already given to TUF in the real-baseline comparison
-(Section 5; `docs/Threat-Model.md` "Phase 8
-real-baseline comparison: python-tuf"). This project does not reimplement
-any of them, and pinning to a specification rather than a single academic
-paper about that specification is arguably more precise for a systems
-paper regardless of the venue's stance on conference proceedings. All
-other citations in this section are drawn from the peer-reviewed-journal
-shortlist verified in `docs/Research-Paper-Outline.md` §6
-(2026-08-07) and are limited to claims that abstract-level information
-can actually support — anything more specific is marked for full-text
-verification before submission, not asserted from the abstract alone.
+Terrestrial practice has converged on three complementary properties. Provenance records how an artifact was built and from what (SLSA [5], in-toto [6]). Attestation and transparency allow a claim about an artifact to be verified independently (Sigstore [7]). Update resilience lets an update system survive the compromise of some of its own keys (TUF [8]). OSCAL [10] represents compliance and authorization evidence in a machine-readable form. These systems are cited through their current specifications, because the pipeline is compared with them and does not reimplement them. The ladder maps loosely onto them: SBOM (S1) and provenance (S2) to the first property, onboard attestation (S3) to the second, and machine-readable authorization evidence (S5) to the purpose of OSCAL. S0 checks a signature against a local revocation list. This is weaker than TUF's resilience property, which rests on signed metadata, threshold signatures, role separation, and signed key rotation.
 
-### 2.1 Terrestrial software supply-chain security
-
-Following SolarWinds-class incidents, terrestrial software supply-chain
-security has converged on a small number of complementary properties
-rather than a single tool: **provenance** (can the deployed artifact be
-traced to the source and build process that produced it — SLSA's graduated
-levels, in-toto's attestation layer), **transparency/attestation** (can a
-claim about an artifact's origin or state be independently verified —
-Sigstore's signing and transparency-log infrastructure), and **update
-resilience** (can the update mechanism itself survive compromise of one or
-more of its own signing keys — TUF's core contribution, and the specific
-property this project's S0 baseline deliberately does *not* provide,
-since S0 is signature-only with no revocation-aware verification layered
-on top). OSCAL, from NIST, addresses a related but distinct need:
-representing compliance and authorization evidence in a machine-readable
-form suitable for automated policy checking rather than only human audit
-review. This project's S1–S5 ladder maps loosely onto this same property
-space — SBOM (S1) and provenance (S2) to the first property, onboard
-attestation (S3) to the second, and machine-readable authorization
-evidence (S5) to a use of the third that mirrors OSCAL's design goal more
-than any of SLSA/in-toto/TUF's own scope. None of these frameworks was
-designed with spacecraft-specific operating constraints in view; Section
-3 and the real-baseline comparison against an unmodified
-python-tuf deployment (Section 6.4) make this gap
-measurable rather than asserted, addressing the most direct form of
-objection this framing invites — that this project is "just SLSA/in-toto/
-TUF applied to a new domain."
+Uptane [9] extends TUF for ground vehicles. It adds a Director repository that decides what each vehicle receives alongside the Image repository, requires an attacker to compromise both, and has each ECU report the hash of its installed image in a signed version report. The current standard (version 2.1.0 [21]) states that compromise of the supply chain, including the build system, and malicious software embedded in a trusted package are out of scope, and it names in-toto as a complement. No Uptane implementation was executed. Section 6.8 classifies each of the 15 cases from the text of the standard, and that classification is a reading of the specification, not a measurement.
 
 ### 2.2 Spacecraft and satellite software security
 
-The existing literature on spacecraft and satellite cybersecurity is
-weighted heavily toward the ground segment and the radio-frequency link,
-not the onboard software supply chain. Manulis, Bridges, Harrison, Sekar,
-& Davis (2020) analyze historical satellite security incidents and find
-that ground and RF communications, not the space segment itself, have
-been the most favored attack targets to date — confirmed against their
-full text, which reports the ground segment as the most-targeted sector
-in their own incident dataset, followed by RF data communications — a
-finding this paper's own literature search (Section 1) independently
-corroborates for the specific case of flight-software build/update
-compromise, where no documented incident was found at all. Manulis et
-al.'s full text does name "supply chain attacks" and "unpatched/
-outdated/legacy COTS software" as distinct ground-segment threat
-categories, but treats each in a single descriptive paragraph without
-proposing or surveying any verification, attestation, or update-integrity
-mechanism — a gap this paper's contribution directly addresses. Ahmad et
-al. (2022) and Kang, Park, & Lee (2024) both survey satellite
-communication security more broadly, covering confidentiality/integrity/
-availability threats and countermeasures at the communications-protocol
-level; Kang et al. specifically discuss the AcidRain and AcidPour
-incidents referenced in Section 1, though (confirmed against its full
-text) at the level of the broader threat landscape rather than the
-incident-specific detail cited in Section 1, which is instead drawn from
-SentinelOne's own technical disclosures. Confirmed against full text for
-both: neither Ahmad et al. nor Kang et al. discusses onboard
-software-update assurance as a developed category. Ahmad et al.'s only
-proximate mention is a single passing observation that satellites moving
-toward software-defined, on-orbit-patchable payloads introduces
-vulnerability "due to immaturity of on-orbit reprogramming technologies,"
-without further development into any assurance mechanism; Kang et al.
-does not mention software updates, patching, firmware, or supply-chain
-security at all. Taken together, this body of work establishes that
-satellite cybersecurity is an active and maturing research area, but one
-whose center of gravity has been the link and ground segment; the software
-lifecycle that produces and updates what runs onboard has received
-comparatively little direct empirical treatment, which is the specific gap
-this paper's contribution targets.
+Published work on satellite security concentrates on the ground segment and the radio link. Manulis et al. [11] analyze historical incidents and find the ground segment and RF communications to be the most frequent targets. Their text names supply-chain attacks and outdated commercial software as threat categories but treats each in one paragraph, with no proposed verification or update-integrity mechanism. Ahmad et al. [12] and Kang et al. [2] survey satellite communication security at the protocol level. Neither develops onboard update assurance as a category; Ahmad et al. note only that on-orbit reprogramming technologies are immature.
 
-### 2.3 Adjacent domains: attestation and update assurance in other
-constrained/autonomous systems
+Two arXiv preprints by Vanlyssel et al. are adjacent. SpyChain [13] describes supply-chain attacks on auxiliary commercial hardware in small satellites and contrasts them with flight software, which it describes as subject to strict security practices. "Trust Without Boundaries" [14] studies runtime trust boundaries among cFS components in the NOS3 simulator and shows that a compromised component can exploit broadly shared privileges. This concerns code that is already running and does not address whether the software that arrived was the software an operator authorized, which is the subject of this paper. Their finding that a compromised component can look legitimate at the architecture level is an independent argument for onboard attestation. Both are preprints and are cited as context.
 
-Three areas of adjacent work bear directly on this project's specific
-combination of attestation and update assurance without a live human
-overseeing either. Usman, Afzal, & Asplund (2026) integrate remote
-attestation with secure software updates in embedded systems (RASUES,
-extending the IETF RATS RFC 9334 architecture with a watchdog-timer-backed
-update procedure that tracks the device's expected state both before and
-after an update) — the closest direct analog to this project's
-S3-plus-update-pipeline combination found in this literature search.
-Confirmed against RASUES's full text: it targets general IoT/embedded
-systems rather than spacecraft specifically, and — unlike this project's
-explicitly disclosed software-only attestation (Section 4.2) — is built
-on a TPM 2.0 hardware root of trust, prototyped on a Raspberry Pi. This
-makes RASUES a stronger baseline for the attestation mechanism itself
-than this project's own S3 implementation, while leaving the
-spacecraft-specific constraints this paper's threat model treats as
-first-class (link intermittency, no human in the loop, physically
-unrecoverable failure) entirely outside its scope, and RASUES does not
-address the pre-attestation supply-chain stages (build provenance, SBOM
-completeness, ground-side authorization policy) this project's S0-S2
-conditions cover. Sahlmann, Clemens, Nowak, & Schnor (2021) address
-secure over-the-air update assurance for constrained IoT devices via
-MQTT (MUP), a domain that shares this project's concern with updating a
-device that cannot be physically retrieved on demand. Confirmed against
-its full text: MUP's failure handling is limited to detection and
-reporting rather than recovery — if the post-update reboot fails, "the
-Update Server will get a timeout and reports the error," with no
-described mechanism for the device to recover or roll back on its own —
-thinner than this project's own S4 automated-rollback design, though the
-paper does not itself frame this gap in terms of permanent or
-unrecoverable asset loss, which is this paper's own framing rather than a
-claim drawn from MUP. Qureshi, Marvi, Shamsi, & Aijaz (2021), initially
-characterized in an earlier draft as addressing general secure
-over-the-air update assurance in autonomous vehicles, is on closer
-reading (confirmed against its abstract; the full text sits behind a
-paywall this literature search could not get past) a narrower
-contribution than that framing suggested: a CNN-based classifier for
-distinguishing malicious from benign OTA update executables, layered on
-the existing Uptane framework and trained/evaluated on general Windows/
-Linux executable datasets rather than vehicle-specific failure scenarios.
-**Flag — not fully citation-verified:** because the full text could not
-be obtained, this paper's specific treatment of update-failure
-permanence or recoverability is not confirmed either way and is not
-asserted here; the comparison this section draws is limited to what its
-abstract actually supports (malicious-update detection via machine
-learning), not to a claim about failure-mode design it does not appear,
-from the abstract, to focus on. Neither Sahlmann et al. nor (as far as
-its abstract indicates) Qureshi et al. operates under the link-latency/
-intermittency constraints Section 3 treats as first-class.
+### 2.3 Attestation and update assurance in adjacent domains
 
-### 2.4 NASA Core Flight System and flight-software engineering practice
+Usman et al. [15] combine remote attestation with secure updates for embedded systems (RASUES), extending the IETF RATS architecture [16] with a watchdog-supervised update procedure. It rests on a TPM 2.0 hardware root of trust and targets general embedded systems. This makes its attestation stronger than the software-only S3 evaluated here, while it does not cover build provenance, SBOM completeness, or ground-side authorization policy. Sahlmann et al. [17] describe a secure over-the-air update protocol for constrained IoT devices; when the post-update reboot fails, the server records a timeout and reports the error, with no recovery mechanism described. Qureshi et al. [18] propose a classifier that detects malicious update executables in vehicles, layered on Uptane; it is cited for malicious-update detection only.
 
-The target artifact used throughout this project's evaluation, NASA's
-Core Flight System (cFS), has its own body of engineering-practice
-literature independent of the security question this paper addresses.
-Ganesan, Lindvall, McComas et al. (2012) analyze unit-testing practice
-across a flight-software product line predating cFS's open-source release,
-and Gonzalez, Rojas, Bergel, & Díaz (2019) evaluate flight-software
-architecture verification methodology for CubeSat nanosatellites using a
-different framework (SUCHAI) but a directly comparable engineering
-concern — ensuring an evolving flight-software codebase continues to
-satisfy its architectural and non-functional requirements over the
-software's lifecycle. Neither addresses supply-chain assurance
-specifically, but both establish that flight-software engineering rigor
-and verification tooling is an active concern in this community
-independent of the security framing this paper adds to it — this project's
-contribution sits alongside this literature rather than in competition
-with it.
+### 2.4 Flight software engineering
 
-## 3. Threat Model
+Ganesan et al. [19] analyze unit testing in a flight-software product line that predates the open release of cFS, and Gonzalez et al. [20] evaluate architecture verification for CubeSat flight software built on a different framework. Neither addresses supply-chain assurance, and both show that verification tooling for flight software is an active concern.
 
-### 3.1 Threat actors
+## 3. Threat model and the assurance ladder
 
-This project's threat model considers six actors, chosen to span both
-adversarial and non-adversarial causes of an untrustworthy update reaching
-a spacecraft (`docs/Threat-Model.md` §2):
+### 3.1 Actors and trust assumptions
 
-1. **An external attacker with network access** to the ground segment or
-   the uplink channel — tampering with an update in transit, replaying a
-   prior update, or attempting a downgrade to a previously superseded
-   version.
-2. **Compromised build infrastructure** — an unauthorized or malicious
-   build runner, or a poisoned upstream dependency, producing an artifact
-   that does not match its claimed source.
-3. **An insider with legitimate but excessive access** — someone who can
-   validly sign a release but approves a configuration that is
-   technically authenticated yet policy-prohibited (for example, a debug
-   flag that should never reach a flight build).
-4. **A compromised or leaked signing key** — where the specific failure
-   mode of interest is not the initial compromise but whether the system
-   continues to accept updates signed with that key after it should have
-   been revoked.
-5. **Onboard software fault** — a failed health check or an installation
-   interrupted partway through. This actor is not adversarial, but it is
-   included deliberately: assurance mechanisms built to catch adversarial
-   tampering (such as a rollback path) need to degrade gracefully under
-   ordinary hardware/software failure too, and a design that only handles
-   the adversarial case is incomplete for an operational spacecraft.
-6. **Ground/space state divergence** — a disagreement between what the
-   ground segment believes is installed and what is actually running
-   onboard, covering both deliberate deception (falsified telemetry) and
-   honest desynchronization (a missed or delayed status update).
+The model considers six actors that span adversarial and non-adversarial causes of an untrustworthy update reaching a spacecraft.
 
-**Explicitly out of scope**, and stated here rather than left for a
-reviewer to infer: RF-layer jamming or spoofing, physical tampering with
-ground-segment hardware, and an insider threat with root access to the
-signing HSM itself. These are real and significant spacecraft security
-concerns, but they sit outside this project's scope — which is
-supply-chain and lifecycle assurance for the software itself, not RF
-security or physical/personnel security. A design that claimed to address
-these without evaluating them would be a stronger claim than this paper's
-evidence supports.
+1. An external attacker with access to the ground segment network or the uplink, who tampers with an update in transit, replays a prior one, or attempts a downgrade.
+2. Compromised build infrastructure: an unauthorized or malicious build runner, or a poisoned dependency, producing an artifact that does not correspond to its claimed source.
+3. An insider with legitimate signing access who approves a configuration that is authenticated but prohibited by policy, such as a debug flag that must not reach a flight build.
+4. A compromised or leaked signing key. The case of interest is whether the system continues to accept updates signed with the key after it has been revoked.
+5. An onboard software fault, such as a failed health check or an installation interrupted part way. This actor is not adversarial, but a rollback path that handles only adversarial failure would be incomplete for an operational spacecraft.
+6. Ground and space state divergence: a disagreement between what the ground segment believes is installed and what is running, whether from falsified telemetry or from an honest missed update.
 
-### 3.2 The S0–S5 assurance ladder
+Table 1 lists what the model trusts. Neither actor 1 nor actor 3 controls the whole authorized update path. Actor 1 has no signing authority. Actor 3 can sign but cannot alter the policy check, which runs independently at ground authorization and again onboard.
 
-Rather than treat "supply-chain security" as a single property a pipeline
-either has or lacks, this project decomposes it into six strictly
-additive conditions, S0 through S5, where each condition includes every
-mechanism present at the prior level plus exactly one new one. This
-additive structure is the paper's central methodological device: because
-every condition above S0 is "S0 plus one more thing," any difference in
-detection rate, timing, or overhead observed between two adjacent
-conditions can be attributed to that one added mechanism specifically,
-rather than to an uncontrolled bundle of simultaneous changes.
+**Table 1.** Trust assumptions of the threat model.
 
-| Condition | Mechanisms present | New mechanism vs. prior | Primarily addresses (§3.1 actor) |
+| Component | Treatment |
+|---|---|
+| Uplink and ground network | Untrusted (actor 1) |
+| Build runner and dependencies | Untrusted (actor 2) |
+| Signing key | Trusted until revoked (actor 4) |
+| Person authorizing a release | Trusted to sign, not trusted on configuration content (actor 3) |
+| Ground authorization logic and onboard verification code | Trusted |
+| Signing HSM and its operators | Trusted (out of scope) |
+| Onboard runtime state and telemetry | Verified by attestation and reconciliation (actors 5, 6) |
+
+Three classes of threat are outside the model: RF jamming and spoofing, physical tampering with ground hardware, and an insider with root access to the signing HSM. A compromise that gives an attacker both the signing capability and control of the authorization process, as in the AcidRain management-segment incident, is also outside the model. In that situation every mechanism evaluated here would be operating under the attacker's control. The ladder addresses the cases in which an attacker, or a fault, lies at some point in the update path short of that complete control.
+
+### 3.2 The S0 to S5 ladder
+
+Each condition includes every mechanism of the one below it plus one new mechanism (Table 2). Because every condition above S0 is S0 plus one further mechanism, a difference in detection, time, or overhead between adjacent conditions is attributable to that mechanism.
+
+**Table 2.** The assurance ladder and the actor each added mechanism mainly addresses.
+
+| Condition | Mechanisms present | Added mechanism | Mainly addresses |
 |---|---|---|---|
-| S0 | Signature only | — (baseline) | External attacker (in-transit tampering only — a *revoked* key is still accepted at S0, since revocation-aware verification is not part of the baseline) |
-| S1 | S0 + SBOM | Software Bill of Materials | Compromised build infrastructure (undisclosed/vulnerable dependencies) |
-| S2 | S1 + build provenance | SLSA/in-toto-style provenance attestation | Compromised build infrastructure (source-to-binary correspondence); downgrade attempts |
-| S3 | S2 + onboard attestation | Runtime/boot attestation on the spacecraft side | Ground/space state divergence (verifying what is actually running, not just what was sent) |
-| S4 | S3 + trusted rollback | Verified A/B partition rollback on failure | Onboard software fault; interrupted installation |
-| S5 | S4 + machine-readable authorization evidence | OSCAL-informed structured evidence for ground/auditor consumption | Insider with legitimate-but-excessive access (policy-prohibited but technically signed configurations) |
+| S0 | Signature and local revocation list | (baseline) | External attacker (in-transit tampering); revoked signing key |
+| S1 | S0 + SBOM | Software bill of materials | Compromised build (undisclosed or vulnerable dependencies) |
+| S2 | S1 + provenance | SLSA/in-toto-style provenance | Compromised build (source-to-binary correspondence); downgrade |
+| S3 | S2 + attestation | Boot and runtime attestation | State divergence (what is running, not only what was sent) |
+| S4 | S3 + rollback | Verified A/B partition rollback | Onboard fault; interrupted installation |
+| S5 | S4 + evidence | OSCAL-informed structured evidence and policy check | Insider with legitimate access (prohibited but signed configuration) |
 
-The pipeline implementation enforces a hard architectural requirement
-behind this table: the same underlying artifact and pipeline code must be
-able to run under any of the six conditions purely through configuration,
-with no per-condition code fork (`docs/Technical-Design-Document.md`
-"Condition switching"). This is what makes the comparison controlled
-rather than incidental — every condition is the identical pipeline with a
-strictly larger or smaller set of mechanisms switched on, not six
-differently-implemented pipelines being compared after the fact.
+The pipeline requires that the same artifact and code run under any of the six conditions through configuration alone. The ladder does not claim that these six mechanisms are the only ones worth measuring or that the order is the only defensible one. Placing SBOM before provenance, for example, is a design choice.
 
-It is worth being explicit about what this ladder does not claim. It is
-not a claim that these six mechanisms are the only ones worth measuring,
-nor that this specific ordering is the only defensible one (SBOM before
-provenance, for instance, is a design choice, not a logical necessity).
-It is a claim that *this* additive structure, evaluated end-to-end against
-a standardized attack matrix (Section 5), produces
-measurable, attributable evidence about the marginal value of each
-mechanism — which is the specific gap Section 1 identifies in existing
-practice.
+## 4. System design
 
-## 4. System Design
+### 4.1 Pipeline
 
-### 4.1 Pipeline architecture
+The implementation moves an artifact through twelve stages (Fig. 1): source, reproducible build, provenance generation, SBOM generation, signed release, ground authorization, simulated uplink, onboard signature and policy verification, installation, boot and runtime attestation, health validation, and rollback or approval, followed by an updated authorization-evidence record that feeds the next cycle. Every stage that can produce audit value writes a structured record to one append-only evidence store, including at conditions below the one where a mechanism activates. This allows the evaluation to separate evidence that existed and was checked from evidence that existed and was not.
 
-The reference implementation moves an artifact through twelve stages —
-source, reproducible build, provenance generation, SBOM generation, signed
-release, ground authorization, simulated uplink, onboard signature and
-policy verification, installation, boot/runtime attestation, health
-validation, and A/B partition rollback-or-approval, closing with an
-updated authorization-evidence record that feeds the next lifecycle
-iteration (`docs/Pipeline-Flow-Document.md` §§1–3). Every stage that can
-plausibly produce forensic or audit value writes a structured record to a
-single append-only evidence store, even at assurance conditions where
-that evidence is not yet acted upon — this is a deliberate design
-principle (`docs/Technical-Design-Document.md` §1, principle 2), not an
-incidental logging choice, because it is what lets the evaluation
-distinguish "the evidence existed but nothing checked it" (below the
-condition where a mechanism activates) from "the evidence existed and was
-checked" (at or above it), rather than conflating absence-of-checking
-with absence-of-evidence.
+![](docs/assets/manuscript/fig1_pipeline.png)
 
-The architectural requirement stated in Section 3.2 — one codebase, six
-conditions, no per-condition code fork — is implemented as a single
-configuration file read by every stage at run time (`src/condition.py`),
-with one boolean flag per mechanism. Each stage checks its own flag
-before performing its check; an inactive mechanism is skipped outright,
-not stubbed with a fake-pass result, so the pipeline behaves as an honest
-S0–S5 system rather than one that implements every mechanism internally
-and merely suppresses reporting of some of them
-(`docs/Technical-Design-Document.md` §5). This distinction matters for
-the paper's evidentiary claims: a detection result at condition S(n) is
-evidence that mechanism *n* caught the case, not evidence that a
-more-capable, always-on system happened to have its result correctly
-filtered for display.
+A single configuration read at run time sets one boolean flag per mechanism. Each stage checks its own flag, and an inactive mechanism is skipped, not replaced by a stub that reports success. A detection at condition S(n) therefore shows that mechanism n caught the case.
 
-### 4.2 Component implementation and stated fidelity
+### 4.2 Fidelity of components
 
-Several components are implemented as deliberately reduced-fidelity
-stand-ins for real infrastructure, each chosen to test the *assurance
-property* a mechanism is meant to provide without requiring
-infrastructure unavailable in the original build environment. Each
-reduction is stated plainly here, not left for a reviewer to discover:
+Several components are reduced-fidelity stand-ins chosen to test whether a mechanism provides its intended property without infrastructure unavailable in the build environment.
 
-- **Provenance and SBOM formats** (`src/provenance/provenance.py`,
-  `src/sbom/sbom.py`) are hand-rolled, SLSA v1/in-toto-statement-shaped
-  and CycloneDX-shaped JSON respectively, rather than full library
-  invocations of the corresponding standard tooling. This tests whether
-  the pipeline's *use* of provenance/SBOM data (binding it to an
-  artifact, checking it, rejecting on mismatch) works correctly; it is
-  not a claim of byte-level conformance to either specification.
-- **Onboard attestation** (`src/attestation/attestation.py`) is a
-  software-only construction: a measurement (installed binary hash,
-  partition identifier, timestamp) signed with a dedicated Ed25519 key,
-  not a hardware root of trust such as a TPM. This is a materially
-  weaker guarantee than real TPM-backed attestation — a software-held
-  key can be exfiltrated in ways a hardware-sealed key cannot — and this
-  paper does not claim otherwise; "attestation" throughout this paper
-  refers to this software construction unless stated otherwise
-  (`docs/Technical-Design-Document.md` §7c).
-- **The simulated uplink** (`src/uplink_sim/uplink.py`) offers three
-  fixed link profiles (ideal, LEO-typical, deep-space-typical) that are
-  loosely, order-of-magnitude informed by CCSDS-class link budgets but
-  not validated against any specific reference mission's actual
-  telemetry. This is the component most likely to draw scrutiny over
-  spacecraft-realism claims, and is treated accordingly in Section
-  8 rather than presented as RF-accurate.
-- **Ground-authorization policy** is a small, explicit Python deny-list
-  rather than a general-purpose policy engine (e.g., OPA/Rego). This
-  tests whether a correctly-signed release can still be correctly
-  rejected on policy grounds — the property under test — without
-  depending on unverified third-party policy infrastructure; the
-  deny-list's check-shape maps cleanly onto a Rego `deny` rule set should
-  a real ground-system migration ever be pursued
-  (`docs/Technical-Design-Document.md` §7d).
-- **Authorization evidence** (S5) is an OSCAL-*informed* JSON
-  aggregation — subject, findings, and overall-result fields modeled on
-  OSCAL's shape — rather than a conformant implementation of the OSCAL
-  schema itself. This paper makes no claim of OSCAL compatibility
-  specifically, only that machine-readable, structured evidence in this
-  general shape is what the S5 condition provides.
+- Provenance and SBOM are JSON documents produced by the pipeline's own code and shaped after SLSA v1 and in-toto statements and after CycloneDX. They test whether the pipeline binds, checks, and rejects on this data. They are not conformant to either specification.
+- Attestation is a software construction: a measurement (installed binary hash, partition identifier, timestamp) signed with a dedicated Ed25519 key. A software-held key can be exfiltrated in ways a hardware-sealed key cannot, and the results apply only to this construction.
+- The simulated uplink offers three fixed link profiles (ideal, LEO-typical, deep-space-typical), informed to an order of magnitude by CCSDS-class link budgets and not validated against any mission's telemetry.
+- Ground authorization policy is a short Python deny-list, not a general policy engine such as OPA.
+- Authorization evidence is a JSON document modeled on the shape of OSCAL (subject, findings, overall result), not a conformant OSCAL implementation.
 
-Each of these choices trades specification conformance for testability of
-the specific mechanism-level question this paper asks (does this
-assurance layer detect what it is supposed to detect, and at what cost),
-and each is a place where a production system aimed at operational
-deployment, rather than controlled comparative measurement, would
-reasonably choose differently.
+Each choice trades conformance for testability of the question under study. A production system would reasonably choose differently.
 
-### 4.3 Target software stacks
+### 4.3 Target stacks
 
-The pipeline was evaluated against four independent target artifacts,
-added incrementally to address generalizability: two purpose-built
-stand-in stub applications (a C telemetry-output stub and an
-architecturally distinct C++ component-based stub, modeled respectively
-on cFS's message-bus architecture and F Prime's component/port
-architecture), and two real, unmodified NASA/JPL flight software
-frameworks built and run for the first time against this pipeline in
-Phase 7 — NASA's Core Flight System (cFS, tag `v7.0.1`) and NASA JPL's F
-Prime (F´, tag `v4.2.2`). The two real frameworks required no changes to
-the assurance-mechanism implementations themselves; generalizing from the
-stand-in stubs to the real frameworks required changes to exactly two
-adapter modules (`src/build/build.py`, `src/health/health_check.py`) that
-had accidentally hardcoded assumptions specific to the first stub's shape
-(`docs/Technical-Design-Document.md` §7f), plus one real correctness fix
-the generalization exercise itself surfaced (a version ledger that was a
-single global file rather than scoped per stack, which produced a false
-downgrade-detection result the first time a second stack was evaluated).
-Health checking against the two real frameworks required a further
-design change, since both are long-running processes rather than the
-stand-in stubs' run-to-completion model: `health_check.py` was extended
-with a persistent-process check that waits for a genuine, empirically
-determined boot-success log line from the binary's own stdout, rather
-than treating the mere absence of a crash as a health signal
-(`docs/Technical-Design-Document.md` §7g) — a design decision made
-deliberately to avoid fabricating a health result from the absence of
-evidence.
+Four targets were used: two stand-in applications (a C telemetry stub modeled on cFS's message-bus architecture and a C++ component stub modeled on F Prime's component and port architecture), and the unmodified NASA Core Flight System (tag v7.0.1) and JPL F Prime (tag v4.2.2). Here "unmodified" refers to the frameworks: no framework source was changed, and only the pipeline's own adapters were. Moving from stubs to real frameworks required changes to two adapter modules (build and health check) that had assumed the shape of the first stub, and one correctness fix: the version ledger had been a single global file, which produced a false downgrade detection when a second stack was evaluated. It is now scoped per stack. Both real frameworks are long-running processes, so the health check for them waits for a boot-success line, determined by observation, on the binary's standard output. The absence of a crash is not treated as a health signal.
 
-## 5. Evaluation Methodology
+## 5. Evaluation methodology
 
-### 5.1 Attack and failure injection matrix
+### 5.1 What the evaluation can and cannot show
 
-A standardized battery of 15 test cases is injected at the pipeline stage
-each is designed to target, and each is run against every assurance
-condition where the relevant mechanism could plausibly detect it
-(`docs/Threat-Model.md` §3). Each test case carries a stated *expected*
-first-detection condition — a hypothesis about which mechanism should
-catch it first, not a guaranteed or engineered outcome. This distinction
-matters methodologically: a case that is caught earlier or later than its
-stated expectation is itself a result worth reporting (Section 6
-states any such divergence explicitly, per `docs/Threat-Model.md` §3's
-own note that these hypotheses are "to validate, not guaranteed
-outcomes"), not evidence to be quietly reconciled after the fact.
+Each of the 15 cases injects the specific condition that its target mechanism is written to detect, on a deterministic path, using an injector and detector implemented by the same author. A detection rate of 100% therefore demonstrates that the implementation contains the checks it claims to contain and that they work. This is an integration-level result about implementation correctness. It is not an estimate of assurance against attackers who vary their methods, and it does not support a claim about the probability of detecting an unknown attack.
 
-| # | Test case | Injected at | Expected first detection |
+Four design features give the results additional meaning within that scope.
+
+- **Attribution.** The additive design and the ablation (Section 5.2) test whether each mechanism's detection comes from that mechanism and not from one beneath it.
+- **Cost.** The overhead measurements are independent of whether attacks are anticipated.
+- **Coverage.** The baseline comparison (Section 5.4) is a statement about which failure classes a design can address, and it is reported as scope analysis, not as a detection experiment.
+- **Robustness.** The mutation experiment (Section 5.7) feeds the verifiers systematically generated variants rather than the 15 manually specified cases, so it can reveal inputs that were not anticipated when the injectors were written. Its operators were nevertheless chosen by the author, and it covers the document, signature, and configuration checks, not the runtime mechanisms (attestation freshness against a running system, health checks, rollback).
+
+The 15 cases and the metric definitions were written during design, before the full evaluation was run, and the repository history records this. The stated first-detection condition for each case is a hypothesis. A case detected earlier or later than expected is reported as such.
+
+### 5.2 Attack matrix, ablation, and adaptive scenarios
+
+Table 3 lists the 15 cases, the stage at which each is injected, and the condition at which it was expected to be detected first.
+
+**Table 3.** Attack and failure matrix.
+
+| # | Case | Injected at | Expected first detection |
 |---|---|---|---|
-| 1 | Binary does not match source | Build → Provenance | S2 |
+| 1 | Binary does not match source | Build, provenance | S2 |
 | 2 | Missing or false provenance | Provenance | S2 |
 | 3 | Incomplete SBOM | SBOM generation | S1 |
-| 4 | Dependency with known test vulnerability | SBOM / dependency scan | S1 |
+| 4 | Dependency with known test vulnerability | SBOM, dependency scan | S1 |
 | 5 | Unauthorized build runner | Build environment | S2 |
-| 6 | Modified update (in transit) | Uplink | S0 |
-| 7 | Revoked signing key | Signature verification | S0/S2 (revocation-aware verification) |
-| 8 | Correct signature but prohibited configuration | Ground authorization / policy | S5 |
-| 9 | Downgrade attempt | Ground authorization / onboard verification | S2/S4 |
+| 6 | Modified update in transit | Uplink | S0 |
+| 7 | Revoked signing key | Signature verification | S0 or S2 |
+| 8 | Correct signature, prohibited configuration | Ground authorization, policy | S5 |
+| 9 | Downgrade attempt | Ground authorization, onboard verification | S2 or S4 |
 | 10 | Interrupted installation | Installation | S4 |
-| 11 | Failed health check | Post-install health validation | S3/S4 |
+| 11 | Failed health check | Post-install health validation | S3 or S4 |
 | 12 | Stale attestation | Onboard attestation | S3 |
-| 13 | Ground/spacecraft inventory disagreement | Operational monitoring | S5 |
+| 13 | Ground and spacecraft inventory disagreement | Operational monitoring | S5 |
 | 14 | Invalid recovery image | Rollback | S4 |
-| 15 | False "successful installation" telemetry | Operational monitoring / attestation | S3/S5 |
+| 15 | False "successful installation" telemetry | Operational monitoring, attestation | S3 or S5 |
 
-Beyond this matrix, two adaptive-attacker scenarios and a per-mechanism
-ablation study extend the evaluation to two questions the fixed matrix
-cannot answer on its own: whether an attacker adapting across attempts
-changes the outcome, and whether each individual mechanism's contribution
-holds when it alone is disabled from an otherwise-fully-active condition
-(rather than only observed cumulatively as conditions are added). As
-stated plainly in Sections 6.6 and 8 rather than left implicit, the
-adaptive-attacker scenarios test whether detection halts the pipeline on
-the first of two attempted attack vectors, not whether the attacker is
-genuinely evasive or time-adaptive; this scope boundary is not implied
-away when the results are presented.
+The ablation removes one mechanism at a time from an otherwise fully active condition. It uses six cases: SBOM (case 4), provenance (case 5), onboard attestation (case 12), trusted rollback (case 11), and machine-readable authorization, tested by two cases (8 and 15). The ablation answers RQ1: if detection falls to zero when only that mechanism is removed, the detection was not supplied by another mechanism.
 
-### 5.2 Metrics and the baseline decision
+Two adaptive scenarios combine vectors in sequence: (A) a rogue build runner followed by in-transit tampering, and (B) an interrupted installation followed by a stale attestation. They test whether the pipeline halts at the first vector it has a mechanism for. They do not test an attacker who varies timing or evades detection.
 
-Every metric is defined and its measurement method fixed *before* any
-results were generated, specifically to prevent the metric definitions
-themselves from being shaped retroactively by whatever the numbers
-happened to show (`docs/PRD.md` §8, "metric legitimacy" risk; §10,
-resolution). **The baseline for every overhead metric is S0 itself, not
-an external real-world reference process.** This project's central claim
-is comparative — S0 vs. S1 vs. ... vs. S5 — so S0's own cost is the
-correct zero-point; inventing a "real mission's manual process" baseline
-this project has no way to independently validate would substitute an
-unverifiable number for a measured one.
+### 5.3 Metrics
 
-- **Detection rate:** the fraction of attack trials at a given condition
-  where the pipeline correctly rejects the injected case, read directly
-  from `PipelineResult.rejected_at` / `rollback_outcome` fields, not
-  inferred from log inspection.
-- **Time to detection / time to trusted restoration:** wall-clock seconds
-  for the relevant pipeline call, measured with `time.perf_counter()`.
-  **This is a sandbox/local-hardware timing proxy, not a flight-hardware
-  or real-mission timing claim** and is stated as such wherever cited —
-  useful for relative comparison across conditions on the same hardware,
-  not as an absolute number meaningful outside this environment (see
-  Section 8 on the related Docker-launch-overhead confound
-  for the real-framework stacks specifically).
-- **Manual evidence-processing effort:** the count of evidence-store
-  records generated per run, per condition — an explicit proxy for review
-  burden, not a measured human-hours figure. No human-factors study of
-  actual operator effort exists or is claimed.
-- **Traceability completeness:** for each condition, the fraction of
-  pipeline stages *expected to be active* at that condition that actually
-  produced at least one evidence record during a given run. The
-  denominator is condition-specific, so S0 is not penalized for lacking
-  evidence from stages it was never meant to exercise.
-- **Storage and link overhead:** the byte size of the additional
-  artifacts (SBOM, provenance, attestation, authorization evidence) a
-  condition produces beyond S0, measured directly from on-disk file
-  sizes.
-- **Reproducibility:** the fraction of build trials in which two
-  independent builds from the same source produced a bit-identical
-  binary hash.
-- **Update acceptance accuracy:** a confusion matrix per condition —
-  true positive (legitimate update correctly approved), true negative
-  (attack correctly rejected), false positive (attack wrongly approved),
-  false negative (legitimate update wrongly rejected).
+- **Detection rate:** the fraction of trials in which the pipeline rejects the injected case, read from the pipeline result fields.
+- **Time to detection and time to trusted restoration:** wall-clock seconds for the relevant pipeline call, measured with `time.perf_counter()`. For cases that end in rollback the metric is time to restoration. These are timings on the evaluation machine, useful for comparing conditions on the same hardware and not as flight timings.
+- **Update acceptance accuracy:** a confusion matrix per condition in which a legitimate update is the positive class: true positive (legitimate update approved), true negative (attack rejected), false positive (attack approved), false negative (legitimate update rejected).
+- **Evidence-processing effort:** the number of evidence records per run, used as a proxy for review burden. No operator study was performed.
+- **Traceability completeness:** the fraction of stages expected to be active at a condition that wrote at least one evidence record.
+- **Storage overhead:** the size in bytes of the artifacts a condition adds beyond S0 (SBOM, provenance, attestation, evidence), measured from file sizes.
+- **Reproducibility:** the fraction of build trials in which two independent builds from the same source gave identical binaries.
 
-### 5.3 Experimental protocol
+The baseline for every overhead metric is S0, since the comparison is among conditions and S0's own cost is the correct zero point.
 
-Each condition/test-case combination is run as a repeated trial (30
-trials per case in the results reported in Section 6, following
-an initial reduced-trial verification pass used only to confirm harness
-correctness before the full run) via `evaluation/experiment.py`, which
-implements one scenario function per attack-matrix test case returning an
-explicit outcome record for that trial, rather than inferring outcomes by
-re-scanning the shared evidence store after the fact — a design chosen
-specifically to avoid a double-counting failure mode an earlier internal
-version of the comparison tooling exhibited when a single test case
-produced evidence records at multiple pipeline stages
-(`docs/Technical-Design-Document.md` §7d–§7e). Aggregate statistics,
-including Wilson confidence intervals for proportions and closed-form
-confidence intervals for means, are computed by `evaluation/report.py`;
-both were independently cross-checked — the proportion-CI logic against
-a third-party implementation (`statsmodels.stats.proportion.
-proportion_confint`), the mean-CI logic against an independently derived
-closed-form computation — with 33 dedicated tests, not assumed correct
-because the formulas "look standard" (`docs/Research-Paper-Outline.md` §4
-objection 9).
+### 5.4 Baselines
 
-**What varies across the 30 trials, stated precisely.** Each trial
-injects the same fixed scenario input against a deterministic code path,
-so the detect/no-detect outcome itself is not a random variable in the
-way a Bernoulli-trial framing might suggest — it is a repeated execution
-of the same logic against the same input, not 30 independent draws from
-an uncertain process. What genuinely varies trial to trial is execution
-timing (observed directly in the raw per-trial data, e.g., elapsed times
-ranging roughly 0.80–1.07 seconds across ablation trials on identical
-inputs), reflecting real OS-scheduling and environment variance rather
-than a fixed, memorized value. The Wilson confidence intervals reported
-in Section 6 for detection/success rates are therefore best read as a
-formally correct treatment of a rate observed over repeated executions,
-not as evidence that detection *could* have gone the other way on any
-given trial absent a code change — whereas the timing confidence
-intervals are a meaningful characterization of genuine run-to-run
-variability. This distinction is stated here explicitly so the two kinds
-of interval in Section 6 are not read as epistemically equivalent.
+Three baselines are compared against the 15 cases. The first is a hash-only deployment: a release host stores an artifact and the SHA-256 digest of the uploaded bytes, as GitHub does for release assets [4], and the deployer installs the artifact if and only if its digest matches. The second is an unmodified python-tuf 7.0.0 repository and client. Both were executed. The third is Uptane, which was not executed: each case is classified from the text of the Uptane Standard 2.1.0 [21] as native (the standard requires a mechanism for it), partial analogue (a related mechanism exists but does not specify the behavior the case tests), stated out of scope (the standard says so), or not addressed (no concept found in the standard). Cases that a baseline's specification has no mechanism for are recorded as out of scope with a stated reason and are not run as scenarios. For all three the comparison is a coverage analysis. Where a check is deterministic, repeated trials confirm that the harness is stable and do not estimate a detection probability.
 
-**Execution environment, confirmed rather than assumed.** All of this
-paper's cited results — the 30-trial happy-path and attack-matrix runs
-for all four target stacks (Section 6.1, 6.2), the mechanism-ablation
-study (Section 6.5), and the adaptive-attacker scenarios (Section 6.6) —
-were produced on a single machine: the author's own Mac (Intel Core
-i9-9980HK CPU, 64 GB RAM, macOS 26.5.2, Docker 29.6.2, Python 3.11.7). An
-earlier development-time verification pass at reduced trial counts (n=5
-or n=10, to fit within a single command's time budget) was run in a
-separate cloud-based Linux development sandbox (Intel Core i9-9980HK CPU,
-4 vCPUs, 3.8 GB RAM, Ubuntu 22.04.5, Python 3.10.12) purely to confirm
-harness correctness before the full-scale runs; none of the numbers cited
-in Section 6 come from that environment, and it lacked Docker entirely,
-making it unable to run the real-framework stacks at all. Because every
-cited result shares one machine, this paper's within-stack S0–S5 timing
-progressions and its cross-stack (stub-vs-real-framework) timing
-comparisons are both measured under consistent hardware conditions;
-however, none of these figures should be read as approximating
-flight-hardware timing (Section 4.2, Section 8), and the real-framework
-results specifically carry the additional Docker-launch-overhead confound
-discussed in Section 8.
+### 5.5 Protocol and environment
+
+Each condition and case was run for 30 trials. Each trial applies the same scenario input to a deterministic code path, so the detect or no-detect outcome does not vary between trials. What varies is execution time: across ablation trials on identical inputs, times ranged from 0.73 s to 1.55 s on the cFS stand-in and up to 3.57 s on the real frameworks. Wilson 95% intervals for rates are therefore a formally correct summary of a rate observed over repeated runs and are not evidence that detection could have failed on a trial. Confidence intervals for mean times describe real run-to-run variation. The interval code was checked against a third-party implementation (statsmodels) and an independent closed-form calculation.
+
+All reported results were produced on one machine: an Intel Core i9-9980HK with 64 GB RAM running macOS 26.5.2, Docker 29.6.2, and Python 3.11.7. Because every figure comes from one machine, within-stack and cross-stack timings are measured under the same conditions. They are not flight timings, and the real-framework figures include container launch overhead (Section 8).
+
+### 5.6 Internal review of the implementation
+
+The implementation was reviewed in four separate passes by AI systems, each given the source with no prior findings: one by Claude in a separate session, and one each by OpenAI models, Zhipu AI's GLM, and DeepSeek. These passes led to fixes for 21 defects, and a further 10 were found during real-hardware validation (31 logged defects in total). The passes are reported as a validation procedure for the implementation, not as a research result, and Section 8 states what they do not substitute for.
+
+### 5.7 Mutation experiment
+
+The experiment gives each verifier inputs that were generated by generic operators, rather than by an injector written for a named case. It targets the checks that parse a document or a configuration: SBOM verification (S1), provenance verification (S2), attestation verification (S3), signature verification (S0), and the prohibited-configuration policy (S5). Each run starts from valid artifacts generated by the pipeline's own code.
+
+For the three JSON documents the operators are: random single-bit flips of the serialized bytes (400 per document); truncation at a random offset (100); deletion of every key and list element in turn; replacement of every leaf by values of eleven other types and values; a change to every scalar leaf; insertion of a duplicate key with a different value; replacement of each scalar by the value from a valid document for a different binary; and six semantics-preserving rewrites (indentation, key order, escapes, whitespace) as controls. For the binary, 200 single-bit flips are checked against the signature, the SBOM's declared hash, and the provenance subject digest, and four truncations or extensions against the signature. For the signature file, 200 bit flips and four other malformations (truncated, extended, empty, half length) are checked against the signature check. For the policy, a grid of 14 spellings of the key `debug_mode` (case, whitespace, fullwidth characters, hyphen, camel case, a zero-width character, a Cyrillic look-alike, and others) against 16 spellings of the value meaning on and 13 meaning off, plus four structural wrappers.
+
+A mutant is first parsed with the same JSON parser the verifier uses. If it parses to the same document, it is a neutral rewrite and should be accepted. If it parses to a different document, it is a changed document, and the outcome is recorded as rejected cleanly, rejected only by an unhandled exception, or accepted. Every accepted changed document is attributed to the JSON path that changed. A field whose every change was rejected is one the verifier checks, and a field whose changes were accepted is one it does not read. The random seed was 20261028. Because the artifacts contain timestamps, exact counts vary by a few mutants between runs.
 
 ## 6. Results
 
-All results below are drawn directly from `evaluation/results/` (30
-trials per condition/test-case combination unless noted) and are reported
-per the caveats fixed in Section 5.2 — detection/success rates are 95%
-Wilson score intervals, timing means are 95% normal-approximation
-intervals, and every timing figure is a sandbox/local-hardware proxy, not
-a flight-hardware claim.
+All figures are from 30 trials per condition and case unless noted. Rates carry Wilson 95% intervals (n = 30 gives 89% to 100% for 30 of 30). Times are means.
 
-### 6.1 Happy-path and attack-matrix detection, stand-in stub artifacts
+### 6.1 Detection and time to detection
 
-Against both stand-in stub artifacts (the cFS-modeled C stub and the F
-Prime-modeled C++ stub), happy-path success and reproducibility were 100%
-(89%–100% Wilson CI, n=30) at every condition S0–S5, and all 15 attack
-matrix cases were detected at a 100% (89%–100% CI) rate at their tested
-condition, with zero false positives and zero false negatives in every
-condition's confusion matrix (`evaluation/results/phase5_report.md`,
-`phase6_report_fprime.md`). Traceability completeness — the fraction of
-stages expected active at a condition that actually produced evidence —
-was 100% at every condition, and mean evidence-record count per run
-(the manual-evidence-processing-effort proxy defined in Section 5.2)
-increases monotonically with condition: 7 records at S0, 9 at S1, 12 at
-S2, 15 at S3, 17 at S4, and 21 at S5 (`evaluation/results/
-phase5_summary.json`) — roughly triple the review burden at S5 relative
-to S0, the expected direction stated in Section 5.2, now with the actual
-measured figures rather than only the qualitative claim. Storage overhead
-relative to S0 increases monotonically with condition — 0 bytes at S0,
-613 bytes at S1 (SBOM),
-1264 bytes at S2 (+provenance), 1631 bytes at S3 (+attestation), 1624
-bytes at S4 (a 7-byte decrease from S3 — no formal significance test was
-run on this specific delta, but the magnitude is consistent with S4
-adding a rollback *mechanism* rather than new per-run evidence volume,
-not with a meaningfully larger artifact), and 5747
-bytes at S5 (+machine-readable authorization evidence, the single largest
-jump in the ladder) — identical byte counts across both stub stacks,
-since this metric depends on evidence-record shape, not the stub
-artifact's own content.
+All 15 cases were detected in 30 of 30 trials at their tested condition on all four targets, with no false positives or false negatives. Table 4 gives the mean time to detection, or to trusted restoration for cases that end in rollback. Case 13 is a direct call to the reconciliation check and not a full pipeline run, so its time is not comparable with the others. Differences among cases depend in part on the stage at which the pipeline halts, which was not decomposed.
 
-### 6.2 Generalization to real, unmodified NASA/JPL frameworks
+**Table 4.** Mean time to detection (D) or trusted restoration (R), in seconds, at the tested condition.
 
-The same 100%/0% pattern holds against both real, unmodified flight
-software frameworks (cFS `v7.0.1`, F´ `v4.2.2`): happy-path success,
-reproducibility of the ablation/adaptive mechanisms under test, and
-attack-matrix detection are structurally identical to the stub-artifact
-results (`evaluation/results/phase6_report_cfs-real.md`,
-`phase6_report_fprime-real.md`). One real, measured asymmetry emerged in
-build reproducibility specifically, not in any assurance-mechanism
-result: two independent from-scratch builds of the real F´ binary were
-byte-for-byte identical, while two independent builds of the real cFS
-binary differed in exactly 22 of approximately 915,000 bytes — isolated
-precisely (via `cmp -l` and a `strings` diff, not assumed) to a build
-timestamp string embedded by cFS's own build system at two byte offsets,
-plus a downstream 20-byte ELF build-ID hash that changes as a consequence
-of that timestamp. Every other byte of the cFS binary, including all
-flight-software logic, was identical across both builds. This is reported
-as a genuine finding about the two real frameworks' own build systems, not
-a defect in this project's pipeline, and it means the "reproducibility"
-metric's claim differs slightly by framework: fully bit-identical for F´,
-identical-modulo-a-known-and-explained-non-functional-difference for cFS.
+| Case | Condition | Metric | cfs | fprime | cfs-real | fprime-real |
+|---|---|---|---|---|---|---|
+| 1 | S2 | D | 0.263 | 0.325 | 0.335 | 0.392 |
+| 2 | S2 | D | 0.252 | 0.250 | 0.064 | 0.094 |
+| 3 | S1 | D | 0.260 | 0.301 | 0.278 | 0.352 |
+| 4 | S1 | D | 0.272 | 0.329 | 0.252 | 0.351 |
+| 5 | S2 | D | 0.254 | 0.302 | 0.319 | 0.384 |
+| 6 | S0 | D | 0.263 | 0.320 | 0.310 | 0.386 |
+| 7 | S0 | D | 0.251 | 0.301 | 0.275 | 0.341 |
+| 8 | S5 | D | 0.285 | 0.323 | 0.329 | 0.409 |
+| 9 | S2 | D | 0.268 | 0.356 | 0.331 | 0.438 |
+| 10 | S4 | R | 0.303 | 0.359 | 0.352 | 0.505 |
+| 11 | S4 | R | 0.297 | 0.356 | 0.426 | 0.539 |
+| 12 | S4 | R | 0.320 | 0.382 | 2.581 | 2.130 |
+| 13 | S5 | D | 0.0002 | 0.0002 | 0.0003 | 0.0003 |
+| 14 | S4 | R | 0.301 | 0.385 | 0.467 | 0.621 |
+| 15 | S5 | D | 0.402 | 0.533 | 0.720 | 1.033 |
 
-### 6.3 A hypothesis-vs-implementation divergence worth reporting explicitly
+### 6.2 Update acceptance accuracy
 
-Test case #12 ("stale attestation") was hypothesized in the threat model
-(Section 3.2; `docs/Threat-Model.md` §3) to be first detected at S3, the
-condition where onboard attestation itself activates. The actual
-evaluation harness tests this case at condition S4 instead, measuring
-`time_to_trusted_restoration` rather than a pure S3-level detection time
-(`evaluation/experiment.py::scenario_12`). This is a deliberate
-implementation choice, not a bug or a failed hypothesis: `scenario_12`
-establishes a confirmed S4 baseline, then injects a backdated attestation
-timestamp and measures whether the system not merely *flags* the stale
-attestation but actually completes a rollback in response
-(`rollback_outcome == "rolled_back"`). In other words, the implemented
-test is a strictly stronger claim than the original hypothesis — it
-measures recovery, not just detection — but it means the "S3" entry in
-the attack matrix table (Section 5.1) should be read as "the mechanism
-that makes detection possible activates at S3," not as "this specific
-trial was measured at S3." This distinction is stated here explicitly
-rather than left as a quiet inconsistency between Sections 3, 5, and 6,
-consistent with this paper's stated intent (Section 3.2) to report
-hypothesis divergences rather than reconcile them silently.
+The confusion matrices were identical on all four targets (Table 5). No attack case is tested at S3, because the cases whose mechanism activates at S3 (11, 12, 15) are tested at S4 or S5, so the S3 row contains only legitimate updates.
 
-### 6.4 Real-baseline comparison against unmodified TUF
+**Table 5.** Confusion matrix per condition, identical on all four targets (30 trials per case).
 
-Of the 15 attack matrix cases, an unmodified, real upstream `python-tuf`
-deployment (Section 5; `evaluation/baselines/tuf_baseline.py`) has a
-plausible native detection mechanism for exactly 3: case #6 (in-transit
-tampering, via TUF's target hash/length verification), case #7 (revoked
-signing key, via TUF's key-revocation/rotation mechanism), and case #9
-(downgrade attempt, via TUF's version-monotonicity protection). All three
-were caught at 30/30 (100%) trials
-(`evaluation/results/phase8_tuf_baseline.json`) — a result that confirms
-TUF works correctly for the guarantees it actually makes, and is reported
-as exactly that, not as evidence that TUF is "weak." The remaining 12
-cases, including 9 that are load-bearing parts of this project's own
-S1–S5 ladder (SBOM, build provenance, dependency-vulnerability scanning,
-authorized-builder identity, policy/configuration evaluation,
-installation-state management, runtime health checking, onboard
-attestation, ground/spacecraft state reconciliation, and rollback/recovery
-management — case #12's metadata-expiration mechanism is noted as a
-related but non-equivalent partial overlap, not scored as coverage), have
-no corresponding concept anywhere in TUF's specification. This is the
-paper's primary measured evidence for the claim that spacecraft-relevant
-supply-chain assurance is not simply "TUF applied to a new domain": the
-majority of what this project's ladder measures sits entirely outside an
-already-mature terrestrial framework's stated scope, not inside it and
-merely unimplemented.
+| Condition | TP | FN | TN | FP | Attack cases tested |
+|---|---|---|---|---|---|
+| S0 | 30 | 0 | 60 | 0 | 6, 7 |
+| S1 | 30 | 0 | 60 | 0 | 3, 4 |
+| S2 | 30 | 0 | 120 | 0 | 1, 2, 5, 9 |
+| S3 | 30 | 0 | 0 | 0 | none |
+| S4 | 30 | 0 | 120 | 0 | 10, 11, 12, 14 |
+| S5 | 30 | 0 | 90 | 0 | 8, 13, 15 |
 
-### 6.5 Ablation study: per-mechanism isolation
+### 6.3 Cost of each added mechanism
 
-To test whether each mechanism's contribution holds when it alone is
-disabled from an otherwise fully-active condition — rather than only
-observed cumulatively as conditions are added — six ablation cases each
-disable exactly one mechanism (SBOM, provenance, onboard attestation,
-trusted rollback, and machine-readable authorization, the last tested via
-two independent cases, #8 and #15) while leaving every other mechanism at
-its otherwise-active condition. In every case, the baseline (mechanism
-active) detection rate was 100% and the ablated (mechanism disabled) rate
-was 0%, with the effect explicitly attributed to the ablated mechanism
-specifically, identically across all four target stacks
-(`evaluation/results/phase8_ablation_cfs.json`,
-`phase8_ablation_fprime.json`, `phase8_ablation_cfs-real.json`,
-`phase8_ablation_fprime-real.json`) — including both real, unmodified
-NASA/JPL frameworks, not only the stub artifact this result might
-otherwise be assumed to be limited to. This clean isolation — full detection
-on, zero detection off, for every mechanism tested independently — is
-the direct evidence for this paper's central comparative claim (Section
-1): each mechanism in the ladder is doing genuine, individually
-attributable work, not contributing to a detection rate that would hold
-regardless of its presence.
+Happy-path success and reproducibility were 100% (89% to 100%) at every condition on all four targets, and traceability completeness was 100% at every condition. Table 6 and Fig. 2 give the cost progression.
 
-### 6.6 Adaptive-attacker scenarios
+**Table 6.** Mean happy-path pipeline time in seconds, and evidence records per run.
 
-Two scenarios combine multiple attack vectors in sequence to test whether
-an attacker adapting across attempts changes the outcome: (A) a rogue
-build runner combined with in-transit tampering, and (B) an interrupted
-installation combined with a stale attestation. Both were caught at a
-100% rate, and in both, the pipeline halted before the second vector could
-be exercised (`halted_before_second_vector_rate` = 1.0), identically
-across all four target stacks (`phase8_adaptive_cfs.json`,
-`phase8_adaptive_fprime.json`, `phase8_adaptive_cfs-real.json`,
-`phase8_adaptive_fprime-real.json`) — again including both real,
-unmodified frameworks. **This result must be read
-against its actual scope, not an inflated one:** these scenarios test
-whether the pipeline halts on the *first* of two vectors it already has a
-mechanism to detect — they are not a test of a genuinely evasive or
-time-adaptive attacker who might, for instance, attempt the second vector
-independently of the first, or attempt to time an attack around a
-detection window. Stating this boundary here, in Results, rather than
-only in Limitations, is deliberate: a reader should not come away from
-this section believing more was tested than was.
+| Condition | Evidence records | cfs | fprime | cfs-real | fprime-real |
+|---|---|---|---|---|---|
+| S0 | 7 | 0.228 | 0.288 | 0.287 | 0.375 |
+| S1 | 9 | 0.237 | 0.298 | 0.267 | 0.385 |
+| S2 | 12 | 0.253 | 0.291 | 0.305 | 0.445 |
+| S3 | 15 | 0.272 | 0.353 | 2.512 | 2.002 |
+| S4 | 17 | 0.295 | 0.364 | 2.483 | 1.976 |
+| S5 | 21 | 0.328 | 0.518 | 2.774 | 2.325 |
+
+**Table 7.** Storage added relative to S0, in bytes.
+
+| Condition | cfs | fprime | cfs-real | fprime-real |
+|---|---|---|---|---|
+| S0 | 0 | 0 | 0 | 0 |
+| S1 | 613 | 613 | 595 | 583 |
+| S2 | 1264 | 1264 | 1237 | 1219 |
+| S3 | 1631 | 1631 | 1593 | 1569 |
+| S4 | 1624 | 1623 | 1596 | 1578 |
+| S5 | 5747 | 5747 | 5720 | 5703 |
+
+![](docs/assets/manuscript/fig2_cost.png)
+
+On the cFS stand-in, the full ladder raises mean time from 0.228 s to 0.328 s (44%), triples the evidence records (7 to 21), and adds 5747 bytes, of which S5 contributes 4123. S5 is the most expensive single step in storage: its increment is more than twice the combined increment of S1 through S4. The S4 value is 7 bytes below S3 on the cFS stand-in; no significance test was run on that difference, and it is small compared with the S5 step. On the real frameworks the step from S2 to S3 (0.305 s to 2.512 s for cFS, 0.445 s to 2.002 s for F Prime) coincides with the introduction of the container-based health check (container launch and a wait for a boot-success line), and its components were not separated (Section 8). Between S0 and S2, the real frameworks add 6% (cFS) and 19% (F Prime). On the F Prime stand-in the full ladder adds 80% (0.288 s to 0.518 s). The 95% intervals for S0 and S5 do not overlap on either stand-in, but the per-step increments at S1 and S2 are within run-to-run noise on some targets (S1 is below S0 on cfs-real), so only the cumulative difference should be read as an effect.
+
+### 6.4 Real frameworks and build reproducibility
+
+Detection, ablation, and adaptive-scenario results on the real frameworks match those on the stand-ins. Build reproducibility differs. Two independent from-scratch builds of the real F Prime binary were byte-for-byte identical. Two builds of the real cFS binary differed in 22 of about 915,000 bytes. Using `cmp -l` and a diff of printable strings, the differences were isolated to a build timestamp string that cFS's build system embeds at two offsets, and to a 20-byte ELF build-ID hash that changes as a consequence. All other bytes, including all flight-software logic, were identical. This is a property of the two frameworks' own build systems, not of the pipeline. The reproducibility metric therefore means bit-identical for F Prime and identical apart from a known, explained, non-functional difference for cFS.
+
+### 6.5 Divergence from the expected detection condition
+
+Cases 7 and 9 were detected at S0 and S2 respectively, the earlier of their two expected conditions. Case 12 (stale attestation) was expected to be detected first at S3, where attestation activates. The harness tests it at S4, with a backdated attestation timestamp, and measures whether the system completes a rollback. The test is therefore stronger than detection alone, and the S3 entry in Table 3 should be read as the condition at which the detecting mechanism becomes available.
+
+### 6.6 Ablation
+
+Table 8 gives the ablation results. In every case detection was 100% with the mechanism active and 0% with it removed, on all four targets (n = 30 each). This shows that detection of each failure class depends on its own mechanism and is not supplied by another mechanism. Removing a check removes its detection by construction, so the result establishes non-redundancy and provides no information about robustness to attack variants.
+
+**Table 8.** Ablation results (identical on all four targets).
+
+| Mechanism removed | Case | Condition | Detection active | Detection ablated |
+|---|---|---|---|---|
+| SBOM | 4 | S1 | 100% | 0% |
+| Build provenance | 5 | S2 | 100% | 0% |
+| Onboard attestation | 12 | S4 | 100% | 0% |
+| Trusted rollback | 11 | S4 | 100% | 0% |
+| Machine-readable authorization | 15 | S5 | 100% | 0% |
+| Machine-readable authorization | 8 | S5 | 100% | 0% |
+
+### 6.7 Adaptive scenarios
+
+Both scenarios were caught in 30 of 30 trials on all four targets, and in both the pipeline halted before the second vector was attempted: scenario A at ground authorization and scenario B at installation. The scenarios test a halt on the first of two vectors the pipeline already detects. They do not test an attacker who attempts the second vector independently or times an attack around a detection window.
+
+### 6.8 Baseline coverage
+
+Table 9 and Fig. 3 compare the baselines with the ladder. The hash-only and TUF columns come from executed harnesses. The Uptane column comes from reading the standard and was not executed.
+
+A hash-only deployment rejects case 6, and only when the digest reaches the deployer by a path the attacker cannot rewrite. When the attacker controls the host or channel that serves both artifact and digest, the same attack passes (0 of 30 rejected). The hash check passes the artifact in cases 1, 2, 3, 4, 5, 7, 8, and 9, because in each the malicious or superseded artifact is published with its own correct digest. These outcomes follow from what a digest is, and the harness demonstrates them with real bytes and real SHA-256 comparisons. Cases 10 to 15 concern state after installation, which a pre-install check does not address.
+
+TUF has a native mechanism for three cases: 6 (target hash and length), 7 (key revocation through root rotation), and 9 (version monotonicity). All three were caught in 30 of 30 trials. The other 12 cases have no corresponding mechanism in TUF's specification. For case 1, a binary built from other source and then signed is consistent with its own signed metadata, so TUF has no notion of source-to-binary correspondence. TUF's metadata expiration partly overlaps with case 12 but concerns the repository's own metadata, not the state of running software, and it is not scored as coverage.
+
+Uptane is the closer comparison for a system with a ground-side decision service and a vehicle-side verifier. Reading the standard [21], three cases have a native mechanism: 6 (hashes and length in the Targets metadata must match the image), 7 (the Root role distributes and revokes keys), and 9 (release counters and metadata version checks against rollback). Four have a partial analogue: 10 (installation should occur with a backup of the current image, but no detection or recovery procedure is specified), 12 (the ECU version report carries a verifiable time and a nonce that the Director checks, but staleness of an installed-state quote is not specified), 13 (the Director compares the version manifest with its inventory database, but the required checks cover ECU presence, signatures, and time, and the database records identities and keys, not installed images or policy), and 15 (the ECU-signed version report contains the hash of the installed image, but it is self-reported and the threat model assumes at most one compromised ECU per vehicle). Cases 1, 2, and 5 are stated to be out of scope, since the standard excludes compromise of the supply chain and the build system. Cases 3, 4, 8, 11, and 14 are not addressed: the standard contains no SBOM, dependency data, policy language, health check, or verification of a recovery image. Uptane therefore shares TUF's boundaries for provenance, SBOM, policy, health validation, and recovery, and comes closer than TUF to the state-reconciliation cases (12, 13, and 15) through its version report and Director checks. The classification is conservative in one respect: a standard that says "SHOULD" for a behavior is counted as a partial analogue, not as coverage.
+
+These are statements about design scope. They show that the failure classes in this matrix lie outside what the baselines were built to address. They do not show that TUF or Uptane is weak, they are not a measured comparison of detection performance, and the Uptane column has not been confirmed by running an implementation.
+
+**Table 9.** Coverage of the 15 cases. Hash-only and TUF were executed. Uptane is read from the standard. Partial means a related mechanism exists that does not specify the behavior tested.
+
+| Case | Hash-only | TUF | Uptane (specification) | Ladder (first condition) |
+|---|---|---|---|---|
+| 1 | not covered | not covered | out of scope | S2 |
+| 2 | not covered | not covered | out of scope | S2 |
+| 3 | not covered | not covered | not addressed | S1 |
+| 4 | not covered | not covered | not addressed | S1 |
+| 5 | not covered | not covered | out of scope | S2 |
+| 6 | caught (digest on independent path) | caught | native | S0 |
+| 7 | not covered | caught | native | S0 |
+| 8 | not covered | not covered | not addressed | S5 |
+| 9 | not covered | caught | native | S2 |
+| 10 | not covered | not covered | partial | S4 |
+| 11 | not covered | not covered | not addressed | S4 |
+| 12 | not covered | not covered | partial | S4 |
+| 13 | not covered | not covered | partial | S5 |
+| 14 | not covered | not covered | not addressed | S4 |
+| 15 | not covered | not covered | partial | S5 |
+
+![](docs/assets/manuscript/fig3_coverage.png)
+
+### 6.9 Mutation experiment
+
+Binary and signature. All 204 mutations of the binary (200 bit flips and four truncations or extensions) were rejected by the signature check, and the 200 bit flips were also rejected by the SBOM's declared-hash check and by the provenance subject-digest check. All 204 mutations of the signature file were rejected. No exception was raised.
+
+Documents. Table 10 gives the outcomes for the three JSON documents. In the first run, 408 of the 523 rejections of mutated SBOMs, 107 of 465 for provenance, and 336 of 579 for attestation were not clean rejections: the verifier raised an unhandled exception (a JSON decoding error, a type error, a missing key). The update was still not accepted, because the exception propagates out of the pipeline run, but no evidence record of the rejection was written. This is a defect in a design that treats evidence as primary. The 15 manually specified cases did not expose it, because each of them presents a well-formed document that fails a check. The three verifiers now convert parse and structure errors into a clean rejection with an evidence record, and the repeated run produced no exceptions.
+
+**Table 10.** Outcomes for mutated documents after the fix. "Unhandled before fix" is the number of rejections in the first run that were unhandled exceptions.
+
+| Document (verifier) | Mutants | Rejected | Unhandled before fix | Accepted, content changed | Accepted, same content |
+|---|---|---|---|---|---|
+| SBOM (S1) | 793 | 523 | 408 | 264 | 6 |
+| Provenance (S2) | 749 | 465 | 107 | 278 | 6 |
+| Attestation (S3) | 594 | 585 | 336 | 0 | 9 |
+
+The accepted changed documents show which fields each verifier reads. Every change to the declared artifact hash in the SBOM was rejected, as was every deletion of a required component field (name, version, or type, for each component). Changes to `bomFormat`, `specVersion`, `serialNumber`, `version`, the hash algorithm label, and the name, type, and version of the other components were accepted. For provenance, every change to the subject digest and to the builder identity was rejected. Changes to `_type`, `predicateType`, `buildType`, the recorded source commit, the dirty-tree flag, the recorded release version, and the subject name were accepted. Two consequences follow. First, the source commit in the provenance record is stored and never compared with anything, so S2 attests the builder identity and the binding to the binary and does not verify the source. Second, the SBOM and provenance documents are not signed in this implementation, so a party able to write both can produce a consistent pair; the checks establish that each document is consistent with the binary, not who produced it. For attestation, which is signed over a canonical form of the quote, no change to the quote or the signature was accepted. The nine accepted attestation mutants were six neutral rewrites and three that changed only the letter case of the signature's hex digits and decode to the same bytes.
+
+Policy. Table 11 gives the results for the prohibited-configuration rule. Before the fix, the rule accepted four spellings of the value meaning on (`"y"`, `"t"`, `"enabled"`, `"enable"`) under every equivalent spelling of the key, 24 of 96 combinations, and it rejected a flag whose value was `[false]` or `{"enabled": false}`, 12 of the 182 combinations meaning off, which is a false positive. The value vocabulary was extended, containers are now judged by their members, and a string that is neither a recognized on-value nor a recognized off-value is treated as on, so an unrecognized spelling fails closed. After the fix, no equivalent spelling of the key with any on-value was accepted, and no off-value was rejected. Eight alternative key names (`debug-mode`, `debugMode`, `build.debug_mode`, a name containing a zero-width character, a Cyrillic look-alike, `debug__mode`, `debug_modes`, `debug`) and three structural wrappers (a nested object, a list of objects, a JSON-encoded string) are accepted under every value. Whether these mean "debug on" depends on how the flight software parses its configuration, which a deny-list on the ground cannot know. These cases are reported as a structural limitation of deny-list policies and not as defects that a longer list would remove.
+
+**Table 11.** Policy rule outcomes on the configuration grid (accepted means the configuration passes the rule).
+
+| Group | Configurations | Accepted before fix | Accepted after fix |
+|---|---|---|---|
+| Equivalent key spelling (6), on-value (16) | 96 | 24 | 0 |
+| Equivalent key spelling (6), off-value (13) | 78 | 66 | 78 |
+| Alternative key name (8), on-value (16) | 128 | 128 | 128 |
+| Structural wrapper, on | 4 | 3 | 3 |
+
+The regression suite, which exercises all 15 cases at every condition, passes after the changes (Section 6.10), and 37 new tests cover the fixes. The mutation counts are for one run. The 30-trial timing and detection experiments of Sections 6.1 to 6.8 were not rerun after the fixes, which change only the error path of three verifiers and the value vocabulary of one rule.
+
+### 6.10 Reproducing the results
+
+The code, test suite, raw results, and this paper's figures are in the archived release cited in the Data and code availability statement. Python 3.10 or newer is required, and Docker is needed only for the real-framework targets. From the repository root:
+
+```
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+python3 -m pytest -q                           # regression suite
+python3 evaluation/experiment.py               # Sections 6.1 to 6.3 (stand-in cfs)
+python3 evaluation/experiment.py fprime        # second stand-in
+python3 evaluation/ablation.py                 # Section 6.6
+python3 evaluation/baselines/tuf_baseline.py   # Section 6.8, TUF
+python3 evaluation/baselines/hash_only_baseline.py   # Section 6.8, hash-only
+python3 evaluation/baselines/uptane_spec_analysis.py # Section 6.8, Uptane (specification)
+python3 evaluation/mutation_attacks.py               # Section 6.9
+python3 docs/assets/make_manuscript_figures.py       # Figures 1 to 3
+```
+
+Raw outputs are written to `evaluation/results/`. Runs of the full 30-trial evaluation take several minutes per target. Absolute times depend on the machine, and the comparisons among conditions are the reproducible quantity. The real-framework targets require building the pinned cFS and F Prime images, as described in the repository's `cfs-app` and `fprime-app` directories.
 
 ## 7. Discussion
 
-### 7.1 What the marginal-cost results imply for mission design tradeoffs
+### 7.1 What the results show and what they do not
 
-The central practical question this paper set out to answer was not
-whether stronger assurance mechanisms work — Section 6 shows each does,
-cleanly and individually — but what each one costs relative to what it
-buys. Read against Section 6.1's overhead figures, a mission designer
-choosing among conditions has a genuinely graduated set of options rather
-than a single "secure or not" decision: S1 and S2 (SBOM and provenance)
-add a few hundred bytes each and, per the stub-artifact happy-path timing
-in Section 6.1, roughly 10–25 milliseconds of cumulative timing overhead
-over the S0 baseline in this sandbox environment — closing the entire
-class of build-integrity
-and dependency-visibility gaps that both this paper's own attack matrix
-and Section 6.4's TUF comparison show a signature-only baseline has no
-visibility into at all. S5's authorization evidence is, by a wide margin,
-the most expensive single step in the ladder — more than triple any other
-mechanism's storage footprint — and correspondingly the one whose
-cost/benefit case rests most heavily on how much a mission actually values
-machine-readable, auditor-consumable evidence over the cheaper mechanisms
-already catching the same underlying attacks in this evaluation's specific
-attack matrix (case #8, prohibited-but-signed configuration, is the one
-case in this matrix S5's policy check is *uniquely* positioned to catch
-here; cases #13 and #15 route through S5 as well, but represent a
-different mechanism — inventory/telemetry reconciliation — bundled into
-the same condition). This suggests a real, if narrow, design lever: a
-mission with tight storage/link-budget constraints and low concern about
-insider-approved-but-prohibited configurations could reasonably stop at
-S4 without giving up detection coverage this specific attack matrix
-tests for; a mission where auditability to a third party (a regulator, a
-launch-services customer, a multi-stakeholder mission) is itself a
-requirement would find S5 worth its cost regardless of the marginal
-detection-rate argument, since machine-readable evidence is doing
-compliance work, not just detection work.
+The 100% detection and 0% ablated results of the 15-case matrix are interpreted as verification of the implementation. Each of the 15 injections was written to trigger a specific check, and each check fires. This outcome is useful, because an assurance mechanism that does not detect what it is designed to detect has no value, and the evaluation identified and corrected several such defects during development. It is not evidence that the mechanisms would detect an attacker who varies the method. The ablation adds a different kind of evidence: it shows that no mechanism's detection is carried by another, so each line item of the ladder is a distinct unit of assurance.
 
-### 7.2 What the TUF gap implies, and what it doesn't
+The measurements that do not depend on the attacker's behavior are the cost figures (Section 6.3), the build reproducibility finding (Section 6.4), and the coverage analysis (Section 6.8). The first two describe the pipeline and its targets, and the last describes the scope of the compared designs.
 
-Section 6.4's finding — that 12 of 15 attack matrix cases have no
-corresponding concept in TUF's specification at all — is this paper's
-strongest evidence against the "just SLSA/in-toto/TUF in a new domain"
-framing (Section 1; `docs/Research-Paper-Outline.md` §4 objection 1), but
-it is worth being precise about what the finding does and does not show.
-It shows that TUF, specifically, does not natively address build
-provenance, SBOM/dependency visibility, installation-state management,
-runtime health/attestation, or ground/spacecraft state reconciliation —
-because TUF was never designed to. It does not show that no combination
-of existing terrestrial tools could cover the same ground: SLSA-format
-provenance generators, CycloneDX/SPDX SBOM tooling, and various runtime
-attestation frameworks each address a subset of what this paper's ladder
-covers, and a terrestrial system composing several of them (rather than
-using TUF alone) would close some of that 12-case gap. What no single
-existing framework or straightforward composition addresses, as far as
-this paper's evaluation goes, is the *spacecraft-specific* combination:
-autonomous rollback decisions with no live operator (S4), and structured
-evidence aggregation specifically shaped for a ground/auditor consumer
-who cannot inspect the artifact directly (S5). That narrower, more
-defensible claim — not "no terrestrial tool does any of this" — is the
-one this paper's evidence actually supports, and Section 1's framing
-should be read accordingly rather than as a claim of total novelty.
+The mutation experiment (Section 6.9) was added to move beyond that boundary for the document and configuration checks. It identified two defects that the 15 cases had not exposed: malformed input was rejected only by unhandled exceptions, and the policy rule missed equivalent spellings of the prohibited flag. Both were corrected, which indicates that generated variants can reveal problems that manually specified cases do not. The experiment also established which fields each verifier evaluates. The attestation verifier, which is cryptographically bound to its content, accepted no change. The SBOM and provenance verifiers accepted changes to every field they do not read, among them the recorded source commit, so a pass at S2 should be interpreted as "built by an authorized builder identity and bound to this binary", and not as "built from this source".
 
-### 7.3 What does and does not generalize beyond this evaluation
+The experiment does not substitute for an independent evaluation. The operators and the grid of configuration spellings were selected by the author, the documents are the pipeline's own formats, and the experiment does not exercise the runtime mechanisms (attestation freshness, health checks, rollback). An evaluation that supports claims about unanticipated attacks would additionally require injectors and variants produced by a party other than the author of the detectors, a human red team attempting to defeat the pipeline with knowledge of its design, and real operational artifacts and link traces. None of these is part of the present study; Section 8 lists them as the principal direction for follow-on work.
 
-Section 6.2's real-framework results are genuine evidence that this
-project's assurance mechanisms are not artifacts of the stand-in stubs'
-simplicity — the identical 100%/0% pattern against real cFS and F´
-binaries is the strongest single piece of evidence in this paper for that
-specific claim. It is not evidence that the same results would hold on
-flight-representative hardware, over a real CCSDS-conformant link, or
-under a genuinely adaptive adversary; each of those is a different claim
-requiring different evidence, and Section 8 (Limitations) states plainly
-which of them this evaluation does and does not license. The cFS-vs-F´
-reproducibility asymmetry found in Section 6.2 is a useful illustration of
-this boundary in miniature: it is a real result about two real build
-systems, discovered by direct measurement rather than assumed, and it
-would have been invisible to an evaluation that only ever used the
-stand-in stubs — but it is also a result specific to *these two
-frameworks' current build tooling*, not a general claim about
-reproducibility of spacecraft flight software as a category.
+### 7.2 Implications for mission design
 
-### 7.4 The ablation study's implication: mechanisms are doing individual work, not incidental work
+The cost results give a mission designer a graded set of options. On the cFS stand-in, SBOM and provenance (S1 and S2) add 613 and 651 bytes and about 10 ms and 25 ms of cumulative time over S0, although the time increments are within noise on some targets (Section 6.3). In this matrix they are the levels at which the failure classes of cases 1 to 5 become detectable. S5 is the most expensive single step in storage (4123 bytes against 1624 for S1 to S4 combined) and adds 33 ms over S4 on the cFS stand-in. It is also the level at which cases 8, 13, and 15 become detectable, and the ablation shows that removing the machine-readable authorization mechanism removes their detection (Table 8). A mission with tight storage and link budgets could stop at S4 and would then forgo coverage of those three failure classes, which concern prohibited but signed configurations, disagreement between ground and spacecraft inventory, and false installation telemetry. A mission that must show an auditor what was approved and what is running would need S5 for the evidence itself.
 
-A standing risk in any additive-ladder evaluation is that a
-higher-condition detection result is actually being carried by a
-lower-condition mechanism that happens to still be active, rather than by
-the specific mechanism nominally under test — for instance, S5's
-100% detection on case #8 could, in principle, be substantially explained
-by S2's provenance check catching something adjacent, with the S5 policy
-check itself contributing little. Section 6.5's ablation results directly
-rule this out for every mechanism tested: disabling one mechanism from an
-otherwise fully-active condition drops that mechanism's specific case from
-100% to 0%, not to some intermediate rate that would suggest a different
-mechanism was doing most of the real work. This is the paper's most
-direct evidence that the S0–S5 ladder's individual line items are
-meaningful units of assurance, not just cumulative labels on an
-increasingly capable but internally undifferentiated system.
+### 7.3 Why a matching hash does not close the problem
+
+A natural question is what remains once the deployed bytes match a published release hash. The baseline results answer it directly. The digest binds bytes to bytes. Whoever can publish an asset also publishes its digest, so the check cannot distinguish an authorized release from an unauthorized one. The digest is computed over the upload and therefore says nothing about the source, the build, or the dependencies that produced it. A superseded release has a valid digest, and nothing in a digest describes the configuration or the state of the spacecraft after installation. An onboard verifier also needs a trust root that it holds independently, which a digest served from the same host does not provide. Release digests are useful and should be used. The point of the ladder is that integrity of the bytes is one property among several that a flight update depends on.
+
+### 7.4 Relation to composed terrestrial tooling
+
+The coverage analysis does not show that no combination of existing tools could address the 15 cases. Reading the specifications, a composition could plausibly cover most of the matrix. Uptane or TUF covers cases 6, 7, and 9 and, for Uptane, part of 12, 13, and 15. SLSA provenance and in-toto attestations address the subject of cases 1, 2, and 5 (the Uptane standard itself names in-toto as a complement). CycloneDX or SPDX tooling with a vulnerability scanner addresses cases 3 and 4, a general policy engine addresses case 8, and the RATS architecture addresses attestation (case 12). Cases 10, 11, and 14 (interrupted installation, failed health check, invalid recovery image) concern the installer, boot loader, and health monitor, not the supply-chain frameworks, and would need an A/B update mechanism with health-gated rollback from elsewhere. The ladder can be read as one such composition with its marginal costs measured. SLSA, in-toto, Sigstore, RATS, and Uptane were not executed against the matrix, and this mapping is a reading of their specifications and not a measurement. What the present evaluation does not show is whether such a composition would work as a whole without the integration the ladder provides, or what it would cost. Two properties of the spacecraft setting remain less clearly covered by the tools reviewed: an autonomous rollback decision with no operator in the loop (S4), and evidence aggregated for a ground or audit consumer who cannot inspect the artifact (S5). This is an observation about the literature reviewed. Evaluating a composed terrestrial pipeline against the same matrix is a direction for future work.
+
+### 7.5 Threats to validity
+
+Construct validity: the injections and detectors are author-specified, so detection rates measure implementation correctness, and the mutation operators and the policy spelling grid are also the author's. Internal validity: outcomes are deterministic, so only timing varies between trials, and all results come from one machine. External validity: the pipeline is a simulation. It has no flight hardware, no CCSDS-conformant link, and no hardware root of trust, and the two real frameworks are run unmodified inside containers. Conclusion validity: confidence intervals for rates describe repeated execution and not sampling from an uncertain process, and timing intervals describe machine-level variation.
 
 ## 8. Limitations
 
-Six boundaries below mark what this evaluation does not establish. They
-are listed explicitly here so a reader does not have to infer them from a
-close reading of Sections 4 through 7.
-
-1. **Uplink realism.** The uplink model in Section 4.2 is only loosely,
-   order-of-magnitude informed by CCSDS-class link budgets; it has not
-   been validated against any specific mission's actual telemetry, and
-   this project does not attempt RF or physical-layer simulation
-   (`docs/PRD.md` non-goals). Uplink-stage results in Section 6 should
-   therefore be read as evidence about a terrestrial-analog pipeline
-   under spacecraft-motivated constraints (latency, loss, and bandwidth
-   ceilings modeled as configurable parameters), not as evidence about
-   behavior over an actual spacecraft communications link.
-
-2. **Attestation has no hardware root of trust.** Onboard attestation in
-   this implementation is a software-held Ed25519 signature over a
-   measurement, not a TPM-backed hardware root of trust (Section 4.2).
-   The S3-and-above results in Section 6 show that the attestation
-   *concept* works in this pipeline: proving what is actually running,
-   not just what was sent. They do not show resistance to the specific
-   threat a hardware root exists to prevent, namely exfiltration of the
-   attestation key itself. A mission-grade system making this same claim
-   would need hardware backing that this project's software stub only
-   approximates.
-
-3. **Container overhead confounds the real-framework timings.** The real
-   cFS and F´ binaries in Section 6.2 run inside Docker on the pipeline's
-   host machine. The persistent-process health-check strategy that makes
-   S3-and-above evaluation possible against these binaries (Section 4.3)
-   adds container-launch overhead of roughly 2.4 to 2.6 seconds per
-   invocation, a figure observed directly during testing. Real-framework
-   timing figures in Section 6 therefore mix genuine pipeline-stage cost
-   with this infrastructure overhead, and the two have not been
-   separated. What these results support is that detection and recovery
-   work correctly against real, unmodified flight-software frameworks.
-   What they do not support is that the observed timings approximate
-   native flight-computer execution; confirming that would mean running
-   outside a container on representative hardware, which this evaluation
-   does not do. The real-framework results in Sections 6.2, 6.5, and 6.6
-   all share this confound.
-
-4. **Reproducibility is mainly a stub-artifact finding.** Section 6.1's
-   reproducibility figures come from the stand-in stubs. Section 6.2 adds
-   two real, measured data points: F´ is fully bit-identical across
-   independent builds, while cFS differs in exactly 22 explained,
-   non-functional bytes. Both are evidence about these two frameworks'
-   current build tooling at the pinned versions (cFS `v7.0.1`, F´
-   `v4.2.2`), not a general claim about build reproducibility as a
-   property of flight software as a category.
-
-5. **The adaptive-attacker scenarios measure whether the pipeline halts,
-   not whether an attacker is evasive.** As already noted in Section 6.6,
-   the two adaptive scenarios in Section 5.1 confirm that the pipeline
-   halts before a second attack vector is attempted. They do not model an
-   attacker who varies timing, avoids the specific signatures this
-   pipeline's mechanisms check for, or pursues the second vector on an
-   independent path instead of the fixed sequence tested here. Extending
-   these results to a general claim of resistance against a truly
-   adaptive or evasive adversary would overreach what was measured.
-
-6. **Only TUF was empirically baselined.** SLSA, in-toto, and Sigstore
-   were not. Section 6.4's measured comparison, and this paper's central
-   claim that spacecraft-specific constraints go unaddressed by
-   "terrestrial frameworks applied to a new domain," rest on a real
-   baseline comparison against TUF specifically. Section 7.2 already
-   narrows the claim for this reason: the evidence supports "TUF
-   specifically does not cover this," not "no terrestrial tool or
-   combination of tools could." That narrowing is repeated here as its
-   own limitation so a reader scanning specifically for this gap finds it
-   named plainly, not only inferable from the Discussion. A real baseline
-   comparison against a SLSA-conformant provenance pipeline or an in-toto
-   attestation chain would be a natural next extension of this work.
-
-A seventh item concerns independent review rather than technical scope,
-and is discussed separately below because it bears on how much weight the
-paper's own self-assessment should carry.
-
-**No completed independent human security review.** Independent
-verification of this project's threat model and mitigations to date
-consists of four independent, blind, AI-driven red-team review passes
-(Section 3; `docs/Threat-Model.md`) and a from-scratch comparison against
-an unmodified upstream `python-tuf` deployment (Section 6.4). A human
-domain-expert review was requested but had not been completed at the time
-of submission. AI-driven review, however methodically structured, is not
-a substitute for the judgment a human security practitioner brings,
-particularly regarding which findings matter operationally and which
-attacker capabilities are realistic for a spacecraft mission. This is
-treated here as an open limitation, not a resolved concern. If a human
-review is completed prior to publication its findings will be
-incorporated; otherwise it remains a direction for follow-on work.
-
-**A second, related gap: the same process that designed the threat model
-also designed and red-teamed its own mitigations.** The S0–S5 ladder, its
-implementation, and the four red-team review passes that pressure-tested
-it were all produced by one author-plus-AI process. Each red-team pass
-ran in a fresh context with no access to prior findings or the existing
-threat model until after its own testing was complete, and the second,
-third, and fourth passes were each scoped in part at what earlier passes
-had missed, including the fix code the process itself had produced. The
-degree of independence achieved varied by pass, and is stated exactly
-rather than folded into a blanket "fresh context" claim: the second,
-third, and fourth passes used AI systems other than the one that
-performed the majority of this project's design and implementation work,
-so they carry both system-level and context-level independence; the
-first pass used that same underlying AI system in a separate session with
-no access to prior context, so it carries context-level independence
-only. This combination of independence found and led to fixes for 21
-defects (Section 1) that a purely self-reviewing process cannot be
-assumed to find by construction. It does not, however, resolve the
-deeper point this limitation names. No review pass was conducted by a
-party outside the author-plus-AI process that built the system under
-review, and even the three system-independent passes remain within a
-process one author directed throughout. The accurate summary this
-evidence supports is narrower than "independently verified": this process
-found and fixed real, non-trivial gaps across several independent-context
-passes, most of them also independent at the AI-system level, including
-gaps in its own earlier fixes. That is not the same claim as having
-resolved the underlying methodological concern.
+1. **Author-specified injections.** Detection results verify the implementation against anticipated failures. The mutation experiment adds generated variants, but its operators, documents, and policy grid are the author's, and it does not cover the runtime mechanisms. The results do not estimate performance against an adversary who adapts, as discussed in Section 7.1.
+2. **Uplink realism.** The link model is informed only to an order of magnitude by CCSDS-class link budgets and has not been validated against any mission's telemetry. No RF or physical-layer behavior is simulated.
+3. **No hardware root of trust.** Attestation is a software-held Ed25519 signature over a measurement. The results show that the attestation concept works in this pipeline. They do not show resistance to extraction of the attestation key, which a hardware root exists to prevent.
+4. **Container overhead.** The real cFS and F Prime binaries run inside Docker. The persistent-process health check that makes S3 and above measurable launches a container and waits for a boot-success line. Mean happy-path times on the real frameworks rise from 0.3 to 0.4 s at S0 to S2 to 2.0 to 2.8 s at S3 to S5. This increase is attributed to the container launch and the boot wait; the two were not separated, and the attestation cost within them was not measured. The timings do not approximate flight-computer execution.
+5. **Reproducibility.** The reproducibility figures come mainly from the stand-in stubs. The two real-framework data points apply to the pinned versions (cFS v7.0.1, F Prime v4.2.2) and not to flight software in general.
+6. **Adaptive scenarios.** The two scenarios test whether the pipeline halts at the first vector. They do not model an attacker who varies timing or evades the checks.
+7. **Baselines.** Only a hash-only deployment and TUF were executed. Uptane was classified from its specification and has not been confirmed by running an implementation. SLSA, in-toto, Sigstore, and RATS were not evaluated. All comparisons are scope analyses.
+8. **Independent review.** No human domain expert has completed a review of the threat model and mitigations. The four AI-driven review passes (Section 5.6) found and led to fixes for real defects, including defects in earlier fixes. The first pass used the same AI system that did most of the implementation work, in a separate session, so it was independent in context but not in system. The other three used different systems. All four were directed by one author, and none was conducted by a party outside the author-plus-AI process. This does not substitute for human review.
+9. **Unsigned SBOM and provenance, unchecked fields, and rerun scope.** In this implementation the SBOM and provenance documents are not signed, and the verifiers do not read several fields, including the recorded source commit (Section 6.9). The fixes made after the mutation experiment changed the error path of three verifiers and the value vocabulary of the policy rule. The regression suite passes after them, and the 30-trial experiments of Sections 6.1 to 6.8 were not rerun.
 
 ## 9. Conclusion
 
-This paper set out to answer a narrower question than "does spacecraft
-software need better supply-chain security" — namely, how much
-additional assurance each of six additive mechanisms actually buys, and
-at what measured cost, under constraints that make spacecraft update
-failures harder to recover from than most terrestrial software failures.
-The six-level S0–S5 ladder and its reference implementation make that
-question answerable rather than argued: every mechanism, tested
-individually via ablation (Section 6.5) and cumulatively across a 15-case
-attack matrix (Section 6.1), detects what it is designed to detect at a
-100% rate across four independent target software stacks, including two
-real, unmodified NASA/JPL flight software frameworks (Section 6.2) — and
-a real, unmodified baseline comparison against TUF (Section 6.4) shows
-that 12 of those 15 cases have no corresponding concept in an
-already-mature terrestrial update-security framework's specification at
-all, which is measured evidence, not assertion, for this paper's central
-claim that spacecraft-specific constraints change the engineering problem
-rather than merely relocating it.
+This paper measured what each of five added mechanisms contributes to a signed spacecraft update pipeline, and what it costs. On four targets, including the unmodified NASA cFS and JPL F Prime frameworks, each mechanism detected its assigned failure class and no other mechanism supplied that detection. The full ladder adds 44% (cFS stand-in) and 80% (F Prime stand-in) to mean pipeline time, triples evidence records, and adds 5.7 kB of storage, with S5 the largest single step in storage. Two builds of F Prime were bit-identical and two builds of cFS differed in 22 bytes traced to a timestamp. A hash comparison and TUF each address only a small subset of the 15 failure classes, because the rest lie outside their design scope, and a reading of the Uptane standard finds three native mechanisms, four partial analogues, and eight cases that are out of scope or not addressed. A mutation experiment on the document, signature, and policy checks identified two defects not exposed by the manually specified cases, both subsequently corrected, and showed that the SBOM and provenance verifiers do not read several fields, including the source commit.
 
-That claim is deliberately narrower than "no existing tool addresses
-spacecraft supply-chain security" (Section 7.2) — what this paper's
-evidence actually supports is that the *specific combination* this ladder
-tests, autonomous recovery with no live operator plus structured evidence
-for a ground/auditor consumer who cannot inspect the artifact directly,
-sits outside what TUF alone, and plausibly any straightforward
-composition of existing terrestrial tools, was designed to cover. Section
-8 states, without qualification, what this evaluation does not license:
-claims about flight-representative hardware timing, RF-accurate uplink
-behavior, resistance to a genuinely adaptive adversary, or a resolved
-answer to the question of whether a process can adequately audit its own
-security design. Two of those boundaries — flight-hardware timing and
-independent human review — are the most direct next steps for this work,
-not incidental gaps; the rest (RF realism, adversarial adaptivity) mark
-where this paper's contribution ends and a different, complementary study
-would need to begin.
-
-The practical upshot for a mission designer, per Section 7.1, is that the
-S0–S5 ladder is not an all-or-nothing decision: the cheapest mechanisms
-close an entire class of build-integrity and dependency-visibility gaps
-this project's evidence shows a signature-only baseline has no visibility
-into at all, while the most expensive step is worth its cost specifically
-when third-party auditability is itself a mission requirement, not merely
-when marginal detection rate is the only consideration. Making that
-tradeoff visible and measurable — rather than leaving "how much security
-is enough" as a judgment call with no comparative basis — is this paper's
-contribution to a domain that has, to date, applied far less empirical
-scrutiny to its own software update assurance than the consequences of
-getting it wrong would seem to warrant.
+These results verify an implementation and quantify its cost. They do not establish detection against unanticipated attacks, behavior on flight hardware, or hardware-rooted attestation. The most direct next steps are variants and injectors produced by an independent party and a human red team, an executed Uptane baseline and composed terrestrial pipeline against the same matrix, signing of the SBOM and provenance documents with verification of the source commit, and measurement on flight-representative hardware.
 
 ---
 
-## AI-use disclosure statement
+## CRediT authorship contribution statement
 
-*[Use the drafted text in `docs/Research-Paper-Outline.md` §7 verbatim,
-adapted to Computers & Security's required placement: a section titled
-"Declaration of generative AI and AI-assisted technologies in the writing
-process," immediately above the references.]*
+**Aman Singh:** Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Resources, Data curation, Writing – original draft, Writing – review & editing, Visualization, Supervision, Project administration.
 
-## Data / code availability statement
+## Declaration of competing interest
 
-*[Use the drafted text in `docs/Research-Paper-Outline.md` §8, dropping
-the "request from the corresponding author" sentence only if submitting
-to a double-blind venue — not applicable for Computers & Security.]*
+The author declares no competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+## Funding
+
+This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+
+## Data and code availability statement
+
+The source code, test suite, evaluation harness, raw results, and figure scripts are archived as a versioned release at Zenodo (DOI: [ZENODO-DOI]). Development continues at https://github.com/Zartharas/verifiable-spacecraft-lifecycle.
+
+## Declaration of generative AI and AI-assisted technologies in the manuscript preparation process
+
+During the preparation of this work the author used Claude (Anthropic), OpenAI's models, Zhipu AI's GLM, and DeepSeek. Claude wrote most of the pipeline's source code, test suite, and documentation to the author's specifications, diagnosed the root cause of several environment-dependent defects during real-hardware validation, designed the ablation study and adaptive scenarios, and assisted in drafting and revising this manuscript, including the revision in response to peer review. Four independent review passes of the codebase were run in fresh contexts without access to prior findings: the first with Claude in a separate session, and the second, third, and fourth with OpenAI's models, Zhipu AI's GLM, and DeepSeek respectively. Together they led to fixes for 21 defects, and 10 further defects were found during real-hardware validation.
+
+AI-generated code, diagnoses, and findings were verified before being accepted. Root-cause claims were confirmed by direct testing, every fix was checked against the regression suite and, where applicable, against the real target frameworks, and all test executions on physical hardware, repository operations, and acceptance decisions were performed by the author. AI is not listed as an author. After using these tools, the author reviewed and edited the content as needed and takes full responsibility for the content of the publication. The process that designed the mitigations also designed and reviewed them, a limitation discussed in Section 8.
+
+## References
+
+[1] SentinelLabs. AcidRain: a modem wiper rains down on Europe. SentinelOne, 2022. https://www.sentinelone.com/labs/acidrain-a-modem-wiper-rains-down-on-europe/ (accessed 7 August 2026).
+
+[2] M. Kang, S. Park, Y. Lee, A survey on satellite communication system security, Sensors 24 (2024) 2897. https://doi.org/10.3390/s24092897.
+
+[3] SentinelLabs. AcidPour: new embedded wiper variant of AcidRain appears in Ukraine. SentinelOne, 2024. https://www.sentinelone.com/labs/acidpour-new-embedded-wiper-variant-of-acidrain-appears-in-ukraine/ (accessed 7 August 2026).
+
+[4] GitHub. Releases now expose digests for release assets. GitHub Changelog, 3 June 2025. https://github.blog/changelog/2025-06-03-releases-now-expose-digests-for-release-assets/ (accessed 28 October 2026).
+
+[5] SLSA. Supply-chain Levels for Software Artifacts (SLSA) specification, v1.2. https://slsa.dev/spec/v1.2/ (accessed 7 August 2026).
+
+[6] in-toto. in-toto attestation framework, v1.0.2. https://in-toto.io/docs/specs (accessed 7 August 2026).
+
+[7] Open Source Security Foundation. Sigstore. https://sigstore.dev (accessed 7 August 2026).
+
+[8] The Update Framework. The Update Framework specification, v1.0.34. https://theupdateframework.io/spec/ (accessed 7 August 2026).
+
+[9] T.K. Kuppusamy, A. Brown, S. Awwad, D. McCoy, R. Bielawski, C. Mott, S. Lauzon, A. Weimerskirch, J. Cappos, Uptane: securing software updates for automobiles, in: 14th escar Europe, 2016. https://ssl.engineering.nyu.edu/papers/kuppusamy_escar_16.pdf (accessed 28 October 2026).
+
+[10] National Institute of Standards and Technology. Open Security Controls Assessment Language (OSCAL). https://pages.nist.gov/OSCAL/ (accessed 7 August 2026).
+
+[11] M. Manulis, C.P. Bridges, R. Harrison, V. Sekar, A. Davis, Cyber security in New Space, Int. J. Inf. Secur. 20 (2021) 287-311. https://doi.org/10.1007/s10207-020-00503-w.
+
+[12] I. Ahmad, J. Suomalainen, P. Porambage, A. Gurtov, J. Huusko, M. Höyhtyä, Security of satellite-terrestrial communications: challenges and potential solutions, IEEE Access 10 (2022) 96038-96052. https://doi.org/10.1109/ACCESS.2022.3205426.
+
+[13] J. Vanlyssel, E. Sobrados, R. Anwar, G.C. Roman, A. Anwar, SpyChain: multi-vector supply chain attacks on small satellite systems, arXiv preprint arXiv:2510.06535, 2025. https://doi.org/10.48550/arXiv.2510.06535.
+
+[14] J. Vanlyssel, G.C. Roman, K. Cook, S. Rahaman, A. Anwar, Trust without boundaries: an architectural analysis of satellite flight software, arXiv preprint arXiv:2608.14532, 2026. https://doi.org/10.48550/arXiv.2608.14532.
+
+[15] A.B. Usman, Z. Afzal, M. Asplund, Bridging remote attestation and secure software updates in embedded systems, Int. J. Inf. Secur. 25 (2026) 75. https://doi.org/10.1007/s10207-026-01233-1.
+
+[16] H. Birkholz, D. Thaler, M. Richardson, N. Smith, W. Pan, Remote ATtestation procedureS (RATS) architecture, RFC 9334, IETF, 2023. https://doi.org/10.17487/RFC9334.
+
+[17] K. Sahlmann, V. Clemens, M. Nowak, B. Schnor, MUP: simplifying secure over-the-air update with MQTT for constrained IoT devices, Sensors 21 (2021) 10. https://doi.org/10.3390/s21010010.
+
+[18] A. Qureshi, M. Marvi, J.A. Shamsi, A. Aijaz, eUF: a framework for detecting over-the-air malicious updates in autonomous vehicles, J. King Saud Univ. Comput. Inf. Sci. 34 (2022) 5456-5467. https://doi.org/10.1016/j.jksuci.2021.05.005.
+
+[19] D. Ganesan, M. Lindvall, D. McComas, M. Bartholomew, S. Slegel, B. Medina, et al., An analysis of unit tests of a flight software product line, Sci. Comput. Program. 78 (2013) 2360-2380. https://doi.org/10.1016/j.scico.2012.02.006.
+
+[20] C.E. Gonzalez, C.J. Rojas, A. Bergel, M.A. Diaz, An architecture-tracking approach to evaluate a modular and extensible flight software for CubeSat nanosatellites, IEEE Access 7 (2019) 126409-126429. https://doi.org/10.1109/ACCESS.2019.2927931.
+
+[21] Uptane. Uptane Standard for Design and Implementation, version 2.1.0. https://uptane.org/docs/2.1.0/standard/uptane-standard (accessed 28 October 2026).

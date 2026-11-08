@@ -500,10 +500,19 @@ marked **[UNVERIFIED — could not confirm]** need a direct check of the primary
 - Current metrics (2026): Impact Factor 5.7, quartile Q1.
 
 **Journal of Space Safety Engineering (JSSE, Elsevier, published for IAASS)**
-- Fully open access (no reader paywall) and **no author charge** — authors retain
+- **Correction (2026-08-17, live-verified from JSSE's actual ScienceDirect
+  open-access page, superseding the note below):** JSSE is a **hybrid**
+  journal, not free-OA-only. Authors choose gold open access (a
+  live-verified Article Publishing Charge of USD 2,930, excl. taxes) or
+  the traditional no-charge subscription route; either way there is a
+  12-month green-OA self-archiving embargo. The line below ("no author
+  charge," "OA at zero direct cost") was inaccurate and is retained
+  struck through only for the record of what was previously believed, not
+  as current guidance.
+- ~~Fully open access (no reader paywall) and no author charge — authors retain
   copyright. This changes the cost calculus versus TAES's OA option — worth
   highlighting to the user as JSSE being the only primary target that's OA at zero
-  direct cost.
+  direct cost.~~
 - Same Elsevier generative-AI disclosure policy as Computers & Security applies (see
   above) — same "Declaration of generative AI..." section required if used.
 - Quarterly publication cadence; scope centers on space safety engineering broadly —

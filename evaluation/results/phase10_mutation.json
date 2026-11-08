@@ -1,0 +1,3500 @@
+{
+  "seed": 20261028,
+  "elapsed_seconds": 17.2,
+  "parameters": {
+    "bitflip": 400,
+    "truncate": 100,
+    "binary_bitflip": 200
+  },
+  "json_documents": [
+    {
+      "document": "sbom",
+      "total_mutants": 793,
+      "by_operator": {
+        "bitflip": {
+          "rejected": 303,
+          "accepted_semantic": 97
+        },
+        "truncate": {
+          "rejected": 100
+        },
+        "delete": {
+          "accepted_semantic": 10,
+          "rejected": 11
+        },
+        "retype": {
+          "accepted_semantic": 129,
+          "rejected": 101
+        },
+        "change": {
+          "accepted_semantic": 13,
+          "rejected": 1
+        },
+        "dupkey": {
+          "accepted_semantic": 12,
+          "rejected": 6
+        },
+        "splice": {
+          "accepted_semantic": 3,
+          "rejected": 1
+        },
+        "neutral": {
+          "accepted_neutral": 6
+        }
+      },
+      "accepted_semantic_paths": {
+        "bitflip": {
+          "components.[].name": 5,
+          "serialNumber": 15,
+          "specVersion": 12,
+          "<unknown key under <root>>": 34,
+          "metadata.component.type": 11,
+          "<unknown key under compo>": 2,
+          "components": 12,
+          "<unknown key under metadata.component>": 3,
+          "bomFormat": 13,
+          "components.[].type": 9,
+          "components.[].version": 8,
+          "version": 4,
+          "<unknown key under metadata.component.>": 1,
+          "metadata.component.name": 6,
+          "<unknown key under specVersio>": 1,
+          "metadata.component.hashes.[].alg": 2,
+          "<unknown key under compone>": 1
+        },
+        "delete": {
+          "bomFormat": 1,
+          "specVersion": 1,
+          "serialNumber": 1,
+          "version": 1,
+          "metadata.component.type": 1,
+          "metadata.component.name": 1,
+          "metadata.component.hashes.[].alg": 1,
+          "components": 3
+        },
+        "retype": {
+          "bomFormat": 11,
+          "specVersion": 11,
+          "serialNumber": 11,
+          "version": 10,
+          "metadata.component.type": 11,
+          "metadata.component.name": 11,
+          "metadata.component.hashes.[].alg": 11,
+          "components": 3,
+          "components.[].type": 22,
+          "components.[].name": 14,
+          "components.[].version": 14
+        },
+        "change": {
+          "bomFormat": 1,
+          "specVersion": 1,
+          "serialNumber": 1,
+          "version": 1,
+          "metadata.component.type": 1,
+          "metadata.component.name": 1,
+          "metadata.component.hashes.[].alg": 1,
+          "components.[].type": 2,
+          "components.[].name": 2,
+          "components.[].version": 2
+        },
+        "dupkey": {
+          "bomFormat": 1,
+          "specVersion": 1,
+          "serialNumber": 1,
+          "<unknown key under metadata>": 1,
+          "<unknown key under metadata.component>": 1,
+          "components.[].type": 3,
+          "components.[].name": 3,
+          "metadata.component.hashes.[].alg": 1
+        },
+        "splice": {
+          "serialNumber": 1,
+          "metadata.component.name": 1,
+          "components.[].name": 1
+        }
+      },
+      "field_stats": {
+        "<unknown key under components.[]>": {
+          "mutants": 2,
+          "accepted": 0
+        },
+        "<unknown key under metadata.component.hashes.[]>": {
+          "mutants": 1,
+          "accepted": 0
+        },
+        "<unknown key under metadata.component>": {
+          "mutants": 2,
+          "accepted": 1
+        },
+        "<unknown key under metadata>": {
+          "mutants": 2,
+          "accepted": 1
+        },
+        "bomFormat": {
+          "mutants": 14,
+          "accepted": 14
+        },
+        "components": {
+          "mutants": 14,
+          "accepted": 6
+        },
+        "components.[]": {
+          "mutants": 18,
+          "accepted": 0
+        },
+        "components.[].name": {
+          "mutants": 34,
+          "accepted": 20
+        },
+        "components.[].type": {
+          "mutants": 33,
+          "accepted": 27
+        },
+        "components.[].version": {
+          "mutants": 30,
+          "accepted": 16
+        },
+        "metadata": {
+          "mutants": 10,
+          "accepted": 0
+        },
+        "metadata.component": {
+          "mutants": 12,
+          "accepted": 0
+        },
+        "metadata.component.hashes": {
+          "mutants": 14,
+          "accepted": 0
+        },
+        "metadata.component.hashes.[]": {
+          "mutants": 10,
+          "accepted": 0
+        },
+        "metadata.component.hashes.[].alg": {
+          "mutants": 16,
+          "accepted": 14
+        },
+        "metadata.component.hashes.[].content": {
+          "mutants": 16,
+          "accepted": 0
+        },
+        "metadata.component.name": {
+          "mutants": 16,
+          "accepted": 14
+        },
+        "metadata.component.type": {
+          "mutants": 15,
+          "accepted": 13
+        },
+        "serialNumber": {
+          "mutants": 15,
+          "accepted": 15
+        },
+        "specVersion": {
+          "mutants": 14,
+          "accepted": 14
+        },
+        "version": {
+          "mutants": 12,
+          "accepted": 12
+        }
+      },
+      "exception_types": {},
+      "false_reject_examples": []
+    },
+    {
+      "document": "provenance",
+      "total_mutants": 749,
+      "by_operator": {
+        "bitflip": {
+          "accepted_semantic": 139,
+          "rejected": 261
+        },
+        "truncate": {
+          "rejected": 100
+        },
+        "delete": {
+          "accepted_semantic": 10,
+          "rejected": 8
+        },
+        "retype": {
+          "accepted_semantic": 108,
+          "rejected": 88
+        },
+        "change": {
+          "accepted_semantic": 7,
+          "rejected": 2
+        },
+        "dupkey": {
+          "accepted_semantic": 12,
+          "rejected": 5
+        },
+        "splice": {
+          "accepted_semantic": 2,
+          "rejected": 1
+        },
+        "neutral": {
+          "accepted_neutral": 6
+        }
+      },
+      "accepted_semantic_paths": {
+        "bitflip": {
+          "predicate.buildDefinition.externalParameters.source_commit": 26,
+          "predicate.buildDefinition": 10,
+          "<unknown key under predicate>": 10,
+          "<unknown key under predicate.buildDefinition.externalParameters>": 24,
+          "predicate.buildDefinition.externalParameters.source_tree_dirty": 11,
+          "predicate.buildDefinition.buildType": 38,
+          "subject.[].name": 6,
+          "<unknown key under predicate.buildDefinition>": 15,
+          "predicateType": 29,
+          "predicate.buildDefinition.externalParameters": 7,
+          "<unknown key under <root>>": 11,
+          "_type": 10,
+          "<unknown key under predicate.runDetails>": 2,
+          "predicate.runDetails.metadata": 2,
+          "<unknown key under subject.[]>": 1
+        },
+        "delete": {
+          "_type": 1,
+          "predicateType": 1,
+          "subject.[].name": 1,
+          "predicate.buildDefinition": 1,
+          "predicate.buildDefinition.buildType": 1,
+          "predicate.buildDefinition.externalParameters": 1,
+          "predicate.buildDefinition.externalParameters.source_commit": 1,
+          "predicate.buildDefinition.externalParameters.source_tree_dirty": 1,
+          "predicate.runDetails.metadata": 1,
+          "predicate.runDetails.metadata.version": 1
+        },
+        "retype": {
+          "_type": 11,
+          "predicateType": 11,
+          "subject.[].name": 11,
+          "predicate.buildDefinition": 9,
+          "predicate.buildDefinition.buildType": 13,
+          "predicate.buildDefinition.externalParameters": 11,
+          "<unknown key under predicate.buildDefinition>": 1,
+          "predicate.buildDefinition.externalParameters.source_commit": 13,
+          "predicate.buildDefinition.externalParameters.source_tree_dirty": 12,
+          "<unknown key under predicate.buildDefinition.externalParameters>": 1,
+          "predicate.runDetails.metadata": 9,
+          "predicate.runDetails.metadata.version": 12,
+          "<unknown key under predicate.runDetails.metadata>": 1
+        },
+        "change": {
+          "_type": 1,
+          "predicateType": 1,
+          "subject.[].name": 1,
+          "predicate.buildDefinition.buildType": 1,
+          "predicate.buildDefinition.externalParameters.source_commit": 1,
+          "predicate.buildDefinition.externalParameters.source_tree_dirty": 1,
+          "predicate.runDetails.metadata.version": 1
+        },
+        "dupkey": {
+          "_type": 1,
+          "predicateType": 1,
+          "subject.[].name": 1,
+          "<unknown key under subject.[].digest>": 1,
+          "<unknown key under predicate>": 1,
+          "<unknown key under predicate.buildDefinition>": 1,
+          "predicate.buildDefinition.buildType": 1,
+          "<unknown key under predicate.buildDefinition.externalParameters>": 1,
+          "predicate.buildDefinition.externalParameters.source_commit": 1,
+          "<unknown key under predicate.runDetails>": 1,
+          "<unknown key under predicate.runDetails.builder>": 1,
+          "<unknown key under predicate.runDetails.metadata>": 1
+        },
+        "splice": {
+          "subject.[].name": 1,
+          "predicate.runDetails.metadata.version": 1
+        }
+      },
+      "field_stats": {
+        "<unknown key under predicate.buildDefinition.externalParameters>": {
+          "mutants": 2,
+          "accepted": 2
+        },
+        "<unknown key under predicate.buildDefinition>": {
+          "mutants": 2,
+          "accepted": 2
+        },
+        "<unknown key under predicate.runDetails.builder>": {
+          "mutants": 2,
+          "accepted": 1
+        },
+        "<unknown key under predicate.runDetails.metadata>": {
+          "mutants": 2,
+          "accepted": 2
+        },
+        "<unknown key under predicate.runDetails>": {
+          "mutants": 2,
+          "accepted": 1
+        },
+        "<unknown key under predicate>": {
+          "mutants": 2,
+          "accepted": 1
+        },
+        "<unknown key under subject.[].digest>": {
+          "mutants": 2,
+          "accepted": 1
+        },
+        "<unknown key under subject.[]>": {
+          "mutants": 1,
+          "accepted": 0
+        },
+        "_type": {
+          "mutants": 14,
+          "accepted": 14
+        },
+        "predicate": {
+          "mutants": 10,
+          "accepted": 0
+        },
+        "predicate.buildDefinition": {
+          "mutants": 12,
+          "accepted": 10
+        },
+        "predicate.buildDefinition.buildType": {
+          "mutants": 16,
+          "accepted": 16
+        },
+        "predicate.buildDefinition.externalParameters": {
+          "mutants": 12,
+          "accepted": 12
+        },
+        "predicate.buildDefinition.externalParameters.source_commit": {
+          "mutants": 16,
+          "accepted": 16
+        },
+        "predicate.buildDefinition.externalParameters.source_tree_dirty": {
+          "mutants": 14,
+          "accepted": 14
+        },
+        "predicate.runDetails": {
+          "mutants": 12,
+          "accepted": 0
+        },
+        "predicate.runDetails.builder": {
+          "mutants": 12,
+          "accepted": 0
+        },
+        "predicate.runDetails.builder.id": {
+          "mutants": 15,
+          "accepted": 0
+        },
+        "predicate.runDetails.metadata": {
+          "mutants": 12,
+          "accepted": 10
+        },
+        "predicate.runDetails.metadata.version": {
+          "mutants": 15,
+          "accepted": 15
+        },
+        "predicateType": {
+          "mutants": 14,
+          "accepted": 14
+        },
+        "subject": {
+          "mutants": 12,
+          "accepted": 0
+        },
+        "subject.[]": {
+          "mutants": 10,
+          "accepted": 0
+        },
+        "subject.[].digest": {
+          "mutants": 12,
+          "accepted": 0
+        },
+        "subject.[].digest.sha256": {
+          "mutants": 16,
+          "accepted": 0
+        },
+        "subject.[].name": {
+          "mutants": 17,
+          "accepted": 15
+        }
+      },
+      "exception_types": {},
+      "false_reject_examples": []
+    },
+    {
+      "document": "attestation",
+      "total_mutants": 594,
+      "by_operator": {
+        "bitflip": {
+          "rejected": 397,
+          "accepted_equivalent": 3
+        },
+        "truncate": {
+          "rejected": 100
+        },
+        "delete": {
+          "rejected": 6
+        },
+        "retype": {
+          "rejected": 66
+        },
+        "change": {
+          "rejected": 5
+        },
+        "dupkey": {
+          "rejected": 6
+        },
+        "splice": {
+          "rejected": 5
+        },
+        "neutral": {
+          "accepted_neutral": 6
+        }
+      },
+      "accepted_semantic_paths": {},
+      "field_stats": {
+        "<unknown key under quote>": {
+          "mutants": 2,
+          "accepted": 0
+        },
+        "quote": {
+          "mutants": 10,
+          "accepted": 0
+        },
+        "quote.measured_binary": {
+          "mutants": 17,
+          "accepted": 0
+        },
+        "quote.measured_hash": {
+          "mutants": 17,
+          "accepted": 0
+        },
+        "quote.partition_id": {
+          "mutants": 17,
+          "accepted": 0
+        },
+        "quote.timestamp": {
+          "mutants": 16,
+          "accepted": 0
+        },
+        "signature": {
+          "mutants": 14,
+          "accepted": 0
+        }
+      },
+      "exception_types": {},
+      "false_reject_examples": []
+    }
+  ],
+  "binary_and_signature": {
+    "binary_mutation": {
+      "signature": {
+        "reject": 204
+      },
+      "sbom_binding": {
+        "reject": 200
+      },
+      "provenance_binding": {
+        "reject": 200
+      }
+    },
+    "signature_file_mutation": {
+      "reject": 204
+    }
+  },
+  "policy": {
+    "summary": {
+      "debug_on_total": 228,
+      "debug_on_accepted": 131,
+      "debug_off_total": 182,
+      "debug_off_rejected": 0
+    },
+    "accepted_debug_on": [
+      [
+        "hyphen",
+        "True"
+      ],
+      [
+        "hyphen",
+        "'true'"
+      ],
+      [
+        "hyphen",
+        "'TRUE'"
+      ],
+      [
+        "hyphen",
+        "1"
+      ],
+      [
+        "hyphen",
+        "'1'"
+      ],
+      [
+        "hyphen",
+        "1.0"
+      ],
+      [
+        "hyphen",
+        "'yes'"
+      ],
+      [
+        "hyphen",
+        "'on'"
+      ],
+      [
+        "hyphen",
+        "'enabled'"
+      ],
+      [
+        "hyphen",
+        "'y'"
+      ],
+      [
+        "hyphen",
+        "'t'"
+      ],
+      [
+        "hyphen",
+        "'enable'"
+      ],
+      [
+        "hyphen",
+        "[True]"
+      ],
+      [
+        "hyphen",
+        "{'enabled': True}"
+      ],
+      [
+        "hyphen",
+        "'true '"
+      ],
+      [
+        "hyphen",
+        "2"
+      ],
+      [
+        "camel",
+        "True"
+      ],
+      [
+        "camel",
+        "'true'"
+      ],
+      [
+        "camel",
+        "'TRUE'"
+      ],
+      [
+        "camel",
+        "1"
+      ],
+      [
+        "camel",
+        "'1'"
+      ],
+      [
+        "camel",
+        "1.0"
+      ],
+      [
+        "camel",
+        "'yes'"
+      ],
+      [
+        "camel",
+        "'on'"
+      ],
+      [
+        "camel",
+        "'enabled'"
+      ],
+      [
+        "camel",
+        "'y'"
+      ],
+      [
+        "camel",
+        "'t'"
+      ],
+      [
+        "camel",
+        "'enable'"
+      ],
+      [
+        "camel",
+        "[True]"
+      ],
+      [
+        "camel",
+        "{'enabled': True}"
+      ],
+      [
+        "camel",
+        "'true '"
+      ],
+      [
+        "camel",
+        "2"
+      ],
+      [
+        "dotted_prefix",
+        "True"
+      ],
+      [
+        "dotted_prefix",
+        "'true'"
+      ],
+      [
+        "dotted_prefix",
+        "'TRUE'"
+      ],
+      [
+        "dotted_prefix",
+        "1"
+      ],
+      [
+        "dotted_prefix",
+        "'1'"
+      ],
+      [
+        "dotted_prefix",
+        "1.0"
+      ],
+      [
+        "dotted_prefix",
+        "'yes'"
+      ],
+      [
+        "dotted_prefix",
+        "'on'"
+      ],
+      [
+        "dotted_prefix",
+        "'enabled'"
+      ],
+      [
+        "dotted_prefix",
+        "'y'"
+      ],
+      [
+        "dotted_prefix",
+        "'t'"
+      ],
+      [
+        "dotted_prefix",
+        "'enable'"
+      ],
+      [
+        "dotted_prefix",
+        "[True]"
+      ],
+      [
+        "dotted_prefix",
+        "{'enabled': True}"
+      ],
+      [
+        "dotted_prefix",
+        "'true '"
+      ],
+      [
+        "dotted_prefix",
+        "2"
+      ],
+      [
+        "zero_width",
+        "True"
+      ],
+      [
+        "zero_width",
+        "'true'"
+      ],
+      [
+        "zero_width",
+        "'TRUE'"
+      ],
+      [
+        "zero_width",
+        "1"
+      ],
+      [
+        "zero_width",
+        "'1'"
+      ],
+      [
+        "zero_width",
+        "1.0"
+      ],
+      [
+        "zero_width",
+        "'yes'"
+      ],
+      [
+        "zero_width",
+        "'on'"
+      ],
+      [
+        "zero_width",
+        "'enabled'"
+      ],
+      [
+        "zero_width",
+        "'y'"
+      ],
+      [
+        "zero_width",
+        "'t'"
+      ],
+      [
+        "zero_width",
+        "'enable'"
+      ],
+      [
+        "zero_width",
+        "[True]"
+      ],
+      [
+        "zero_width",
+        "{'enabled': True}"
+      ],
+      [
+        "zero_width",
+        "'true '"
+      ],
+      [
+        "zero_width",
+        "2"
+      ],
+      [
+        "cyrillic_e",
+        "True"
+      ],
+      [
+        "cyrillic_e",
+        "'true'"
+      ],
+      [
+        "cyrillic_e",
+        "'TRUE'"
+      ],
+      [
+        "cyrillic_e",
+        "1"
+      ],
+      [
+        "cyrillic_e",
+        "'1'"
+      ],
+      [
+        "cyrillic_e",
+        "1.0"
+      ],
+      [
+        "cyrillic_e",
+        "'yes'"
+      ],
+      [
+        "cyrillic_e",
+        "'on'"
+      ],
+      [
+        "cyrillic_e",
+        "'enabled'"
+      ],
+      [
+        "cyrillic_e",
+        "'y'"
+      ],
+      [
+        "cyrillic_e",
+        "'t'"
+      ],
+      [
+        "cyrillic_e",
+        "'enable'"
+      ],
+      [
+        "cyrillic_e",
+        "[True]"
+      ],
+      [
+        "cyrillic_e",
+        "{'enabled': True}"
+      ],
+      [
+        "cyrillic_e",
+        "'true '"
+      ],
+      [
+        "cyrillic_e",
+        "2"
+      ],
+      [
+        "double_underscore",
+        "True"
+      ],
+      [
+        "double_underscore",
+        "'true'"
+      ],
+      [
+        "double_underscore",
+        "'TRUE'"
+      ],
+      [
+        "double_underscore",
+        "1"
+      ],
+      [
+        "double_underscore",
+        "'1'"
+      ],
+      [
+        "double_underscore",
+        "1.0"
+      ],
+      [
+        "double_underscore",
+        "'yes'"
+      ],
+      [
+        "double_underscore",
+        "'on'"
+      ],
+      [
+        "double_underscore",
+        "'enabled'"
+      ],
+      [
+        "double_underscore",
+        "'y'"
+      ],
+      [
+        "double_underscore",
+        "'t'"
+      ],
+      [
+        "double_underscore",
+        "'enable'"
+      ],
+      [
+        "double_underscore",
+        "[True]"
+      ],
+      [
+        "double_underscore",
+        "{'enabled': True}"
+      ],
+      [
+        "double_underscore",
+        "'true '"
+      ],
+      [
+        "double_underscore",
+        "2"
+      ],
+      [
+        "plural",
+        "True"
+      ],
+      [
+        "plural",
+        "'true'"
+      ],
+      [
+        "plural",
+        "'TRUE'"
+      ],
+      [
+        "plural",
+        "1"
+      ],
+      [
+        "plural",
+        "'1'"
+      ],
+      [
+        "plural",
+        "1.0"
+      ],
+      [
+        "plural",
+        "'yes'"
+      ],
+      [
+        "plural",
+        "'on'"
+      ],
+      [
+        "plural",
+        "'enabled'"
+      ],
+      [
+        "plural",
+        "'y'"
+      ],
+      [
+        "plural",
+        "'t'"
+      ],
+      [
+        "plural",
+        "'enable'"
+      ],
+      [
+        "plural",
+        "[True]"
+      ],
+      [
+        "plural",
+        "{'enabled': True}"
+      ],
+      [
+        "plural",
+        "'true '"
+      ],
+      [
+        "plural",
+        "2"
+      ],
+      [
+        "short",
+        "True"
+      ],
+      [
+        "short",
+        "'true'"
+      ],
+      [
+        "short",
+        "'TRUE'"
+      ],
+      [
+        "short",
+        "1"
+      ],
+      [
+        "short",
+        "'1'"
+      ],
+      [
+        "short",
+        "1.0"
+      ],
+      [
+        "short",
+        "'yes'"
+      ],
+      [
+        "short",
+        "'on'"
+      ],
+      [
+        "short",
+        "'enabled'"
+      ],
+      [
+        "short",
+        "'y'"
+      ],
+      [
+        "short",
+        "'t'"
+      ],
+      [
+        "short",
+        "'enable'"
+      ],
+      [
+        "short",
+        "[True]"
+      ],
+      [
+        "short",
+        "{'enabled': True}"
+      ],
+      [
+        "short",
+        "'true '"
+      ],
+      [
+        "short",
+        "2"
+      ],
+      [
+        "nested_dict",
+        "structure"
+      ],
+      [
+        "list_of_dicts",
+        "structure"
+      ],
+      [
+        "json_string",
+        "structure"
+      ]
+    ],
+    "rejected_debug_off": [],
+    "rows": [
+      {
+        "key": "exact",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "exact",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "exact",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "upper",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "upper",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "title",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "title",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "lead_space",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "lead_space",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "trail_space",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "trail_space",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": false
+      },
+      {
+        "key": "fullwidth",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "fullwidth",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "hyphen",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "camel",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "dotted_prefix",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "zero_width",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "cyrillic_e",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "double_underscore",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "plural",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "True",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'true'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'TRUE'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "1",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'1'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "1.0",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'yes'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'on'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'enabled'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'y'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'t'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'enable'",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "[True]",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "{'enabled': True}",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'true '",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "2",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "False",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'false'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "0",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'0'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'no'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'off'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "None",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "[]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "{}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "[False]",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "{'enabled': False}",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "'disabled'",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "short",
+        "value": "''",
+        "intent": "debug_off",
+        "accepted": true
+      },
+      {
+        "key": "nested_dict",
+        "value": "structure",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "list_of_dicts",
+        "value": "structure",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "json_string",
+        "value": "structure",
+        "intent": "debug_on",
+        "accepted": true
+      },
+      {
+        "key": "second_key_shadow",
+        "value": "structure",
+        "intent": "debug_on",
+        "accepted": false
+      }
+    ]
+  }
+}

@@ -171,7 +171,7 @@ def check_binding(sbom_path: Path, binary_path: Path) -> tuple[bool, Optional[st
     return True, None
 
 
-def verify_sbom(sbom_path: Path, binary_path: Optional[Path] = None, condition_name: str = "S1") -> bool:
+def _verify_sbom_inner(sbom_path: Path, binary_path: Optional[Path] = None, condition_name: str = "S1") -> bool:
     """Run all S1 SBOM checks, logging one evidence record for the stage.
 
     `binary_path` is optional only for backward compatibility with
@@ -246,3 +246,27 @@ def verify_sbom(sbom_path: Path, binary_path: Optional[Path] = None, condition_n
         detail={},
     )
     return True
+
+
+_MALFORMED_ERRORS = (ValueError, TypeError, KeyError, IndexError, AttributeError, UnicodeDecodeError)
+
+
+def verify_sbom(sbom_path: Path, binary_path: Optional[Path] = None, condition_name: str = "S1") -> bool:
+    """Public entry point. Delegates to `_verify_sbom_inner` and turns any
+    parse or structure error into a clean rejection with an evidence
+    record. Added in revision 1: the mutation experiment
+    (evaluation/mutation_attacks.py) showed that a malformed SBOM was
+    rejected only by an unhandled exception, which halted the run but left
+    no evidence record of the rejection."""
+    try:
+        return _verify_sbom_inner(sbom_path, binary_path=binary_path, condition_name=condition_name)
+    except _MALFORMED_ERRORS as exc:
+        EvidenceStore().record(
+            pipeline_stage="sbom_verification",
+            condition=condition_name,
+            artifact_ref="unknown",
+            actor="ground_authorization_service",
+            result="fail",
+            detail={"reason": "SBOM malformed", "error": type(exc).__name__},
+        )
+        return False
