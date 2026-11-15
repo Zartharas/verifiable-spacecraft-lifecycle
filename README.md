@@ -20,7 +20,7 @@ seeing it work, copy-paste the block below.
 git clone https://github.com/Zartharas/verifiable-spacecraft-lifecycle.git
 cd verifiable-spacecraft-lifecycle
 python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements-dev.txt
+pip install -r requirements-dev.txt          # or: pip install -r requirements.lock for pinned versions
 
 # 1. Run the demo pipeline (five end-to-end calls, incl. a caught tamper attack)
 python3 src/pipeline.py
@@ -152,7 +152,7 @@ Read in this order when resuming work:
 7. **docs/Implementation-Plan.md** — phased build plan, milestones, task breakdown.
 8. **docs/Research-Paper-Outline.md** — how the prototype's results map to a paper, venue targets.
 9. **docs/Legal-Data-Sourcing-Notes.md** — what data/software sources are used and why they're legally clean for an independent researcher.
-10. **docs/Paper-Draft.md** — the manuscript itself: full text, citation-verification history, and target-venue status.
+10. **docs/Paper-Draft.md** — the manuscript source (the text after the `MANUSCRIPT-START` marker is what is submitted).
 11. **ISSUES-AND-FIXES-LOG.md** — every bug and security finding, root cause, fix, and disclosure status.
 12. **SECURITY.md** — responsible disclosure policy for this repo.
 
@@ -184,22 +184,24 @@ verifiable-spacecraft-lifecycle/       # repo root
 │                                         (stand-in stubs by default; real
 │                                         NASA cFS/F´ via Docker, optional)
 ├── tests/                              # attack/tamper injection + regression suite
-└── evaluation/                        # experiment runner, metrics, ablation study
+└── evaluation/                        # experiment runner, metrics, ablation, baselines (hash-only, TUF, Uptane analysis), mutation experiment
 ```
 
 ## Status
 
 See `STATUS.md` for the current phase and detailed session log. In short:
-the full S0–S5 pipeline is built and tested (197 tests passing), evaluated
-against two target stacks (NASA cFS and F´, both stand-in and real Docker
-builds) with a full statistical evaluation and mechanism-isolation ablation
-study, and has been through four rounds of independent, blind, AI-driven
-red-team review (Claude, OpenAI, Zhipu AI's GLM, and DeepSeek) — see
-`docs/Threat-Model.md` and `ISSUES-AND-FIXES-LOG.md` for every finding and
-fix. The companion paper (`docs/Paper-Draft.md`) has been submitted for
-peer review; a human-colleague code review remains separately pending.
-The repo is expected to go public no later than the paper's publication
-date.
+the full S0 to S5 pipeline is built and tested (197 tests collected; 191
+pass without Docker), evaluated on two stand-in applications and the real
+NASA cFS and JPL F Prime frameworks with 30-trial statistics, a mechanism
+ablation, two adaptive scenarios, hash-only and python-tuf baselines, a
+specification-based Uptane analysis, and a mutation experiment. It has been
+through four rounds of AI-driven review (Claude, OpenAI, Zhipu AI's GLM, and
+DeepSeek); see `docs/Threat-Model.md` and `ISSUES-AND-FIXES-LOG.md`. The
+companion paper (`docs/Paper-Draft.md`) was submitted to the Journal of
+Space Safety Engineering and is being resubmitted after a major-revision
+decision. A review of the code by a human domain expert has not been
+completed. The repository is public; the archived release is at
+https://doi.org/10.5281/zenodo.24046930 (see `CITATION.cff`).
 
 ## License
 

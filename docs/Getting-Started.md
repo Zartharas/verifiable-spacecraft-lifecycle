@@ -155,6 +155,25 @@ python3 evaluation/ablation.py
 Takes a few minutes at the default trial count. Results are written to
 `evaluation/results/phase8_ablation_cfs.json`.
 
+## 5b. Run the baselines and the mutation experiment
+
+These produce the baseline-coverage and mutation results in the manuscript
+(Sections 6.8 and 6.9). The TUF baseline needs the `tuf` package
+(`pip install "tuf==7.0.0"`); the other two need nothing beyond the
+requirements above.
+
+```bash
+python3 evaluation/baselines/hash_only_baseline.py     # hash-comparison baseline (executed)
+python3 evaluation/baselines/tuf_baseline.py           # python-tuf 7.0.0 baseline (executed)
+python3 evaluation/baselines/uptane_spec_analysis.py   # Uptane Standard 2.1.0 (read from the specification, not executed)
+python3 evaluation/mutation_attacks.py                 # mutation experiment (seed 20261028)
+```
+
+Results are written to `evaluation/results/` (`phase9_hash_baseline.json`,
+`phase8_tuf_baseline.json`, `phase11_uptane_spec_analysis.json`,
+`phase10_mutation.json`). Mutation counts can differ by a few mutants
+between runs because the generated artifacts contain timestamps.
+
 ## 6. (Optional, advanced) Run against the real NASA cFS / F´ frameworks
 
 Everything above uses a small stand-in binary that behaves like flight

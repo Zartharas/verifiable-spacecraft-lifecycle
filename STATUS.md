@@ -8,39 +8,40 @@ session, however small.
 
 ## Current phase
 
-**Phase 7 — Real framework builds and real-stack statistical evaluation:
-COMPLETE.**
-(see `docs/Implementation-Plan.md`) Both `cfs-app/Dockerfile` and
-`fprime-app/Dockerfile` run successfully on the user's Docker-capable Mac
-(after fixing real bugs in both). Real `core-cpu1` (cFS) and `Ref` (F´)
-binaries are built, confirmed working, and wired into the pipeline as
-`"cfs-real"`/`"fprime-real"` stacks. Full S0-S5 lifecycle exercised
-against both, including a persistent-process health-check strategy
-(ISSUE-003). Independent reproducibility verification complete: F´'s
-`Ref` is byte-for-byte reproducible across two from-scratch builds; cFS's
-`core-cpu1` is not, with the cause precisely isolated (an embedded build
-timestamp, 22 bytes of ~915KB). See `docs/Threat-Model.md` "Phase 7
-reproducibility verification."
+**Revision 1 of the JSSE manuscript (JSSE-D-26-00171) is prepared for resubmission
+(deadline 2026-11-22).** All build phases (1 to 8) are complete. The pipeline,
+the 15-case attack matrix, the six-case ablation, the two adaptive scenarios,
+and the four-target evaluation (30 trials each; two stand-ins and the real
+cFS v7.0.1 and F Prime v4.2.2 frameworks) are finished. The revision added a
+hash-only baseline, an executed python-tuf baseline, a specification-based
+Uptane analysis (not executed), and a mutation experiment that found and fixed
+two verifier defects. The authoritative manuscript source is
+`docs/Paper-Draft.md`; the point-by-point response is
+`docs/Revision-1-Response.md` (gitignored, kept locally).
 
-**Real-stack statistical evaluation (the paper's real-framework results
-section) also complete.** Getting there surfaced two real bugs, both
-found and fixed the same day: **ISSUE-007** (real health checks crashed
-with `Exec format error` outside Docker on macOS, and the error handling
-was silently mislabeling that as an unhealthy build — fixed with a
-transparent Docker-run fallback) and **ISSUE-008** (`cfs-real` still
-failed after that fix — Docker Desktop's default `fs.mqueue.msg_max`
-too low for cFE's Software Bus — fixed via a per-stack `docker_sysctls`
-override, confirmed manually before being coded). With both fixed, the
-full repeated-trial harness (5 trials × 6 conditions × 15 attack cases)
-ran successfully against **both** real binaries: 100% happy-path
-success/reproducibility, 100% detection, 0 false positives/negatives for
-both `cfs-real` and `fprime-real` — structurally identical to the
-stub-artifact results. 47/47 unit tests passing. See `docs/Threat-Model.md`
-"Phase 7 real-stack statistical evaluation results" and
-ISSUES-AND-FIXES-LOG.md ISSUE-007/ISSUE-008. Next up: Phase 8 (paper
-drafting and repo polish).
+Test suite: 197 tests collected; 191 pass without Docker (the Docker-gated
+file `tests/test_phase7_real_builds.py` auto-skips when the real binaries are
+absent). The 30-trial experiments of manuscript Sections 6.1 to 6.8 were not
+rerun after the mutation-experiment fixes (error path of three verifiers and
+the policy value vocabulary); this is stated in manuscript limitation 9.
+
+Archive: GitHub release v1.0.0 with Zenodo DOI 10.5281/zenodo.24046930.
+Later commits (pre-submission audit fixes, dependency pins) are on `main` and
+not in that release.
+
+The sections below this one (Last session summary, What's done, What's next)
+retain the August 2026 build history and are historical; the Session log at
+the end of the file is the dated record.
+
+---
 
 ## Last session summary
+
+**Date:** 2026-11-11 (revision session)
+
+Applied a ten-check pre-submission audit to the manuscript (see `Academic Paper Submission/Revision-1/Pre-Submission-Audit-R1.md`, gitignored): abstract qualifiers, Table 2 and 3 wording for S2 and case 1, provenance-trust scope note, held-out caveat for the policy fix, references renumbered to first-appearance order (now [1] to [28]), figure captions moved out of the images, vector figure PDFs added, and `requirements.lock` added. Pushed as commits 11c3252, aaf8725 and ee06bf2. Re-ran `evaluation/baselines/tuf_baseline.py` on the evaluation machine: cases 6, 7 and 9 caught 30 of 30, results file unchanged.
+
+## Earlier session summaries (August 2026, historical)
 
 **Date:** 2026-08-03 (session 7)
 
@@ -708,7 +709,7 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
       re-run at full scale in-sandbox due to per-command time
       constraints, consistent with every prior full run needing chunking
       or the user's own machine.
-- [ ] Move to Phase 8 (paper drafting and repo polish) — including the
+- [x] Phase 8 (paper drafting and repo polish) complete; manuscript submitted 2026-08-18 and revised for JSSE-D-26-00171 (see Current phase). Original scope: Phase 8 (paper drafting and repo polish) — including the
       writing-only work already scoped: objection 1 (make the
       spacecraft-specific-constraints argument explicit and early, not
       left implicit), objections 2 and 10 (honest, explicit scoping of
@@ -723,14 +724,14 @@ Fixed a macOS-specific build reproducibility bug (ld64 UUID load command)
 
 ## Blockers
 
-- None currently. GitHub repo is live and up to date (see below).
+- None in the repository. Remaining items are the author's: reading the final manuscript, pasting the replies on the Elsevier platform, and uploading the revised files in Editorial Manager by 2026-11-22.
 - None of the code-level open questions (SBOM format, attestation
   approach) are true blockers — they just need a decision before Phase 1
   coding starts.
 
 ## Repository
 
-- **Live at:** https://github.com/Zartharas/verifiable-spacecraft-lifecycle (private)
+- **Live at:** https://github.com/Zartharas/verifiable-spacecraft-lifecycle (public; release v1.0.0; Zenodo DOI 10.5281/zenodo.24046930)
 - Pushed from local `master` branch to remote `main` on 2026-08-02.
 - Commit author uses GitHub noreply email
   (`12345678+Zartharas@users.noreply.github.com`) per GH007 privacy
@@ -843,17 +844,17 @@ not based on intent or partial progress.
 - Flight-software or operational-spacecraft applicability claims:
   `NOT_PERMITTED` — this is a simulated research prototype only, and this
   restriction is permanent, not phase-gated (see PRD.md non-goals)
-- Publication-evidence status: `PRELIMINARY_INTERNAL_ONLY` — Phases 5-7
-  now provide a full stub-artifact evaluation with a credible, documented
-  baseline (PRD.md § 10) across two architecturally distinct stacks, plus
-  a working S0-S2 smoke test against both real frameworks. Still not
-  `PERMITTED` for external citation: no repeated-trial evaluation exists
-  against either real binary, S3-S5 cannot be tested against them at all
-  yet, and reproducibility of either real build is unverified.
+- Publication-evidence status: `PERMITTED_AS_SCOPED` (updated 2026-11-11). The
+  manuscript reports, with its stated limits, 30-trial results on four
+  targets for all six conditions and 15 cases (including S3 to S5 on the real
+  frameworks), a six-case ablation, two adaptive scenarios, executed hash-only
+  and python-tuf baselines, a specification-read Uptane analysis, and a
+  mutation experiment. The results verify the implementation against
+  author-specified attacks. They do not estimate detection of unanticipated
+  attacks, do not apply to flight hardware, and the 30-trial experiments were
+  not rerun after the mutation-experiment fixes (manuscript limitations 1 and 9).
 
-Mandatory stop point: do not submit any manuscript, external write-up, or
-public claim of a result until the specific phase above has completed and
-this section has been updated to reflect it.
+Mandatory stop point (historical, satisfied for the August 2026 submission): do not publish any claim beyond what the manuscript states with its limits.
 
 ## Open questions awaiting a decision
 
