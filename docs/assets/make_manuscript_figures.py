@@ -11,12 +11,18 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
+matplotlib.rcParams["font.family"] = "sans-serif"
+matplotlib.rcParams["font.sans-serif"] = ["Arial", "Liberation Sans", "Helvetica", "DejaVu Sans"]
+matplotlib.rcParams["pdf.fonttype"] = 42
+matplotlib.rcParams["ps.fonttype"] = 42
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import FancyBboxPatch  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(__file__).resolve().parent / "manuscript"
 OUT.mkdir(exist_ok=True)
+VEC = OUT / "vector"
+VEC.mkdir(exist_ok=True)
 RES = ROOT / "evaluation" / "results"
 
 CONDS = ["S0", "S1", "S2", "S3", "S4", "S5"]
@@ -59,9 +65,8 @@ def fig1_pipeline():
     for i in range(7, 12):
         ax.annotate("", xy=(pos[i + 1][0] + 0.92, pos[i + 1][1] + 0.37),
                     xytext=(pos[i][0], pos[i][1] + 0.37), arrowprops=dict(arrowstyle="->", lw=0.8))
-    ax.text(3.65, 2.5, "Fig. 1. Twelve-stage update pipeline; text in italics gives the lowest "
-            "condition at which a stage's check is active.", ha="center", fontsize=8)
-    fig.savefig(OUT / "fig1_pipeline.png", dpi=220, bbox_inches="tight")
+    fig.savefig(OUT / "fig1_pipeline.png", dpi=300, bbox_inches="tight")
+    fig.savefig(VEC / "fig1_pipeline.pdf", bbox_inches="tight")
     plt.close(fig)
 
 
@@ -86,11 +91,9 @@ def fig2_cost():
     axs[2].legend(fontsize=6.5)
     for a in axs:
         a.tick_params(labelsize=8)
-    fig.suptitle("Fig. 2. Measured cost of each added mechanism (30 trials per point). "
-                 "Real-framework time steps at S3 reflect container launch (Section 8).",
-                 fontsize=8, y=-0.02)
     fig.tight_layout()
-    fig.savefig(OUT / "fig2_cost.png", dpi=220, bbox_inches="tight")
+    fig.savefig(OUT / "fig2_cost.png", dpi=300, bbox_inches="tight")
+    fig.savefig(VEC / "fig2_cost.pdf", bbox_inches="tight")
     plt.close(fig)
 
 
@@ -130,8 +133,8 @@ def fig3_coverage():
             else:
                 txt = "caught" if grid[i][j] else "not covered"
             ax.text(j, i, txt, ha="center", va="center", fontsize=6.5)
-    fig.text(0.5, 0.0, "Fig. 3. Attack-matrix cases covered by each approach. Uptane is classified from the\nstandard's text, not run. Ladder column: first condition at which the case is detected.", ha="center", fontsize=7.5)
-    fig.savefig(OUT / "fig3_coverage.png", dpi=220, bbox_inches="tight")
+    fig.savefig(OUT / "fig3_coverage.png", dpi=300, bbox_inches="tight")
+    fig.savefig(VEC / "fig3_coverage.pdf", bbox_inches="tight")
     plt.close(fig)
 
 
